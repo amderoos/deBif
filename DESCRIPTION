@@ -1,0 +1,25 @@
+Package: deBif
+Type: Package
+Title: Bifurcation Analysis of Ordinary Differential Equation Systems
+Version: 0.0.1
+Authors@R: c(person("Andre M.", "de Roos", email = "A.M.deRoos@uva.nl", role = c("aut", "cre")))
+Description: Performs bifurcation and phaseplane analysis of systems of ordinary differential equations. 
+    The package allows for computation of equilibrium curves as a function of a single free parameter,
+    detection of transcritical, saddle-node and hopf bifurcation points along these curves, and
+    computation of curves representing these transcritical, saddle-node and hopf bifurcation points
+    as a function of two free parameters.
+License: GPL-3
+Encoding: UTF-8
+NeedsCompilation: no
+LazyData: true
+Imports: graphics,
+         deSolve  (>= 1.2), 
+         rootSolve (>= 1.7),
+         shiny (>= 1.2), 
+         shinyjs (>= 1.0), 
+         shinydashboard (>= 0.7), 
+         shinydashboardPlus  (>= 0.6)
+Suggests: knitr, rmarkdown
+RoxygenNote: 6.1.1
+VignetteBuilder: knitr
+Depends: R (>= 3.5)
