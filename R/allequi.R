@@ -6,6 +6,7 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
   logx <- ifelse(grepl('x', log), TRUE, FALSE)
   logy <- ifelse(grepl('y', log), TRUE, FALSE)
   gridy <- ifelse((length(state) > 1), grid, 1)
+  msg <- ""
   if (logx) dx <- (log10(xmax)-log10(xmin))/grid
   else dx <- (xmax-xmin)/grid
   if (logy) dy <- (log10(ymax)-log10(ymin))/gridy
@@ -27,17 +28,18 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
         else neweq <- (!any(sapply(1:eqnr, function(i) {any(c(all(abs(eqlst[i,] - equ) < 1e-4),all(abs(eqlst[i,] - equ) < 0.5e-4*(eqlst[i,] + equ))))})))
         if (neweq)
         {
-          if (report) print(equ)
+          if (report) msg <- paste0(msg, paste(unlist(lapply(1:length(equ), function(i) {paste(names(equ[i]), "=", round(equ[i],6), sep=" ")})), collapse=', '), "\n")
           jac <- jacobian.full(y=equ,func=odes,parms=parms)
           eig <- eigen(jac)
           dom <- max(sort(Re(eig$values)))
           if (eigenvalues) {
-            if (dom < 0) cat("Stable point, ")
-            else cat("Unstable point, ")
-            cat("eigenvalues: ",eig$values,"\n")
+            if (dom < 0) msg <- paste0(msg, "Stable point\n")
+            else msg <- paste0(msg, "Unstable point\n")
+            msg <- paste0(msg, "Eigenvalues: ", paste(round(eig$values,5), collapse=', '), "\n")
             if (vector) {cat("Eigenvectors:\n"); print(eig$vectors)}
             if (jacobian) {cat("Jacobian:\n"); print(jac)}
           }
+          if (report || eigenvalues) msg <- paste0(msg, "\n")
           if (dom < 0) points(equ[x],ifelse((length(state) > 1),equ[y],0),pch=19,cex=2)
           else points(equ[x],ifelse((length(state) > 1),equ[y],0),pch=1,cex=2)
           eqnr <- eqnr + 1
@@ -46,5 +48,5 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
       }
     }
   }
-  return(NULL)
+  return(msg)
 }
