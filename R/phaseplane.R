@@ -56,6 +56,7 @@
 #' }
 #' @importFrom graphics contour legend lines par plot points
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
+#' @importFrom shinyjs useShinyjs click removeClass
 #' @export
 phaseplane <- function(model, state, parms) {
   debifOpts <- list(plotopts = c(lwd = 2, pch = 20, sizeLegend = 1, font.main = 2, font.sub = 1, cex.main = 2, cex.lab = 1.4, cex.axis = 1.2),
