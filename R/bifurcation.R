@@ -66,6 +66,7 @@ bifurcation <- function(model, state, parms) {
   curveList[["Orbits"]] <- list()
   curveList[["BifurcationCurves"]] <- list()
   curveList[["BifurcationBounds"]] <- list()
+  curveList[["TotalCurves"]] <- 0
 
   # Options for plotting etc.
   plotopts <- vector(mode = "list", 3)
@@ -101,58 +102,83 @@ bifurcation <- function(model, state, parms) {
     ########## Left side-bar
     sidebar = dashboardSidebar(
       width = 220,
+      # conditionPanels inside sidebarMenu do not really work well, so the entire sidebarMenu should be wrapped inside a conditionaPanel
       conditionalPanel(
         condition = "input.plottab == 1",
         sidebarMenu(
           h4("Initial values", align = "center"),
+          selectizeInput('selectpoint', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
-            lapply(1:length(state),function(i){numericInput(inputId=paste0(names(state[i]), "_1"), label=h6(names(state[i])), value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+            lapply(1:length(state),
+                   function(i){numericInput(inputId=paste0(names(state[i]), "_1"), label=h6(names(state[i])),
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
           ),
           menuItem(
             h4("Parameters"),
-            lapply(1:length(parms),function(i){numericInput(inputId=paste0(names(parms[i]), "_1"), label=h6(names(parms[i])),value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
-          )
+            lapply(1:length(parms),
+                   function(i){numericInput(inputId=paste0(names(parms[i]), "_1"), label=h6(names(parms[i])),
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+          ),
+          id = "leftsbmenu"
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 2",
         sidebarMenu(
           h4("Initial values", align = "center"),
+          selectizeInput('selectpoint', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
-            lapply(1:length(state),function(i){numericInput(inputId=paste0(names(state[i]), "_2"), label=h6(names(state[i])), value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+            lapply(1:length(state),
+                   function(i){numericInput(inputId=paste0(names(state[i]), "_2"), label=h6(names(state[i])),
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
           ),
           menuItem(
             h4("Parameters"),
-            lapply(1:length(parms),function(i){numericInput(inputId=paste0(names(parms[i]), "_2"), label=h6(names(parms[i])),value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
-          )
+            lapply(1:length(parms),
+                   function(i){numericInput(inputId=paste0(names(parms[i]), "_2"), label=h6(names(parms[i])),
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+          ),
+          id = "leftsbmenu"
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 3",
         sidebarMenu(
           h4("Initial values", align = "center"),
+          selectizeInput('selectpoint', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
-            lapply(1:length(state),function(i){numericInput(inputId=paste0(names(state[i]), "_3"), label=h6(names(state[i])), value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+            lapply(1:length(state),
+                   function(i){numericInput(inputId=paste0(names(state[i]), "_3"), label=h6(names(state[i])),
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
           ),
           menuItem(
             h4("Parameters"),
-            lapply(1:length(parms),function(i){numericInput(inputId=paste0(names(parms[i]), "_3"), label=h6(names(parms[i])),value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
-          )
+            lapply(1:length(parms),
+                   function(i){numericInput(inputId=paste0(names(parms[i]), "_3"), label=h6(names(parms[i])),
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+          ),
+          id = "leftsbmenu"
         )
       ),
-      br(),
       sidebarMenu(
+        br(),
         actionButton("computebtn", "Compute", icon("refresh")),
         br(),
         h4("Curve management", align = "center"),
-        menuItem(
-          h4("Delete curve"),
-          sidebarMenuOutput("curvemenu")
+        menuItem(h4("Delete curve"),
+                 selectInput('deletecurve', 'Select curve', c("None" = 0), selected=0),
+                 actionButton("deletebtn", "Delete curve"),
+                 tabName = "deletetab"
         ),
-        id = "leftsbmenu"
+        menuItem(h4("Save curve"),
+                 selectInput('savecurve', 'Select curve', c("None" = 0), selected=0),
+                 textInput("curvename", "Give a valid R variable name"),
+                 actionButton("savebtn", "Save curve"),
+                 tabName = "savetab"
+        )
       )
     ),
     ########## Main panels
@@ -168,70 +194,34 @@ bifurcation <- function(model, state, parms) {
         title = "Plot options",
         icon = "chart-line",
         active = TRUE,
+        selectInput('xcol', h4('Variable(s) on X-axis'),
+                    c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$xcol),
+        splitLayout(cellWidths = c("50%", "50%"),
+                    numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
+                    numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
+        selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
+        selectInput('ycol', h4('Variable(s) on Y-axis'),
+                    c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
+        splitLayout(cellWidths = c("50%", "50%"),
+                    numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
+                    numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
+        selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
         conditionalPanel(
-          condition = "input.plottab == 1",
-          selectInput('xcol1', h4('Variable(s) on X-axis'), c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$xcol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="xmin1", label="Minimum", value=plotopts[[1]]$xmin),
-                      numericInput(inputId="xmax1", label="Maximum", value=plotopts[[1]]$xmax)),
-          selectInput('logx1', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
-          selectInput('ycol1', h4('Variable(s) on Y-axis'), c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="ymin1", label="Minimum", value=plotopts[[1]]$ymin),
-                      numericInput(inputId="ymax1", label="Maximum", value=plotopts[[1]]$ymax)),
-          selectInput('logy1', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
+          condition = "input.plottab != 3 && input.ycol > 1",
+          selectInput('y2col', h4("Variable on 2nd Y-axis"),
+                      c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
           conditionalPanel(
-            condition = "input.ycol1 > 1",
-            selectInput('y2col1', h4("Variable on 2nd Y-axis"), c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
-            conditionalPanel(
-              condition = "input.y2col1 > 1",
-              splitLayout(cellWidths = c("50%", "50%"),
-                          numericInput(inputId="y2min1", label="Minimum", value=plotopts[[1]]$y2min),
-                          numericInput(inputId="y2max1", label="Maximum", value=plotopts[[1]]$y2max)),
-              selectInput('logy21', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2)
-            )
+            condition = "input.y2col > 1",
+            splitLayout(cellWidths = c("50%", "50%"),
+                        numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
+                        numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
+            selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2)
           )
-        ),
-        conditionalPanel(
-          condition = "input.plottab == 2",
-          selectInput('xcol2', h4('Bifurcation parameter'), c(setNames((1:(length(parms))), names(parms))), selected=plotopts[[2]]$xcol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="xmin2", label="Minimum", value=plotopts[[1]]$xmin),
-                      numericInput(inputId="xmax2", label="Maximum", value=plotopts[[1]]$xmax)),
-          selectInput('logx2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
-          selectInput('ycol2', h4('Variable(s) on Y-axis'), c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[2]]$ycol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="ymin2", label="Minimum", value=plotopts[[1]]$ymin),
-                      numericInput(inputId="ymax2", label="Maximum", value=plotopts[[1]]$ymax)),
-          selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
-          conditionalPanel(
-            condition = "input.ycol2 > 1",
-            selectInput('y2col2', h4("Variable on 2nd Y-axis"), c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[2]]$y2col),
-            conditionalPanel(
-              condition = "input.y2col2 > 1",
-              splitLayout(cellWidths = c("50%", "50%"),
-                          numericInput(inputId="y2min2", label="Minimum", value=plotopts[[2]]$y2min),
-                          numericInput(inputId="y2max2", label="Maximum", value=plotopts[[2]]$y2max)),
-              selectInput('logy22', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[2]]$logy2)
-            )
-          )
-        ),
-        conditionalPanel(
-          condition = "input.plottab == 3",
-          selectInput('xcol3', h4('1st bifurcation parameter'), c(setNames((1:(length(parms))), names(parms))), selected=plotopts[[3]]$xcol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="xmin3", label="Minimum", value=plotopts[[1]]$xmin),
-                      numericInput(inputId="xmax3", label="Maximum", value=plotopts[[1]]$xmax)),
-          selectInput('logx3', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
-          selectInput('ycol3', h4('2nd bifurcation parameter'), c(setNames((1:(length(parms))), names(parms))), selected=plotopts[[3]]$ycol),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="ymin3", label="Minimum", value=plotopts[[1]]$ymin),
-                      numericInput(inputId="ymax3", label="Maximum", value=plotopts[[1]]$ymax)),
-          selectInput('logy3', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy)
         ),
         br(),
         actionButton("plotoptsapply", "Apply", icon("refresh"))
       ),
+      # sidebarMenu() and menuItem() do not work in the right sidebar. Only conditionpanels can be used
       rightSidebarTabContent(
         id = "numopttab",
         title = "Numerical options",
@@ -252,13 +242,92 @@ bifurcation <- function(model, state, parms) {
 
     serverenv <- environment()
 
+    observeEvent(input$plottab, {
+      curtab <- as.numeric(input$plottab)
+
+      # Update the delete and save menus
+      clist <- get("curveList", envir=bifenv)
+      lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
+      ids <- (0:length(clist[[curtab]]))
+      names(ids) <- c("None", lbls[,1])[1:length(ids)]
+      updateSelectInput(session, "deletecurve", choices=ids, selected=0)
+      updateSelectInput(session, "savecurve", choices=ids, selected=0)
+
+      # Update the plot options
+      popts <- get("plotopts", envir=bifenv)
+      if (curtab == 1){
+        updateSelectInput(session, "xcol",  label=h4('Variable(s) on X-axis'),
+                          choices=c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$xcol)
+        updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
+                          choices=c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$ycol)
+        updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
+                          choices=c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$y2col)
+      } else if (curtab == 2){
+        updateSelectInput(session, "xcol",  label=h4('Bifurcation parameter'),
+                          choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$xcol)
+        updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
+                          choices=c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$ycol)
+        updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
+                          choices=c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$y2col)
+      } else {
+        updateSelectInput(session, "xcol",  label=h4('1st bifurcation parameter'),
+                          choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$xcol)
+        updateSelectInput(session, "ycol",  label=h4('2nd bifurcation parameter'),
+                          choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$ycol)
+      }
+      updateSelectInput(session,  "logx", selected=popts[[curtab]]$logx)
+      updateNumericInput(session, "xmin", value=popts[[curtab]]$xmin)
+      updateNumericInput(session, "xmax", value=popts[[curtab]]$xmax)
+      popts[[curtab]]$xlab <- ifelse(curtab == 1, (c("Time", names(state)))[popts[[curtab]]$xcol], (names(parms))[popts[[curtab]]$xcol])
+
+      updateSelectInput(session,  "logy", selected=popts[[curtab]]$logy)
+      updateNumericInput(session, "ymin", value=popts[[curtab]]$ymin)
+      updateNumericInput(session, "ymax", value=popts[[curtab]]$ymax)
+      popts[[curtab]]$ylab <- ifelse(curtab < 3, (c("State variables", names(state)))[popts[[curtab]]$ycol],
+                                     (names(parms))[popts[[curtab]]$ycol])
+
+      updateSelectInput(session,  "logy2", selected=popts[[curtab]]$logy2)
+      updateNumericInput(session, "y2min", value=popts[[curtab]]$y2min)
+      updateNumericInput(session, "y2max", value=popts[[curtab]]$y2max)
+      popts[[curtab]]$y2lab <- ifelse(curtab < 2, (names(state))[popts[[curtab]]$y2col-1], (names(parms))[popts[[curtab]]$y2col])
+
+      serverenv$output[[paste0("plot", curtab)]] <- renderPlot({
+        if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
+        else if (curtab == 2) bif1parplot(clist[[2]], popts[[2]])
+        else bif2parplot(clist[[3]], popts[[3]])
+      },
+      height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
+      width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
+    })
+
+    observeEvent(input$selectpoint, {
+      curtab <- as.numeric(input$plottab)
+      curveid <- as.numeric(input$selectpoint)
+      if (curveid > 0) {
+        ind1 <- round(curveid/1000000)
+        ind2 <- round((curveid-ind1*1000000)/1000)
+        ind3 <- round(curveid-ind1*1000000-ind2*1000)
+        ii <- ifelse((ind1 == 3), 2, 1)   # 2 parameter bifurcation points have 2 columns before the state, otherwise 1 only
+        lapply(1:length(state), function(i){updateNumericInput(session, paste0(names(state[i]), "_", curtab), value=as.numeric(curveList[[ind1]][[ind2]]$points[[ind3,(i+ii)]]))})
+        lapply(1:length(parms), function(i){updateNumericInput(session, paste0(names(parms[i]), "_", curtab), value=as.numeric(curveList[[ind1]][[ind2]]$parameters[[i]]))})
+        if (ind1 > 1) {
+          cnames <- colnames(CurveList[[ind1]][[ind2]]$points)
+          updateNumericInput(session, paste0(names(parms[cnames[1]]), "_", curtab), value=as.numeric(curveList[[ind1]][[ind2]]$points[[ind3,1]]))
+          if (ind1 == 3) {
+            updateNumericInput(session, paste0(names(parms[cnames[2]]), "_", curtab), value=as.numeric(curveList[[ind1]][[ind2]]$points[[ind3,2]]))
+          }
+        }
+      }
+    })
+
     observeEvent(input$computebtn, {
       shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
       updateSelectInput(session, "deletecurve", selected = 0)
 
       curtab <- as.numeric(input$plottab)
-      popts <- get("plotopts", envir=bifenv)[[1]]
+      popts <- get("plotopts", envir=bifenv)
       clist <- get("curveList", envir=bifenv)
+      curvescomputed <- as.numeric(clist[["TotalCurves"]])
 
       for (i in names(state)) state[i] <- input[[paste0(i, "_", curtab)]]
       for (i in names(parms)) parms[i] <- input[[paste0(i, "_", curtab)]]
@@ -270,14 +339,50 @@ bifurcation <- function(model, state, parms) {
 
       if (curtab == 1) {
         nsol <- run(tmax=numopts$tmax, tstep=numopts$tstep, odes=model, state=state, parms=parms, dbopts=numopts, method=numopts$odemethod)
-        msg <- paste(unlist(lapply(1:length(state), function(i) {paste(names(state[i]), "=",round(nsol[nrow(nsol), (1+i)],5), sep=" ")})), collapse=', ')
-        msg <- paste("Ended in ", msg, "\n", sep=" ")
-        serverenv$output[["console"]] <- renderText({msg})
 
-        lbl <- paste0("TS: ", paste(unlist(lapply(1:length(state), function(i) {paste(names(state[i]), "=", round(state[i],5), sep="")})), collapse=', '))
-        newcurve <- list(label = lbl, initstate = state, parameters = parms, curve = nsol)
+        OS <- c(nsol[1,], "Description" = paste(unlist(lapply(1:length(state), function(i) {paste0(names(state[i]), "=", round(nsol[1, (1+i)], 2))})), collapse=', '))
+        OE <- c(nsol[nrow(nsol),], "Description" = paste(unlist(lapply(1:length(state), function(i) {paste0(names(state[i]), "=", round(nsol[nrow(nsol), (1+i)], 2))})), collapse=', '))
+
+        serverenv$output[["console"]] <- renderText({paste("Ended in", OE["Description"], "\n", sep=" ")})
+        curvescomputed <- curvescomputed + 1
+
+        lbl <- paste0("TS", sprintf("%02d", curvescomputed),": ", OS["Description"])
+        OS["Description"] <- paste0("OS: ", OS["Description"])
+        OE["Description"] <- paste0("OE: ", OE["Description"])
+
+        newcurve <- list(label = lbl, initstate = state, parameters = parms, curve = nsol, points = rbind(OS, OE))
         clist$Orbits[[newcurvenr]] <- newcurve
+        clist$TotalCurves <- curvescomputed
+
+        lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
+        ids <- (0:length(clist[[curtab]]))
+        names(ids) <- c("None", lbls[,1])[1:length(ids)]
+        updateSelectInput(session, "deletecurve", choices=ids, selected=0)
+        updateSelectInput(session, "savecurve", choices=ids, selected=0)
+
+        # Update the special point selection menu
+        splist <- list()
+        for (i in (1:3)) {
+          if (length(clist[[i]]) > 0) {
+            listlbls <- NULL
+            splist <- c(splist, lapply((1:length(clist[[i]])),
+                                       function(j){
+                                         listlbls <<- c(listlbls, clist[[i]][[j]]$label)
+                                         lbls <- unlist(clist[[i]][[j]]$points[,"Description"], use.names=FALSE);
+                                         ids <- ((i*1000000)+j*1000)+(1:length(lbls)); names(ids) <- lbls;
+                                         return(ids)}))}
+          names(splist) <- listlbls
+        }
+        updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0), splist), selected=0)
       }
+
+      serverenv$output[[paste0("plot", curtab)]] <- renderPlot({
+        if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
+        else if (curtab == 2) bif1parplot(clist[[2]], popts[[2]])
+        else bif2parplot(clist[[3]], popts[[3]])
+      },
+      height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
+      width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
 
       rm("curveList", envir=bifenv)
       assign("curveList", clist, envir=bifenv)
@@ -286,8 +391,6 @@ bifurcation <- function(model, state, parms) {
         rm("CurveList", envir = .GlobalEnv)
       }
       assign("CurveList", clist, envir = .GlobalEnv)
-
-      shinyjs::click("plotoptsapply")
     })
 
     observeEvent(input$deletebtn, {
@@ -295,12 +398,42 @@ bifurcation <- function(model, state, parms) {
 
       curtab <- as.numeric(input$plottab)
       clist <- get("curveList", envir=bifenv)
+      popts <- get("plotopts", envir=bifenv)
       deletenr <- as.numeric(input$deletecurve)
       totalcurves <- as.numeric(length((clist[[curtab]])))
 
       if ((totalcurves > 0) && (deletenr > 0) && (deletenr < (totalcurves + 1))) {
 
         clist[[curtab]][[deletenr]] <- NULL
+
+        lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
+        ids <- (0:length(clist[[curtab]]))
+        names(ids) <- c("None", lbls[,1])[1:length(ids)]
+        updateSelectInput(session, "deletecurve", choices=ids, selected=0)
+        updateSelectInput(session, "savecurve", choices=ids, selected=0)
+
+        # Update the special point selection menu
+        splist <- list()
+        for (i in (1:3)) {
+          if (length(clist[[i]]) > 0) {
+            listlbls <- NULL
+            splist <- c(splist, lapply((1:length(clist[[i]])),
+                                       function(j){
+                                         listlbls <<- c(listlbls, clist[[i]][[j]]$label)
+                                         lbls <- unlist(clist[[i]][[j]]$points[,"Description"], use.names=FALSE);
+                                         ids <- ((i*1000000)+j*1000)+(1:length(lbls)); names(ids) <- lbls;
+                                         return(ids)}))}
+          names(splist) <- listlbls
+        }
+        updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0), splist), selected=0)
+
+        serverenv$output[[paste0("plot", curtab)]] <- renderPlot({
+          if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
+          else if (curtab == 2) bif1parplot(clist[[2]], popts[[2]])
+          else bif2parplot(clist[[3]], popts[[3]])
+        },
+        height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
+        width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
 
         rm("curveList", envir=bifenv)
         assign("curveList", clist, envir=bifenv)
@@ -309,87 +442,80 @@ bifurcation <- function(model, state, parms) {
           rm("CurveList", envir = .GlobalEnv)
         }
         assign("CurveList", clist, envir = .GlobalEnv)
-
-        shinyjs::click("plotoptsapply")
       }
     })
 
-    # render the curve menu
-    output$curvemenu <- renderMenu({
-      input$plotoptsapply
+    observeEvent(input$savebtn, {
       curtab <- as.numeric(input$plottab)
       clist <- get("curveList", envir=bifenv)
+      savenr <- as.numeric(input$savecurve)
+      totalcurves <- as.numeric(length((clist[[curtab]])))
 
-      if (length((clist[[curtab]])) > 0) {
-        lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-        ids <- (1:length(clist[[curtab]]))
-        names(ids) <- lbls[,1]
-        sidebarMenu(
-          selectInput('deletecurve', 'Select curve', c("None" = 0, ids), selected=0),
-          actionButton("deletebtn", "Delete curve", icon("trash-alt"))
-        )
-      } else {
-        sidebarMenu(
-          selectInput('deletecurve', 'Select curve', c("None" = 0), selected=0),
-          actionButton("deletebtn", "Delete curve", icon("trash-alt"))
-        )
+      if ((totalcurves > 0) && (savenr > 0) && (savenr < (totalcurves + 1))) {
+        varname <- make.names(input$curvename, unique = TRUE)
+        if (exists(varname, envir = .GlobalEnv)) {
+          rm(varname, envir = .GlobalEnv)
+        }
+        assign(varname, clist[[curtab]][[savenr]], envir = .GlobalEnv)
       }
     })
 
-    lapply(1:3, function(nr){
-      serverenv$output[[paste0("plot", nr)]] <- renderPlot({
+    observeEvent(input$plotoptsapply, {
+      shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
+
+      isolate({
         curtab <- as.numeric(input$plottab)
-        input$plotoptsapply
-        input$curveClicked
+        clist <- get("curveList", envir=bifenv)
+        popts <- get("plotopts", envir=bifenv)
 
-        observeEvent(input$plotoptsapply, {
-          shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
-        })
+        popts[[curtab]]$xcol <- as.numeric(input[["xcol"]])
+        popts[[curtab]]$logx <- as.numeric(input[["logx"]])
+        popts[[curtab]]$xmin <- ifelse(input[["logx"]] == 1,
+                                       max(as.numeric(input[["xmin"]]), 1.0E-10), as.numeric(input[["xmin"]]))
+        popts[[curtab]]$xmax <- as.numeric(input[["xmax"]])
+        popts[[curtab]]$xlab <- ifelse(curtab == 1, (c("Time", names(state)))[popts[[curtab]]$xcol], (names(parms))[popts[[curtab]]$xcol])
+        popts[[curtab]]$ycol <- as.numeric(input[["ycol"]])
+        popts[[curtab]]$logy <- as.numeric(input[["logy"]])
+        popts[[curtab]]$ymin <- ifelse(input[["logy"]] == 1,
+                                       max(as.numeric(input[["ymin"]]), 1.0E-10), as.numeric(input[["ymin"]]))
+        popts[[curtab]]$ymax <- as.numeric(input[["ymax"]])
+        popts[[curtab]]$ylab <- ifelse(curtab < 3, (c("State variables", names(state)))[popts[[curtab]]$ycol],
+                                       (names(parms))[popts[[curtab]]$ycol])
 
-        isolate({
-          popts <- get("plotopts", envir=bifenv)
+        if (popts[[curtab]]$xmax < 1.0001*popts[[curtab]]$xmin) {
+          cat("Maximum of x-axis not significantly different from its minimum\n")
+          popts[[curtab]]$xmax <- 1.0001*popts[[curtab]]$xmin
+        }
+        if (popts[[curtab]]$ymax < 1.0001*popts[[curtab]]$ymin) {
+          cat("Maximum of y-axis not significantly different from its minimum\n")
+          popts[[curtab]]$ymax <- 1.0001*popts[[curtab]]$ymin
+        }
 
-          popts[[nr]]$xcol <- as.numeric(input[[paste0("xcol", nr)]])
-          popts[[nr]]$logx <- as.numeric(input[[paste0("logx", nr)]])
-          popts[[nr]]$xmin <- ifelse(input[[paste0("logx", nr)]] == 1, max(as.numeric(input[[paste0("xmin", nr)]]), 1.0E-10), as.numeric(input[[paste0("xmin", nr)]]))
-          popts[[nr]]$xmax <- as.numeric(input[[paste0("xmax", nr)]])
-          popts[[nr]]$xlab <- ifelse(nr == 1, (c("Time", names(state)))[popts[[nr]]$xcol], (names(parms))[popts[[nr]]$xcol])
-          popts[[nr]]$ycol <- as.numeric(input[[paste0("ycol", nr)]])
-          popts[[nr]]$logy <- as.numeric(input[[paste0("logy", nr)]])
-          popts[[nr]]$ymin <- ifelse(input[[paste0("logy", nr)]] == 1, max(as.numeric(input[[paste0("ymin", nr)]]), 1.0E-10), as.numeric(input[[paste0("ymin", nr)]]))
-          popts[[nr]]$ymax <- as.numeric(input[[paste0("ymax", nr)]])
-          popts[[nr]]$ylab <- ifelse(nr < 3, (c("State variables", names(state)))[popts[[nr]]$ycol], (names(parms))[popts[[nr]]$ycol])
+        if ((curtab < 3) && (popts[[curtab]]$ycol > 1)) {
+          popts[[curtab]]$y2col <- as.numeric(input[["y2col"]])
+          popts[[curtab]]$logy2 <- as.numeric(input[["logy2"]])
+          popts[[curtab]]$y2min <- ifelse(input[["logy2"]] == 1,
+                                          max(as.numeric(input[["y2min"]]), 1.0E-10), as.numeric(input[["y2min"]]))
+          popts[[curtab]]$y2max <- as.numeric(input[["y2max"]])
+          popts[[curtab]]$y2lab <- ifelse(curtab < 2, (names(state))[popts[[curtab]]$y2col-1], (names(parms))[popts[[curtab]]$y2col])
 
-          if (popts[[nr]]$xmax < 1.0001*popts[[nr]]$xmin) {
-            cat("Maximum of x-axis not significantly different from its minimum\n")
-            popts[[nr]]$xmax <- 1.0001*popts[[nr]]$xmin
-          }
-          if (popts[[nr]]$ymax < 1.0001*popts[[nr]]$ymin) {
+          if (popts[[curtab]]$y2max < 1.0001*popts[[curtab]]$y2min) {
             cat("Maximum of y-axis not significantly different from its minimum\n")
-            popts[[nr]]$ymax <- 1.0001*popts[[nr]]$ymin
+            popts[[curtab]]$y2max <- 1.0001*popts[[curtab]]$y2min
           }
-
-          if ((nr < 3) && (popts[[nr]]$ycol > 1)) {
-            popts[[nr]]$y2col <- as.numeric(input[[paste0("y2col", nr)]])
-            popts[[nr]]$logy2 <- as.numeric(input[[paste0("logy2", nr)]])
-            popts[[nr]]$y2min <- ifelse(input[[paste0("logy2", nr)]] == 1, max(as.numeric(input[[paste0("y2min", nr)]]), 1.0E-10), as.numeric(input[[paste0("y2min", nr)]]))
-            popts[[nr]]$y2max <- as.numeric(input[[paste0("y2max", nr)]])
-            popts[[nr]]$y2lab <- ifelse(nr < 2, (names(state))[popts[[nr]]$y2col-1], (names(parms))[popts[[nr]]$y2col])
-
-            if (popts[[nr]]$y2max < 1.0001*popts[[nr]]$y2min) {
-              cat("Maximum of y-axis not significantly different from its minimum\n")
-              popts[[nr]]$y2max <- 1.0001*popts[[nr]]$y2min
-            }
-          }
-        })
-
-        if (curtab == 1) biforbitplot(curveList[[1]], popts[[1]])
-        else if (curtab == 2) bif1parplot(curveList[[2]], popts[[2]])
-        else bif2parplot(curveList[[3]], popts[[3]])
+        }
 
         rm("plotopts", envir=bifenv)
         assign("plotopts", popts, envir=bifenv)
-      }, height = function() {0.75*session$clientData[[paste0("output_plot", nr, "_width")]]}, width = function() {0.99*session$clientData[[paste0("output_plot", nr, "_width")]]})
+      })
+
+      serverenv$output[[paste0("plot", curtab)]] <- renderPlot({
+        if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
+        else if (curtab == 2) bif1parplot(clist[[2]], popts[[2]])
+        else bif2parplot(clist[[3]], popts[[3]])
+      },
+      height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
+      width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
     })
   }
 

@@ -13,3 +13,4 @@ converty2y <- function(y, ymin1, ymax1, logy1, ymin2, ymax2, logy2) {
   }
   return(yval)
 }
+
