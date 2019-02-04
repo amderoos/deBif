@@ -1,0 +1,23 @@
+#############################
+# Cannibalism
+
+# The model has to be specified as a function that returns
+# the derivatives as a list. You can adapt the body below
+# to represent your model
+cannibalism <- function(t, state, parms) {
+  with(as.list(c(state, parms)), {
+
+    dJ = alpha*A - delta*J - beta*J*A
+    dA = delta*J - mu*A/(rho + beta*J)
+
+    return(list(c(dJ, dA)))
+  })
+}
+
+# The initial state of the system has to be specified as a named vector of state values.
+state <- c(J = 5.0, A = 100.0)
+
+# Parameters has to be specified as a named vector of parameters.
+parms <- c(alpha = 1.0, beta = 0.2, delta = 0.2, mu = 0.01, rho = 0.5)
+
+bifurcation(cannibalism, state, parms)
