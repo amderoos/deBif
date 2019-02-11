@@ -22,7 +22,7 @@ bif1parplot <- function(curvelist = NULL, popts) {
     if (popts$ycol == 1) {
       lapply((1:length(curvelist)), function(i) {
         lapply(2:ncol(curvelist[[i]]$points), function(j) {
-          evmax <- Re(curvelist[[i]]$eig.vals[,1])
+          evmax <- Re(curvelist[[i]]$eigvals[,1])
           sp <- (evmax < 0)
           x <- curvelist[[i]]$points[,1]
           y <- curvelist[[i]]$points[,j]
@@ -34,12 +34,22 @@ bif1parplot <- function(curvelist = NULL, popts) {
           x[sp] <- NA
           y[sp] <- NA
           lines(x, y, lty=popts$unstablelty, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+          if (!is.null(curvelist[[i]]$special.points)) {
+            lbls <- c(curvelist[[i]]$special.tags[,1])
+            bps <- (lbls %in% c("BP", "HP", "LP"))
+            if (any(bps)) {
+              x <- curvelist[[i]]$special.points[bps,1]
+              y <- curvelist[[i]]$special.points[bps,j]
+              points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+              text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+            }
+          }
         })
       })
       legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
     } else {
       lapply((1:length(curvelist)), function(i) {
-        evmax <- Re(curvelist[[i]]$eig.vals[,1])
+        evmax <- Re(curvelist[[i]]$eigvals[,1])
         sp <- (evmax < 0)
         x <- curvelist[[i]]$points[,1]
         y <- curvelist[[i]]$points[,popts$ycol]
@@ -51,10 +61,20 @@ bif1parplot <- function(curvelist = NULL, popts) {
         x[sp] <- NA
         y[sp] <- NA
         lines(x, y, lty=popts$unstablelty, col=popts$colors[1], lwd=popts$lwd)
+        if (!is.null(curvelist[[i]]$special.points)) {
+          lbls <- c(curvelist[[i]]$special.tags[,1])
+          bps <- (lbls %in% c("BP", "HP", "LP"))
+          if (any(bps)) {
+            x <- curvelist[[i]]$special.points[bps,1]
+            y <- curvelist[[i]]$special.points[bps,popts$ycol]
+            points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+            text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+          }
+        }
       })
       if (popts$y2col > 1) {
         lapply((1:length(curvelist)), function(i) {
-          evmax <- Re(curvelist[[i]]$eig.vals[,1])
+          evmax <- Re(curvelist[[i]]$eigvals[,1])
           sp <- (evmax < 0)
           x <- curvelist[[i]]$points[,1]
           y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
@@ -66,6 +86,16 @@ bif1parplot <- function(curvelist = NULL, popts) {
           x[sp] <- NA
           y[sp] <- NA
           lines(x, y, lty=popts$unstablelty, col=popts$colors[2], lwd=popts$lwd)
+          if (!is.null(curvelist[[i]]$special.points)) {
+            lbls <- c(curvelist[[i]]$special.tags[,1])
+            bps <- (lbls %in% c("BP", "HP", "LP"))
+            if (any(bps)) {
+              x <- curvelist[[i]]$special.points[bps,1]
+              y <- converty2y(curvelist[[i]]$special.points[bps,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+              points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+              text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+            }
+          }
         })
         legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
       }

@@ -4,8 +4,8 @@ processTabSwitch <- function(input, output, session, state, parms, bifenv) {
   # Update the delete and save menus
   clist <- get("curveList", envir=bifenv)
   lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-  ids <- (0:length(clist[[curtab]]))
-  names(ids) <- c("None", lbls[,1])[1:length(ids)]
+  ids <- c((0:length(clist[[curtab]])), -1)
+  names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
   updateSelectInput(session, "deletecurve", choices=ids, selected=0)
   updateSelectInput(session, "savecurve", choices=ids, selected=0)
 
@@ -45,7 +45,7 @@ processTabSwitch <- function(input, output, session, state, parms, bifenv) {
   updateSelectInput(session,  "logy2", selected=popts[[curtab]]$logy2)
   updateNumericInput(session, "y2min", value=popts[[curtab]]$y2min)
   updateNumericInput(session, "y2max", value=popts[[curtab]]$y2max)
-  popts[[curtab]]$y2lab <- ifelse(curtab < 2, (names(state))[popts[[curtab]]$y2col-1], (names(parms))[popts[[curtab]]$y2col])
+  popts[[curtab]]$y2lab <- (c("None", names(state)))[popts[[curtab]]$y2col]
 
   output[[paste0("plot", curtab)]] <- renderPlot({
     if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
@@ -63,13 +63,14 @@ processDeleteCurve <- function(input, output, session, bifenv) {
   deletenr <- as.numeric(input$deletecurve)
   totalcurves <- as.numeric(length((clist[[curtab]])))
 
-  if ((totalcurves > 0) && (deletenr > 0) && (deletenr < (totalcurves + 1))) {
+  if ((totalcurves > 0) && ((deletenr > 0) || (deletenr == -1)) && (deletenr < (totalcurves + 1))) {
 
-    clist[[curtab]][[deletenr]] <- NULL
+    if (deletenr == -1) clist[[curtab]] <- list()
+    else clist[[curtab]][[deletenr]] <- NULL
 
     lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-    ids <- (0:length(clist[[curtab]]))
-    names(ids) <- c("None", lbls[,1])[1:length(ids)]
+    ids <- c((0:length(clist[[curtab]])), -1)
+    names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
     updateSelectInput(session, "deletecurve", choices=ids, selected=0)
     updateSelectInput(session, "savecurve", choices=ids, selected=0)
 
@@ -90,7 +91,7 @@ processDeleteCurve <- function(input, output, session, bifenv) {
     width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
 
     # Update the special point selection menu
-    updateSpecialPointsList(session, bifenv)
+    updateSpecialPointsList(session, 0, bifenv)
   }
 }
 
@@ -100,12 +101,13 @@ processSaveCurve <- function(input, output, session, bifenv) {
   savenr <- as.numeric(input$savecurve)
   totalcurves <- as.numeric(length((clist[[curtab]])))
 
-  if ((totalcurves > 0) && (savenr > 0) && (savenr < (totalcurves + 1))) {
+  if ((totalcurves > 0) && ((savenr > 0) || (savenr == -1)) && (savenr < (totalcurves + 1))) {
     varname <- make.names(input$curvename, unique = TRUE)
     if (exists(varname, envir = .GlobalEnv)) {
       rm(varname, envir = .GlobalEnv)
     }
-    assign(varname, clist[[curtab]][[savenr]], envir = .GlobalEnv)
+    if (savenr == -1) assign(varname, clist[[curtab]], envir = .GlobalEnv)
+    else assign(varname, clist[[curtab]][[savenr]], envir = .GlobalEnv)
   }
 }
 
@@ -131,7 +133,7 @@ updateSelectedPoint <- function(input, session, state, parms, bifenv) {
   }
 }
 
-updateSpecialPointsList <- function(session, bifenv) {
+updateSpecialPointsList <- function(session, selected, bifenv) {
   clist <- get("curveList", envir=bifenv)
 
   splist <- list()
@@ -141,14 +143,14 @@ updateSpecialPointsList <- function(session, bifenv) {
       listlbls <- c(listlbls, unlist(lapply((1:length(clist[[i]])), function(j){return(clist[[i]][[j]]$label)})))
       splist <- c(splist, lapply((1:length(clist[[i]])),
                                  function(j){
-                                   lbls <- unlist(clist[[i]][[j]]$special.points[,"Description"], use.names=FALSE);
+                                   lbls <- unlist(clist[[i]][[j]]$special.tags[,"Description"], use.names=FALSE);
                                    ids <- ((i*1000000)+j*1000)+(1:length(lbls)); names(ids) <- lbls;
                                    return(ids)}))
       }
   }
   if (length(splist) > 0) {
     names(splist) <- listlbls
-    updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0), splist), selected=0)
+    updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0), splist), selected=selected)
   } else {
     updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0)), selected=0)
   }
@@ -189,12 +191,18 @@ processOptionsApply <- function(input, output, session, state, parms, bifenv) {
     popts[[curtab]]$y2min <- ifelse(input[["logy2"]] == 1,
                                     max(as.numeric(input[["y2min"]]), 1.0E-10), as.numeric(input[["y2min"]]))
     popts[[curtab]]$y2max <- as.numeric(input[["y2max"]])
-    popts[[curtab]]$y2lab <- ifelse(curtab < 2, (names(state))[popts[[curtab]]$y2col-1], (names(parms))[popts[[curtab]]$y2col])
+    popts[[curtab]]$y2lab <- (c("None", names(state)))[popts[[curtab]]$y2col]
 
     if (popts[[curtab]]$y2max < 1.0001*popts[[curtab]]$y2min) {
       cat("Maximum of y-axis not significantly different from its minimum\n")
       popts[[curtab]]$y2max <- 1.0001*popts[[curtab]]$y2min
     }
+  }
+
+  text2numeric <- function(oldval, newval){
+    newval2 <- gsub("[^0-9.E+-]*", "", newval)
+    if (!is.na(suppressWarnings(as.numeric(newval2)))) return (as.numeric(newval2))
+    else return(as.numeric(oldval))
   }
 
   if (curtab == 1) {
@@ -203,9 +211,15 @@ processOptionsApply <- function(input, output, session, state, parms, bifenv) {
     nopts$odemethod <- input[["method"]]
   }
   else {
-    nopts$rtol <- max(as.numeric(input[["rtol"]]), 1.0E-10)
-    nopts$atol <- max(as.numeric(input[["atol"]]), 1.0E-10)
-    nopts$iszero <- max(as.numeric(input[["iszero"]]), 1.0E-10)
+    nopts$rtol <- max(text2numeric(nopts$rtol, input[["rtol"]]), 1.0E-10)
+    updateTextInput(session, "rtol", value=sprintf("%.1E", nopts$rtol))
+    nopts$atol <- max(text2numeric(nopts$atol, input[["atol"]]), 1.0E-10)
+    updateTextInput(session, "atol", value=sprintf("%.1E", nopts$atol))
+    nopts$iszero <- max(text2numeric(nopts$iszero, input[["iszero"]]), 1.0E-10)
+    updateTextInput(session, "iszero", value=sprintf("%.1E", nopts$iszero))
+    nopts$jacdif <- max(text2numeric(nopts$jacdif, input[["jacdif"]]), 1.0E-10)
+    updateTextInput(session, "jacdif", value=sprintf("%.1E", nopts$jacdif))
+
     nopts$stepsize <- as.numeric(input[["stepsize"]])
     nopts$minstepsize <- max(as.numeric(input[["minstepsize"]]), 1.0E-10)
     nopts$maxiter <- max(as.numeric(input[["maxiter"]]), 1)
@@ -226,4 +240,10 @@ processOptionsApply <- function(input, output, session, state, parms, bifenv) {
   },
   height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
   width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
+}
+
+updateConsoleText <- function(session, addtext) {
+  if ("alltext" %in% names(session$userData)) session$userData$alltext <- paste(session$userData$alltext, addtext, sep = "")
+  else session$userData$alltext <- addtext
+  return(renderText({session$userData$alltext}))
 }
