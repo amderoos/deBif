@@ -115,6 +115,7 @@ processComputeButton <- function(input, output, session, model, state, parms, bi
     }
   }
 
+  # Update the save and delete curve menu
   lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
   ids <- c((0:length(clist[[curtab]])), -1)
   names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
@@ -130,9 +131,9 @@ processComputeButton <- function(input, output, session, model, state, parms, bi
   assign("CurveList", clist, envir = .GlobalEnv)
 
   output[[paste0("plot", curtab)]] <- renderPlot({
-    if (curtab == 1) biforbitplot(clist[[1]], popts[[1]])
-    else if (curtab == 2) bif1parplot(clist[[2]], popts[[2]])
-    else bif2parplot(clist[[3]], popts[[3]])
+    if (curtab == 1) biforbitplot(clist[[1]], output, session, popts[[1]])
+    else if (curtab == 2) bif1parplot(clist[[2]], output, session, popts[[2]])
+    else bif2parplot(clist[[3]], output, session, popts[[3]])
   },
   height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
   width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})

@@ -1,9 +1,9 @@
 #' Examples of phaseplane analysis of a system of ODEs
 #'
-#' \code{runExample}
+#' \code{deBifExample}
 #'
 #'
-#'   runExample(example)
+#'   deBifExample(example)
 #'
 #'
 #' Function runs one of the examples provided with the deBif package
@@ -14,7 +14,7 @@
 #'               is returned
 #'
 #' @export
-runExample <- function(example) {
+deBifExample <- function(example) {
   # locate all the shiny app examples that exist
   validExamples <- list.files(system.file("shiny-examples", package = "deBif"))
 
@@ -29,7 +29,7 @@ runExample <- function(example) {
   if (missing(example) || !nzchar(example) ||
       !example %in% validExamples) {
     stop(
-      'Please run `runExample()` with a valid example app as an argument.\n',
+      'Please run `deBifExample()` with a valid example app as an argument.\n',
       validExamplesMsg,
       call. = FALSE)
   }

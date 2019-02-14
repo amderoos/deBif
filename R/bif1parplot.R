@@ -1,4 +1,4 @@
-bif1parplot <- function(curvelist = NULL, popts) {
+bif1parplot <- function(curvelist = NULL, output, session, popts) {
   # Plot the bifurcation curves
   if ((popts$ycol > 1) && (popts$y2col > 1)) {
     par(mar = (as.numeric(popts$plotmar) + c(0, 0, 0, 1)))
@@ -21,6 +21,13 @@ bif1parplot <- function(curvelist = NULL, popts) {
   if (!is.null(curvelist) && (length(curvelist) > 0)) {
     if (popts$ycol == 1) {
       lapply((1:length(curvelist)), function(i) {
+        cnames <- colnames(curvelist[[i]]$points)
+        if (cnames[1] != popts$xlab) {
+          msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
+          return(NA)
+        }
         lapply(2:ncol(curvelist[[i]]$points), function(j) {
           evmax <- Re(curvelist[[i]]$eigvals[,1])
           sp <- (evmax < 0)
@@ -49,6 +56,19 @@ bif1parplot <- function(curvelist = NULL, popts) {
       legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
     } else {
       lapply((1:length(curvelist)), function(i) {
+        cnames <- colnames(curvelist[[i]]$points)
+        if (cnames[1] != popts$xlab) {
+          msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
+          return(NA)
+        }
+        if (cnames[as.numeric(popts$ycol)] != popts$ylab) {
+          msg <- paste0("Curve plotting skipped: variable '", popts$ylab, "' not one of the curve variables\n")
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
+          return(NA)
+        }
         evmax <- Re(curvelist[[i]]$eigvals[,1])
         sp <- (evmax < 0)
         x <- curvelist[[i]]$points[,1]
@@ -74,6 +94,13 @@ bif1parplot <- function(curvelist = NULL, popts) {
       })
       if (popts$y2col > 1) {
         lapply((1:length(curvelist)), function(i) {
+          cnames <- colnames(curvelist[[i]]$points)
+          if (cnames[as.numeric(popts$y2col)] != popts$y2lab) {
+            msg <- paste0("Curve plotting skipped: variable '", popts$y2lab, "' not one of the curve variables\n")
+            if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+            else cat(msg)
+            return(NA)
+          }
           evmax <- Re(curvelist[[i]]$eigvals[,1])
           sp <- (evmax < 0)
           x <- curvelist[[i]]$points[,1]

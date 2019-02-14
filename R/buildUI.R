@@ -33,13 +33,15 @@ buildUI <- function(state, parms, plotopts, numopts) {
             h4("State variables"),
             lapply(1:length(state),
                    function(i){numericInput(inputId=paste0(names(state[i]), "_1"), label=h6(names(state[i])),
-                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")}),
+            tabName = "state1tab"
           ),
           menuItem(
             h4("Parameters"),
             lapply(1:length(parms),
                    function(i){numericInput(inputId=paste0(names(parms[i]), "_1"), label=h6(names(parms[i])),
-                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")}),
+            tabName = "pars1tab"
           ),
           br(),
           actionButton("computebtn", "Compute", icon("forward")),
@@ -54,13 +56,15 @@ buildUI <- function(state, parms, plotopts, numopts) {
             h4("State variables"),
             lapply(1:length(state),
                    function(i){numericInput(inputId=paste0(names(state[i]), "_2"), label=h6(names(state[i])),
-                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")}),
+            tabName = "state2tab"
           ),
           menuItem(
             h4("Parameters"),
             lapply(1:length(parms),
                    function(i){numericInput(inputId=paste0(names(parms[i]), "_2"), label=h6(names(parms[i])),
-                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")}),
+            tabName = "pars2tab"
           ),
           br(),
           splitLayout(cellWidths = c("50%", "50%"),
@@ -77,13 +81,15 @@ buildUI <- function(state, parms, plotopts, numopts) {
             h4("State variables"),
             lapply(1:length(state),
                    function(i){numericInput(inputId=paste0(names(state[i]), "_3"), label=h6(names(state[i])),
-                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")})
+                                            value=as.numeric(state[i]),step=0.1*as.numeric(state[i]),width="95%")}),
+            tabName = "state3tab"
           ),
           menuItem(
             h4("Parameters"),
             lapply(1:length(parms),
                    function(i){numericInput(inputId=paste0(names(parms[i]), "_3"), label=h6(names(parms[i])),
-                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")})
+                                            value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")}),
+            tabName = "pars3tab"
           ),
           br(),
           splitLayout(cellWidths = c("50%", "50%"),
@@ -96,16 +102,23 @@ buildUI <- function(state, parms, plotopts, numopts) {
       ),
       sidebarMenu(
         h4("Curve management", align = "center"),
-        menuItem(h4("Delete curve"),
-                 selectInput('deletecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
-                 actionButton("deletebtn", "Delete curve"),
-                 tabName = "deletetab"
+        menuItem(h4("Load curves"),
+                 textInput("loadcurve", "Give a valid R variable name"),
+                 splitLayout(cellWidths = c("50%", "50%"),
+                             actionButton("appendbtn", "Append"),
+                             actionButton("replacebtn", "Replace")),
+                 tabName = "loadtab"
         ),
-        menuItem(h4("Save curve"),
+        menuItem(h4("Save curves"),
                  selectInput('savecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
                  textInput("curvename", "Give a valid R variable name"),
                  actionButton("savebtn", "Save curve"),
                  tabName = "savetab"
+        ),
+        menuItem(h4("Delete curves"),
+                 selectInput('deletecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                 actionButton("deletebtn", "Delete curve"),
+                 tabName = "deletetab"
         )
       )
     ),

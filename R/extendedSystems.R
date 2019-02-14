@@ -1,143 +1,8 @@
-extsys <- function(t, state, parms, model, ystart = NULL, tanvec = NULL, condfun = NULL, codim = 1, nopts = NULL) {
-  # Evaluate the equations
-  rhsval <- unlist(model(t, state, parms))
-  names(rhsval) <- NULL
-
-  # add possible conditions for codim > 1 continuation
-  if (!is.null(condfun)) {
-    rhsval <- condfun(state, parms, model, codim, nopts = nopts, rhsval)
-    names(rhsval) <- NULL
-  }
-
-  # add the dot product of the difference between the current state and
-  # the initial guess with tangent vector for pseudo-arclength continuation
-  if (!is.null(ystart) && !is.null(tanvec)) {
-    rhsval <- c(unlist(rhsval), c((state - ystart) %*% tanvec))
-  }
-
-  return(list(rhsval))
-}
-
-BPcondition <- function(state, parms, model, codim, nopts, rhsval) {
-
-  #  When codim == 2 the Jacobian equals the following square
-  #  (n+2)x(n+2) matrix of partial derivatives:
-  #
-  #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
-  #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
-  #           |   .       .       .    ...    .   |
-  #      Df = |   .       .       .    ...    .   |
-  #           |dFm/dp1 dFm/dp2 dFm/dx1 ... dFm/dxn|
-  #           |   NA      NA      NA   ...    NA  |
-  #
-  # Here is the vector of state variables (lenght n) and
-  # m = (n+1)
-  #
-  # Otherwise, when codim == 1 the Jacobian equals the following
-  # square (n+1)x(n+1) matrix
-  #
-  #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
-  #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
-  #           |   .       .    ...    .   |
-  #      Df = |   .       .    ...    .   |
-  #           |   .       .    ...    .   |
-  #           |dFm/dp1 dFm/dx1 ... dFm/dxn|
-  #
-  # In which m = n+1 (i.e. equal to the number of state variables plus 1).
-
-  rhsdim <- length(unlist(rhsval))
-  jac <- jacobian.full(y=state[1:(codim + rhsdim)], func=model, parms=parms, pert = nopts$jacdif)
-
-  # If codim == 2 the Jacobian has two rows of NA at the end, because
-  # the state contains 2 free parameters and hence the dimension of the vector
-  # y=state is 2 larger than the right-hand side of the system of ODEs. Delete
-  # the last row and 2nd column of the Jacobian, the latter being the derivative
-  # w.r.t. second free parameters
-
-  # Extract the restricted Jacobian of the system
-  Fx <- jac[(1:rhsdim), ((codim+1):(codim+rhsdim))]
-
-  # Extract F_p(x, p)
-  Fp <- jac[(1:rhsdim), 1]
-
-  # The extended system to solve for is see the Matcont documentation (Branch
-  # point locator, page 36, eq. 41)
-  #
-  #  F(x, p) + b*v   = 0
-  #  (F_x(x, p))^T v = 0
-  #  v^T F_p(x, p)   = 0
-  #  v^T v - 1       = 0
-  #
-  #  with initial conditions b = 0 and v the eigenvector of the matrix
-  #  (F_x(x, p))^T pertaining to the eigenvalue with the smallest norm.
-  #  The unknowns are:
-  #
-  #  p:  the bifurcation parameter
-  #  x:  the solution point
-  #  b:  an additional value
-  #  v:  the eigenvector (same dimension as x)
-  #
-
-  # The value of ncol(jac) equals the number of free parameters plus the
-  # the number of state variables
-  eigval = unlist(state[codim + rhsdim + 1]);
-  eigvec = unlist(state[(codim + rhsdim + 2):length(state)]);
-
-  #  F(x, p) + b*v   = 0
-  rhsval <- unlist(rhsval) + eigval*eigvec
-
-  # (F_x(x, p))^T v = 0
-  rhsval <- c(rhsval, c(t(Fx) %*% eigvec))
-
-  # v^T F_p(x, p)   = 0
-  rhsval <- c(rhsval, c(eigvec %*% Fp))
-
-  # v^T v - 1       = 0
-  rhsval <- c(rhsval, (c(eigvec %*% eigvec) - 1))
-
-  return(rhsval)
-}
-
-HPcondition <- function(state, parms, model, codim, nopts, rhsval) {
-
-  #  When codim == 2 the Jacobian equals the following square
-  #  (n+2)x(n+2) matrix of partial derivatives:
-  #
-  #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
-  #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
-  #           |   .       .       .    ...    .   |
-  #      Df = |   .       .       .    ...    .   |
-  #           |dFm/dp1 dFm/dp2 dFm/dx1 ... dFm/dxn|
-  #           |   NA      NA      NA   ...    NA  |
-  #
-  # Here is the vector of state variables (length n) and
-  # m = (n+1)
-  #
-  # Otherwise, when codim == 1 the Jacobian equals the following
-  # square (n+1)x(n+1) matrix
-  #
-  #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
-  #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
-  #           |   .       .    ...    .   |
-  #      Df = |   .       .    ...    .   |
-  #           |   .       .    ...    .   |
-  #           |dFm/dp1 dFm/dx1 ... dFm/dxn|
-  #
-  # In which m = n+1 (i.e. equal to the number of state variables plus 1).
-
-  jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
-
-  # If codim == 2 the Jacobian has two rows of NA at the end, because the state
-  # contains 2 free parameters and hence the dimension of the vector y=state is
-  # 2 larger than the right-hand side of the system of ODEs.
-  # Extract the restricted Jacobian of the system
-  A <- jac[(1:(nrow(jac)-codim)), ((codim+1):ncol(jac))]
-
-  # Now construct the bialternate matrix product of 2A and I.
+bialt2AI <- function(A) {
+  # Constructs the bialternate matrix product of 2A and I.
   #
   # See pages 485-487 in Kuznetsov, 1995; Elements of Applied Bifurcation
   # Analysis In particular, figure 10.8 and the equation at the top of page 487.
-
   n <- ncol(A)
   m <-n*(n-1)/2
 
@@ -160,47 +25,56 @@ HPcondition <- function(state, parms, model, codim, nopts, rhsval) {
 
   twoAI <- (R == Q)*(-Aps) + ((R != P) & (S == Q))*Apr + ((R == P) & (S == Q))*(App + Aqq) + ((R == P) & (S != Q))*Aqs + (S == P)*(-Aqr)
 
-  # And return the determinant of the bialternate product
-
-  return(c(unlist(rhsval), det(twoAI)))
+  return(twoAI)
 }
 
-LPcondition <- function(state, parms, model, codim, nopts, rhsval) {
+approxNullVec <- function(A) {
+  # Find the eigenvector of the matrix A pertaining to the eigenvalue with
+  # smallest absolute value
+  eig <- eigen(A)
+  minindx <- which.min(abs(Re(eig$values)))
+  eigvec <- c(eig$vectors[,minindx])
+  return (as.numeric(eigvec))
+}
 
-  #  When codim == 2 the Jacobian equals the following square
-  #  (n+2)x(n+2) matrix of partial derivatives:
+TangentVecEQ <- function(state, parms, model, statedim, freeparsdim, nopts) {
+
+  # Routine calculates the tangent vector to the curve determined by the equation
+  #
+  #                           F(x, p1) = 0
+  #
+  # This is a system of n equations, in which n is the length of the state variable
+  # vector (given by statedim)
+
+  #  When freeparsdim == 2 the Jacobian equals the following square (n+2)x(n+2)
+  #  matrix of partial derivatives:
   #
   #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
   #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
   #           |   .       .       .    ...    .   |
   #      Df = |   .       .       .    ...    .   |
-  #           |dFm/dp1 dFm/dp2 dFm/dx1 ... dFm/dxn|
+  #           |dFn/dp1 dFn/dp2 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA      NA   ...    NA  |
   #           |   NA      NA      NA   ...    NA  |
   #
-  # Here is the vector of state variables (length n) and
-  # m = (n+1)
-  #
-  # Otherwise, when codim == 1 the Jacobian equals the following
-  # square (n+1)x(n+1) matrix
+  # Otherwise, when freeparsdim == 1 the Jacobian equals the following square
+  # (n+1)x(n+1) matrix
   #
   #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
   #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
   #           |   .       .    ...    .   |
   #      Df = |   .       .    ...    .   |
   #           |   .       .    ...    .   |
-  #           |dFm/dp1 dFm/dx1 ... dFm/dxn|
+  #           |dFn/dp1 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA   ...    NA  |
   #
-  # In which m = n+1 (i.e. equal to the number of state variables plus 1).
-
   jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
 
-  # If codim == 2 the Jacobian has two rows of NA at the end, because
-  # the state contains 2 free parameters and hence the dimension of the vector
-  # y=state is 2 larger than the right-hand side of the system of ODEs. Delete
-  # the last row and 2nd column of the Jacobian, the latter being the derivative
-  # w.r.t. second free parameters
-  if (codim == 2) jac <- jac[(1:(nrow(jac)-1)), c(1, (3:ncol(jac)))]
+  # If freeparsdim == 2 delete the last row and 2nd column of the Jacobian, the
+  # latter being the derivative w.r.t. second free parameters
+  jac <- jac[(1:(statedim+1)), c(1, ((freeparsdim+1):(freeparsdim+statedim)))]
 
+  # Set the last row with NA to 0
   jac[nrow(jac),] <- 0
 
   # Estimate the condition numbers
@@ -218,42 +92,305 @@ LPcondition <- function(state, parms, model, codim, nopts, rhsval) {
   jac[nrow(jac),maxind] <- 1
   tvlp <- solve(jac, c(rep(0, (nrow(jac)-1)), 1))
   names(tvlp) <- NULL
+  jac[nrow(jac),] <- NA
 
-  return(c(unlist(rhsval), tvlp[1]))
+  return (list(jacobian = jac, tanvec = tvlp))
 }
 
-initBP <- function(state, parms, model, tanvec, codim, starttype, nopts) {
-  #  The Jacobian equals the following square (n+2)x(n+2) matrix of partial
-  #  derivatives:
+ExtSystem <- function(t, state, parms, model, ystart = NULL, tanvec = NULL, condfun = NULL, statedim, freeparsdim, nopts = NULL) {
+  # Evaluate the equations
+  rhsval <- unlist(model(t, state, parms))
+  names(rhsval) <- NULL
+
+  # add possible conditions for freeparsdim > 1 continuation
+  if (!is.null(condfun)) {
+    for (i in (1:length(condfun))) {
+      rhsval <- do.call(condfun[[i]], list(state, parms, model, statedim, freeparsdim, nopts = nopts, rhsval))
+    }
+    names(rhsval) <- NULL
+  }
+
+  # add the dot product of the difference between the current state and
+  # the initial guess with tangent vector for pseudo-arclength continuation
+  if (!is.null(ystart) && !is.null(tanvec)) {
+    rhsval <- c(unlist(rhsval), c((state - ystart) %*% tanvec))
+  }
+
+  return(list(rhsval))
+}
+
+BPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+  jac <- res$jacobian
+  jac[nrow(jac),] <- res$tanvec
+
+  return(c(unlist(rhsval), det(jac)))
+}
+
+BPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  # Continuation of a branching point is carried out using the defining system
+  # eq. 41 on page 36 of the Matcont documentation (august 2011):
+  #
+  #  F(x, p) + b*v   = 0
+  #  (F_x(x, p))^T v = 0
+  #  v^T F_p(x, p)   = 0
+  #  v^T v - 1       = 0
+  #
+  #  with initial conditions b = 0 and v the eigenvector of the matrix
+  #  (F_x(x, p))^T pertaining to the eigenvalue with the smallest norm.
+  #  The unknowns are:
+  #
+  #  p:  the bifurcation parameter
+  #  x:  the solution point
+  #  b:  an additional value
+  #  v:  the eigenvector (same dimension as x)
+  #
+  # This function is only called when freeparsdim == 2, in which case the
+  # Jacobian equals the following square (n+2)x(n+2) matrix of partial
+  # derivatives:
   #
   #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
   #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
   #           |   .       .       .    ...    .   |
   #      Df = |   .       .       .    ...    .   |
-  #           |dFm/dp1 dFm/dp2 dFm/dx1 ... dFm/dxn|
+  #           |dFn/dp1 dFn/dp2 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA      NA   ...    NA  |
   #           |   NA      NA      NA   ...    NA  |
   #
-  # Here is state the vector of state variables (length n) and m = (n+1)
+  jac <- jacobian.full(y=state[1:(freeparsdim + statedim)], func=model, parms=parms, pert = nopts$jacdif)
 
+  # Extract the restricted Jacobian of the system
+  Fx <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # Extract F_p(x, p)
+  Fp <- jac[(1:statedim), 1]
+
+  # Extract the value of b and v from the state
+  eigval = unlist(state[freeparsdim + statedim + 1]);
+  eigvec = unlist(state[(freeparsdim + statedim + 2):length(state)]);
+
+  #  F(x, p) + b*v   = 0
+  rhsval <- unlist(rhsval)
+  rhsval[1:length(eigvec)] <- rhsval[1:length(eigvec)] + eigval*eigvec
+
+  # (F_x(x, p))^T v = 0
+  rhsval <- c(rhsval, c(t(Fx) %*% eigvec))
+
+  # v^T F_p(x, p)   = 0
+  rhsval <- c(rhsval, c(eigvec %*% Fp))
+
+  # v^T v - 1       = 0
+  rhsval <- c(rhsval, (c(eigvec %*% eigvec) - 1))
+
+  return(rhsval)
+}
+
+HPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  #  When freeparsdim == 2 the Jacobian equals the following square (n+2)x(n+2)
+  #  matrix of partial derivatives:
+  #
+  #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
+  #           |   .       .       .    ...    .   |
+  #      Df = |   .       .       .    ...    .   |
+  #           |dFn/dp1 dFn/dp2 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA      NA   ...    NA  |
+  #           |   NA      NA      NA   ...    NA  |
+  #
+  # Otherwise, when freeparsdim == 1 the Jacobian equals the following square
+  # (n+1)x(n+1) matrix
+  #
+  #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
+  #           |   .       .    ...    .   |
+  #      Df = |   .       .    ...    .   |
+  #           |   .       .    ...    .   |
+  #           |dFn/dp1 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA   ...    NA  |
+  #
+  jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
+
+  # Extract the restricted Jacobian of the system
+  A <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # And return the determinant of the bialternate product
+  twoAI <-bialt2AI(A)
+
+  return(c(unlist(rhsval), det(twoAI)))
+}
+
+HPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  #  When freeparsdim == 2 the Jacobian equals the following square (n+2)x(n+2)
+  #  matrix of partial derivatives:
+  #
+  #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
+  #           |   .       .       .    ...    .   |
+  #      Df = |   .       .       .    ...    .   |
+  #           |dFn/dp1 dFn/dp2 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA      NA   ...    NA  |
+  #           |   NA      NA      NA   ...    NA  |
+  #
+  # Otherwise, when freeparsdim == 1 the Jacobian equals the following square
+  # (n+1)x(n+1) matrix
+  #
+  #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
+  #           |   .       .    ...    .   |
+  #      Df = |   .       .    ...    .   |
+  #           |   .       .    ...    .   |
+  #           |dFn/dp1 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA   ...    NA  |
+  #
+  jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
+
+  # Extract the restricted Jacobian of the system
+  A <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # And return the determinant of the bialternate product
+  twoAI <-bialt2AI(A)
+
+  return(c(unlist(rhsval), det(twoAI)))
+}
+
+LPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+
+  return(c(unlist(rhsval), det(res$jac[(1:statedim),((freeparsdim+1):(freeparsdim+statedim))])))
+}
+
+LPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  # Continuation of a limitpoint is carried out using the defining system
+  # (10.97) on page 515 of Kuznetsov (1996):
+  #
+  #  F(x, p)                 = 0
+  #  F_x(x, p) q             = 0
+  #  (F_x(x, p))^T p - eps*p = 0
+  #  q^T q - 1               = 0
+  #  p^T p - 1               = 0
+  #
+  #  with initial conditions b = 0 and v the eigenvector of the matrix
+  #  (F_x(x, p))^T pertaining to the eigenvalue with the smallest norm.
+  #  The unknowns are:
+  #
+  #  p:   the bifurcation parameter
+  #  x:   the solution point
+  #  eps: an additional value
+  #  q:   the eigenvector of F_x pertaining to the 0 eigenvalue
+  #  p:   the eigenvector of (F_x)^T pertaining to the 0 eigenvalue
+  #
+  # The advantage of this defining system is that detection of Bogdanov-Takens
+  # points and cusp point are straightforward
+
+  # This function is only called when freeparsdim == 2, in which case the
+  # Jacobian equals the following square (n+2)x(n+2) matrix of partial
+  # derivatives:
+  # This function is only called when freeparsdim == 2, in which case the
+  # Jacobian equals the following square (n+2)x(n+2) matrix of partial
+  # derivatives:
+  #
+  #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
+  #           |   .       .       .    ...    .   |
+  #      Df = |   .       .       .    ...    .   |
+  #           |dFn/dp1 dFn/dp2 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA      NA   ...    NA  |
+  #           |   NA      NA      NA   ...    NA  |
+  #
+  jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
+
+  # Extract the restricted Jacobian of the system
+  A <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # Extract the additional variables from the state
+  eps = unlist(state[freeparsdim + statedim + 1]);
+  q = unlist(state[(freeparsdim + statedim + 2):(freeparsdim + statedim + 1 + statedim)]);
+  p = unlist(state[(freeparsdim + statedim + 2 + statedim):(freeparsdim + statedim + 1 + 2*statedim)]);
+
+  # Add the additional values
+  # A q = 0
+  rhsval <- c(unlist(rhsval), c(A %*% q))
+
+  # A^T p - eps*p = 0
+  rhsval <- c(unlist(rhsval), c((t(A) %*% p) - eps*p))
+
+  # <q, q) - 1 =
+  rhsval <- c(unlist(rhsval), c((q %*% q) - 1))
+
+  # <p, p) - 1 =
+  rhsval <- c(unlist(rhsval), c((p %*% p) - 1))
+
+  return(unlist(rhsval))
+}
+
+HP_BTtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+  jac <- res$jac[(1:statedim),(2:(statedim+1))]
+
+  return(c(unlist(rhsval), det(jac)))
+}
+
+LP_BTtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  # Extract the additional variables from the state
+  q = unlist(state[(freeparsdim + statedim + 2):(freeparsdim + statedim + 1 + statedim)]);
+  p = unlist(state[(freeparsdim + statedim + 2 + statedim):(freeparsdim + statedim + 1 + 2*statedim)]);
+
+  # See pg 515 of Kuznetsov (1996), just below eq. (10.97)
+
+  return(c(unlist(rhsval), as.numeric(p %*% q)))
+}
+
+LP_CPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+
+  # Extract the additional variables from the state
+  q = unlist(state[(freeparsdim + statedim + 2):(freeparsdim + statedim + 1 + statedim)]);
+  p = unlist(state[(freeparsdim + statedim + 2 + statedim):(freeparsdim + statedim + 1 + 2*statedim)]);
+
+  # The quantity B(q, q) can be computed most easily using a directional derivative
+  # see eq. (10.52) and its approximation some lines below (10.52) on page 490 of
+  # Kuznetsov (1996)
+  s <- state
+  s[(freeparsdim+1):(freeparsdim + statedim)] <- s[(freeparsdim+1):(freeparsdim + statedim)] + sqrt(nopts$jacdif)*q
+  rhsP <- unlist(model(0, s, parms))
+  s <- state
+  s[(freeparsdim+1):(freeparsdim + statedim)] <- s[(freeparsdim+1):(freeparsdim + statedim)] - sqrt(nopts$jacdif)*q
+  rhsM <- unlist(model(0, s, parms))
+  Bqq <- (rhsP + rhsM)/nopts$jacdif
+
+  # See bottom of pg 514 of Kuznetsov (1996), just above eq. (10.97)
+
+  return(c(unlist(rhsval), as.numeric(p %*% Bqq)))
+}
+
+initBP <- function(state, parms, model, tanvec, statedim, freeparsdim, starttype, nopts) {
+
+  # Compute the Jacobian
   jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
 
   # Extract the restricted Jacobian of the system.
-  # Because the initial point is BP, codim is known to equal 2
-  Fx <- jac[(1:(nrow(jac)-codim)), ((codim+1):ncol(jac))]
+  # Because the initial point is BP, freeparsdim is known to equal 2
+  Fx <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # Initialize the eigenvalue estimate to 0
+  eigval <- 0.0
 
   # Find the eigenvector of (F_x(x, p))^T pertaining to the eigenvalue with
   # smallest absolute value
-  eig <- eigen(t(Fx))
-  minindx <- which.min(abs(Re(eig$values)))
-  eigvec <- c(eig$vectors[,minindx])
-  # Initialize the eigenvalue estimate to 0
-  eigval <- 0.0
+  eigvec <- approxNullVec(t(Fx))
 
   return(list(y = c(state, eigval, eigvec), tanvec = tanvec))
 }
 
-initEQ <- function(state, parms, model, tanvec, codim, starttype, nopts) {
-  if(starttype == "BP") {
+initEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, starttype, nopts) {
+  if (starttype == "BP") {
     #  The Jacobian equals the following square (n+1)x(n+1) matrix of partial
     #  derivatives:
     #
@@ -274,16 +411,18 @@ initEQ <- function(state, parms, model, tanvec, codim, starttype, nopts) {
     D <- jac
 
     # Approximate the vector q1 with the stored tangent vector
-    q1 <- tanvec
+    q1 <- as.numeric(c(tanvec))
+    names(q1) <- names(state)
 
     # Solve the vector q2 from D q2 = 0
     eig <- eigen(D)
     minindx <- which.min(abs(Re(eig$values)))
     q2 <- as.numeric(c(eig$vectors[,minindx]))
+    names(q2) <- names(state)
 
     # Extract the (n+1)xn matrix (J(0))^T (see eq.(10.61)-(10.63) on pg. 499 of
     # Kuznetsov (1996))
-    JT <- t(jac[(1:(nrow(jac)-codim)), (1:ncol(jac))])
+    JT <- t(jac[(1:(nrow(jac)-freeparsdim)), (1:ncol(jac))])
 
     # Solve the vector phi from (J(0))^T phi = 0. According to Kuznetsov (1996,
     # pg. 497, eq. (10.59)) there is a unique vector (up to scalar multiple) phi
@@ -313,22 +452,20 @@ initEQ <- function(state, parms, model, tanvec, codim, starttype, nopts) {
     # defined in eq. (10.56) on pg. 496 of Kuznetsov (1996). The vectors
     # B(q1,q2) and B(q2, q2) of length n (n equals the number of state
     # variables) are needed to compute the factors b12 and b22 (see below)
-    Bq1q2 <- unlist(lapply((1:(length(state)-codim)),
-                           function(i) {
-                             fun <- function(x) {res <- unlist(model(0, x, parms)); return(res[i])}
-                             bb <- hessian(fun, state, pert = nopts$jacdif)
-                             q1m <- matrix(as.numeric(q1), nrow(bb), ncol(bb), byrow = FALSE)
-                             q2m <- matrix(as.numeric(q2), nrow(bb), ncol(bb), byrow = TRUE)
-                             return(sum(sum((bb * q1m) * q2m)))
-                           }))
-    Bq2q2 <- unlist(lapply((1:(length(state)-codim)),
-                           function(i) {
-                             fun <- function(x) {res <- unlist(model(0, x, parms)); return(res[i])}
-                             bb <- hessian(fun, state, pert = nopts$jacdif)
-                             q1m <- matrix(as.numeric(q2), nrow(bb), ncol(bb), byrow = FALSE)
-                             q2m <- matrix(as.numeric(q2), nrow(bb), ncol(bb), byrow = TRUE)
-                             return(sum(sum((bb * q1m) * q2m)))
-                           }))
+
+    # The quantity B(q2, q2) can be computed most easily using a directional derivative
+    # see eq. (10.52) and its approximation some lines below (10.52) on page 490 of
+    # Kuznetsov (1996)
+    rhsP1 <- unlist(model(0, state + sqrt(nopts$jacdif)*(q1 + q2), parms))
+    rhsM1 <- unlist(model(0, state - sqrt(nopts$jacdif)*(q1 + q2), parms))
+    rhsP2 <- unlist(model(0, state + sqrt(nopts$jacdif)*(q1 - q2), parms))
+    rhsM2 <- unlist(model(0, state - sqrt(nopts$jacdif)*(q1 - q2), parms))
+
+    Bq1q2 <- (rhsP1 + rhsM1 - rhsP2 - rhsM2)/(4*nopts$jacdif)
+
+    rhsP <- unlist(model(0, state + sqrt(nopts$jacdif)*q2, parms))
+    rhsM <- unlist(model(0, state - sqrt(nopts$jacdif)*q2, parms))
+    Bq2q2 <- (rhsP + rhsM)/nopts$jacdif
 
     # The inner product of phi with the vectors B(q1,q2) and B(q2, q2) of length
     # n (n equals the number of state variables) yields the factors b12 and b22
@@ -353,22 +490,44 @@ initEQ <- function(state, parms, model, tanvec, codim, starttype, nopts) {
   } else return(NULL)
 }
 
-testEQ <- function(state, parms, model, tanvec, extjac, lastvals, nopts, output) {
+initLP <- function(state, parms, model, tanvec, statedim, freeparsdim, starttype, nopts) {
+
+  # To continue an LP curve we use the extended system of eqs. (10.76) on pg. 504 in
+  # Kuznetsov (1996), as the matrix of this system has full rank at a Bogdanov-Takens
+  # point. As additional values we need then an approximation to the null vector of
+  # the Jacobian q, which we also use as additional vector q0.
+
+  # Compute the Jacobian
+  jac <- jacobian.full(y=state, func=model, parms=parms, pert = nopts$jacdif)
+
+  # Extract the restricted Jacobian of the system.
+  # Because the initial point is BP, freeparsdim is known to equal 2
+  Fx <- jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))]
+
+  # Initialize the eigenvalue estimate to 0
+  eigval <- 0.0
+
+  # Find the eigenvector of F_x(x, p) pertaining to the eigenvalue with
+  # smallest absolute value
+  q <- approxNullVec(Fx)
+
+  # Find the eigenvector of (F_x(x, p))^T pertaining to the eigenvalue with
+  # smallest absolute value
+  p <- approxNullVec(t(Fx))
+
+  return(list(y = c(state, eigval, as.numeric(q), as.numeric(p))))
+}
+
+analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
   if (exists("deBifdebug", envir = .GlobalEnv)) debug <- get("deBifdebug", envir = .GlobalEnv)
   else debug <- FALSE
 
-  rhsval <- unlist(model(0, state, parms))
-  rhsdim <- length(rhsval)
-  names(rhsval) <- NULL
-
-  hpval <- HPcondition(state, parms, model, codim = 1, nopts, NULL)
-  lpval <- tanvec[1]
+  bpval <- BPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  names(bpval) <- NULL
+  hpval <- HPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  names(hpval) <- NULL
+  lpval <- LPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
   names(lpval) <- NULL
-
-  # See pg. 499, eq. (10.62) in Kuznetsov (1996). The variable extjac is the
-  # extended Jacobian with the tangent to the solution curve added as additional
-  # row
-  bpval <- det(extjac)
 
   testvals <- list()
   testvals$bpval <- unlist(bpval)
@@ -387,14 +546,10 @@ testEQ <- function(state, parms, model, tanvec, extjac, lastvals, nopts, output)
       biftype = "BP"
     }
     if (!is.null(biftype)) {
-      cfun <- get(paste0(biftype, "condition"), mode = "function")
-      if (biftype == "BP") {
-        initres <- initBP(state, parms, model, tanvec, 1, "EQ", nopts)
-        if (!is.null(initres)) guess <- initres$y
-      } else guess <- state
-
-      res <- tryCatch(stode(guess, time = 0, func = extsys, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
-                            maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = cfun, codim = 1, nopts = nopts),
+      cfun <- get(paste0(biftype, "test"), mode = "function")
+      res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                            maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(cfun),
+                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
                         if (debug) cat(msg)
@@ -415,11 +570,11 @@ testEQ <- function(state, parms, model, tanvec, extjac, lastvals, nopts, output)
         jac <- jacobian.full(y=y, func=model, parms=parms, pert = nopts$jacdif)
 
         # Compute the eigenvalues of the restricted Jacobian
-        eig <- eigen(jac[(1:rhsdim), (2:ncol(jac))])
+        eig <- eigen(jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))])
 
         # Sort them on decreasing real part
         eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
-        names(eigval) <-  unlist(lapply((1:rhsdim), function(i){paste0("Eigenvalue", i)}))
+        names(eigval) <-  unlist(lapply((1:statedim), function(i){paste0("Eigenvalue", i)}))
 
         # Append the current tangent vector as the last row to the jacobian to
         # preserve direction. See the matcont manual at
@@ -447,6 +602,174 @@ testEQ <- function(state, parms, model, tanvec, extjac, lastvals, nopts, output)
         if (biftype == "BP") msg <- "Locating branching point failed\n"
         else if (biftype == "HP") msg <- "Locating Hopf bifurcation point failed\n"
         else msg <- "Locating limit point failed\n"
+
+        if (debug) cat(msg)
+        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+      }
+    }
+  }
+  return(testvals)
+}
+
+analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
+  if (exists("deBifdebug", envir = .GlobalEnv)) debug <- get("deBifdebug", envir = .GlobalEnv)
+  else debug <- FALSE
+
+  btval <- HP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  names(btval) <- NULL
+
+  testvals <- list()
+  testvals$btval <- unlist(btval)
+  biftype <- NULL
+
+  if (!is.null(lastvals)) {
+    if (!is.null(lastvals$btval) && ((lastvals$btval)*btval < -(nopts$atol*nopts$atol))) {
+      biftype = "BT"
+    }
+    if (!is.null(biftype)) {
+      cfun <- get(paste0("HP_", biftype, "test"), mode = "function")
+      res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                            maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(HPcontinuation, cfun),
+                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
+                      warning = function(e) {
+                        msg <- gsub(".*:", "Warning in rootSolve:", e)
+                        if (debug) cat(msg)
+                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        return(NULL)
+                      },
+                      error = function(e) {
+                        msg <- gsub(".*:", "Error in rootSolve:", e)
+                        if (debug) cat(msg)
+                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        return(NULL)
+                      })
+      if (!is.null(res) && !is.null(attr(res, "steady")) && attr(res, "steady")) {                    # Solution found
+        y <- res$y[1:length(state)]
+        names(y) <- names(state)
+
+        # Compute the Jacobian w.r.t. to the free parameter and the state variables
+        jac <- jacobian.full(y=y, func=model, parms=parms, pert = nopts$jacdif)
+
+        # Discard all th rows and columns that pertain to additional variables
+        jac <- jac[(1:(freeparsdim+statedim)), (1:(freeparsdim+statedim))]
+
+        # Compute the eigenvalues of the restricted Jacobian
+        eig <- eigen(jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))])
+
+        # Sort them on decreasing real part
+        eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
+        names(eigval) <-  unlist(lapply((1:statedim), function(i){paste0("Eigenvalue", i)}))
+
+        # Append the current tangent vector as the last row to the jacobian to
+        # preserve direction. See the matcont manual at
+        # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
+        # Notice that jacobian.full returns a square matrix with NA values on the last row
+        jac[nrow(jac),] <- tanvec[(1:(freeparsdim+statedim))]
+        if (rcond(jac) > nopts$atol) {
+          tvnew <- solve(jac, c(rep(0, ((freeparsdim+statedim)-1)), 1))
+          tvnorm <- sqrt(sum(tvnew^2))
+          tvnew <- tvnew/tvnorm
+          names(tvnew) <- unlist(lapply((1:length(state)), function(i){paste0("d", names(state)[i])}))
+        } else {
+          tvnew <- tanvec[(1:(freeparsdim+statedim))]
+        }
+
+        if (biftype == "BT") testvals$btval <- NULL
+
+        testvals[["y"]] <- y
+        testvals[["tanvec"]] <- tvnew
+        testvals[["eigval"]] <- eigval
+        testvals[["biftype"]] <- biftype
+      } else {
+        if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
+
+        if (debug) cat(msg)
+        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+      }
+    }
+  }
+  return(testvals)
+}
+
+analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
+  if (exists("deBifdebug", envir = .GlobalEnv)) debug <- get("deBifdebug", envir = .GlobalEnv)
+  else debug <- FALSE
+
+  btval <- LP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  names(btval) <- NULL
+  cpval <- LP_CPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  names(cpval) <- NULL
+
+  testvals <- list()
+  testvals$btval <- unlist(btval)
+  testvals$cpval <- unlist(cpval)
+  biftype <- NULL
+
+  if (!is.null(lastvals)) {
+    if (!is.null(lastvals$cpval) && ((lastvals$cpval)*cpval < -(nopts$atol*nopts$atol))) {
+      biftype = "CP"
+    }
+    if (!is.null(lastvals$btval) && ((lastvals$btval)*btval < -(nopts$atol*nopts$atol))) {
+      biftype = "BT"
+    }
+    if (!is.null(biftype)) {
+      cfun <- get(paste0("LP_", biftype, "test"), mode = "function")
+      res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                            maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(LPcontinuation, cfun),
+                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
+                      warning = function(e) {
+                        msg <- gsub(".*:", "Warning in rootSolve:", e)
+                        if (debug) cat(msg)
+                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        return(NULL)
+                      },
+                      error = function(e) {
+                        msg <- gsub(".*:", "Error in rootSolve:", e)
+                        if (debug) cat(msg)
+                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        return(NULL)
+                      })
+      if (!is.null(res) && !is.null(attr(res, "steady")) && attr(res, "steady")) {                    # Solution found
+        y <- res$y[1:length(state)]
+        names(y) <- names(state)
+
+        # Compute the Jacobian w.r.t. to the free parameter and the state variables
+        jac <- jacobian.full(y=y, func=model, parms=parms, pert = nopts$jacdif)
+
+        # Discard all th rows and columns that pertain to additional variables
+        jac <- jac[(1:(freeparsdim+statedim)), (1:(freeparsdim+statedim))]
+
+        # Compute the eigenvalues of the restricted Jacobian
+        eig <- eigen(jac[(1:statedim), ((freeparsdim+1):(freeparsdim+statedim))])
+
+        # Sort them on decreasing real part
+        eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
+        names(eigval) <-  unlist(lapply((1:statedim), function(i){paste0("Eigenvalue", i)}))
+
+        # Append the current tangent vector as the last row to the jacobian to
+        # preserve direction. See the matcont manual at
+        # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
+        # Notice that jacobian.full returns a square matrix with NA values on the last row
+        jac[nrow(jac),] <- tanvec[(1:(freeparsdim+statedim))]
+        if (rcond(jac) > nopts$atol) {
+          tvnew <- solve(jac, c(rep(0, ((freeparsdim+statedim)-1)), 1))
+          tvnorm <- sqrt(sum(tvnew^2))
+          tvnew <- tvnew/tvnorm
+          names(tvnew) <- unlist(lapply((1:length(state)), function(i){paste0("d", names(state)[i])}))
+        } else {
+          tvnew <- tanvec[(1:(freeparsdim+statedim))]
+        }
+
+        if (biftype == "BT") testvals$btval <- NULL
+        else testvals$cpval <- NULL
+
+        testvals[["y"]] <- y
+        testvals[["tanvec"]] <- tvnew
+        testvals[["eigval"]] <- eigval
+        testvals[["biftype"]] <- biftype
+      } else {
+        if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
+        else msg <- "Locating cusp point failed\n"
 
         if (debug) cat(msg)
         else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
