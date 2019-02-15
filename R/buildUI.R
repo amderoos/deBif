@@ -141,6 +141,17 @@ buildUI <- function(state, parms, plotopts, numopts) {
       # I copied here the function rightSidebarTabContent and changed it to get
       # rid of the additional blank heading line
       shiny::tags$div(
+        tags$head(
+          tags$style(
+            HTML(
+              "
+              .form-group {
+              margin-bottom: 0 !important;
+              }
+              "
+            )
+          )
+        ),
         class = "tab-pane active",
         id = "control-sidebar-plotopttab-tab",
         icon = "chart-line",
@@ -151,12 +162,14 @@ buildUI <- function(state, parms, plotopts, numopts) {
                     numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
                     numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
         selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
+        div(style="line-height: 6px !important", br()),
         selectInput('ycol', ('Variable(s) on Y-axis'),
                     c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
         splitLayout(cellWidths = c("50%", "50%"),
                     numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
                     numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
         selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
+        div(style="line-height: 6px !important", br()),
         conditionalPanel(
           condition = "input.plottab != 3 && input.ycol > 1",
           selectInput('y2col', ("Variable on 2nd Y-axis"),
