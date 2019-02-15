@@ -196,7 +196,8 @@ buildUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
                       numericInput(inputId="tstep", label="Time step", value=numopts$tstep,step=0.1)),
-          selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod)),
+          selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod)
+          ),
         conditionalPanel(
           condition = "input.plottab > 1",
           h4("Curve continuation"),
@@ -206,14 +207,17 @@ buildUI <- function(state, parms, plotopts, numopts) {
                       textInput(inputId="atol", label="Absolute", value=sprintf("%.1E", numopts$atol))),
           textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
           textInput(inputId="jacdif", label="Jacobian pertubation", value=sprintf("%.1E", numopts$jacdif)),
+          div(style="line-height: 6px !important", br()),
           h4("Step size"),
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="stepsize", label="Target", value=numopts$stepsize),
                       numericInput(inputId="minstepsize", label="Minimum", value=numopts$minstepsize)),
+          h4("Iterations"),
           numericInput(inputId="maxiter", label="Maximum number of iterations", value=numopts$maxiter),
           numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
-          numericInput(inputId="computedelay", label="Computational delay", min=0.0, max=1.0, value=numopts$computedelay, step=0.01)),
-
+          numericInput(inputId="computedelay", label="Computational delay", min=0.0, max=1.0, value=numopts$computedelay, step=0.01)
+          ),
+        div(style="line-height: 12px !important", br()),
         actionButton("numoptsapply", "Apply", icon("refresh"))
       )
     )
