@@ -119,7 +119,8 @@ buildUI <- function(state, parms, plotopts, numopts) {
                  selectInput('deletecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
                  actionButton("deletebtn", "Delete curve"),
                  tabName = "deletetab"
-        )
+        ),
+        radioButtons("reportlevel", "Console report level", choiceNames = c("None", "Normal", "Full"), choiceValues = (0:2), inline = TRUE)
       )
     ),
     ########## Main panels

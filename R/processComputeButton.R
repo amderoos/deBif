@@ -1,12 +1,10 @@
 processComputeButton <- function(input, output, session, model, state, parms, bifenv, direction) {
-  if (exists("deBifdebug", envir = .GlobalEnv)) debug <- get("deBifdebug", envir = .GlobalEnv)
-  else debug <- FALSE
 
   curtab <- as.numeric(input$plottab)
   popts <- get("plotopts", envir=bifenv)
   nopts <- get("numopts", envir=bifenv)
   clist <- get("curveList", envir=bifenv)
-  report2console <- get("report2console", envir=bifenv)
+  reportlevel <- as.numeric(input$reportlevel)
   pointid <- as.numeric(input$selectpoint)
 
   nopts$stepsize <- direction*abs(nopts$stepsize)
@@ -69,17 +67,17 @@ processComputeButton <- function(input, output, session, model, state, parms, bi
     }
 
     nsol <- tryCatch(computeCurve(model, initstate, initparms, freepars, popts[[curtab]], nopts, inittype, curvetype,
-                                  tanvec = tanvec, report2console, session = session, output = output),
+                                  tanvec = tanvec, reportlevel, session = session, output = output),
                     warning = function(e) {
                       msg <- gsub(".*:", "Warning in computeCurve:", e)
-                      if (debug) cat(msg)
-                      else shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      else cat(msg)
                       return(NULL)
                     },
                     error = function(e) {
                       msg <- gsub(".*:", "Error in computeCurve:", e)
-                      if (debug) cat(msg)
-                      else shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      else cat(msg)
                       return(NULL)
                     })
 

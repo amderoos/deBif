@@ -1,15 +1,12 @@
-computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype, curvetype, tanvec = NULL, report2console = TRUE, session = NULL, output = NULL) {
-
-  if (exists("deBifdebug", envir = .GlobalEnv)) debug <- get("deBifdebug", envir = .GlobalEnv)
-  else debug <- FALSE
+computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype, curvetype, tanvec = NULL, reportlevel = 1, session = NULL, output = NULL) {
 
   if (exists("deBifverbose", envir = .GlobalEnv)) verbose <- get("deBifverbose", envir = .GlobalEnv)
   else verbose <- FALSE
 
   if (!(curvetype %in% c("EQ", "BP", "HP", "LP"))) {
     msg <- paste0("Computation aborted:\nContinuation for curve type ", curvetype, " not implemented\n")
-    if (debug) cat(msg)
-    else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+    if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+    else cat(msg)
     return(NULL)
   }
 
@@ -30,8 +27,8 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
     if (exists(paste0(curvetype, "continuation"), mode = "function")) condfun <- c(get(paste0(curvetype, "continuation"), mode = "function"))
     else {
       msg <- paste0("Computation aborted:\nAdditional condition function for curve type ", curvetype, " not found\n")
-      if (debug) cat(msg)
-      else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+      if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+      else cat(msg)
       return(NULL)
     }
   }
@@ -79,14 +76,14 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
                             statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (debug) cat(msg)
-                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (debug) cat(msg)
-                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        else cat(msg)
                         return(NULL)
                       })
     } else {
@@ -95,14 +92,14 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
                             statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (debug) cat(msg)
-                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (debug) cat(msg)
-                        else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        else cat(msg)
                         return(NULL)
                       });
     }
@@ -163,8 +160,24 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
                                                                        sprintf("%12.5E + %12.5Ei", Re(testvals$eigval[i]), Im(testvals$eigval[i])),
                                                                        sprintf("%12.5E", testvals$eigval[i])))})), collapse=' '), "\n")
 
-          if (debug) cat(msg)
-          else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
+
+          if (reportlevel == 2) {
+            msg <- paste0(msg, "Test values:\n")
+            if ("bpval" %in% names(testvals)) msg <- paste0(msg, "BP:", sprintf("%12.5E", testvals$bpval), "; ")
+            if ("hpval" %in% names(testvals)) msg <- paste0(msg, "HP:", sprintf("%12.5E", testvals$hpval), "; ")
+            if ("lpval" %in% names(testvals)) msg <- paste0(msg, "LP:", sprintf("%12.5E", testvals$lpval), "; ")
+            if ("btval" %in% names(testvals)) msg <- paste0(msg, "BT:", sprintf("%12.5E", testvals$btval), "; ")
+            if ("cpval" %in% names(testvals)) msg <- paste0(msg, "CP:", sprintf("%12.5E", testvals$cpval), "; ")
+            cat(msg)
+          }
+          else if (reportlevel == 1) {
+            yy <- c(as.numeric(y), eigval)
+            if (pntnr == 1) names(yy) <- c(names(y), eignames)
+            else names(yy) <- NULL
+            print(c(yy), print.gap = 2, digits = 6, right = TRUE)
+          }
 
           testvals$y <- NULL
           testvals$tanvec <- NULL
@@ -186,10 +199,20 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
                                         function(i) {paste0(ifelse(is.complex(eigval[i]),
                                                                    sprintf("%12.5E + %12.5Ei", Re(eigval[i]), Im(eigval[i])),
                                                                    sprintf("%12.5E", eigval[i])))})), collapse=' '), "\n")
-      if (debug) cat(msg)
-      else if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+      if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+      else cat(msg)
 
-      if (report2console) {
+      if (reportlevel == 2) {
+        specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
+        speclbl <- c("BP", "HP", "LP", "BT", "CP")
+        if (any(specvar %in% names(testvals)))
+          msg <- paste0(msg, "Test values:\n",
+                        paste(unlist(lapply((1:length(specvar)),
+                                            function(i) {if (specvar[i] %in% names(testvals)) paste0(speclbl[i], ": ", sprintf("%12.5E", testvals[[specvar[i]]]))})),
+                              collapse='; '), "\n")
+        cat(msg)
+      }
+      else if (reportlevel == 1) {
         yy <- c(as.numeric(y), eigval)
         if (pntnr == 1) names(yy) <- c(names(y), eignames)
         else names(yy) <- NULL
@@ -221,8 +244,8 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
 
       if (pntnr >= as.numeric(nopts$maxpoints)) {
         msg <- "Computation halted:\nMaximum number of points along the curve reached\n"
-        if (debug) cat(msg)
-        else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+        else cat(msg)
       }
 
       if (pntnr > 10) {
@@ -230,38 +253,38 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
             (as.numeric(y[1]) < (as.numeric(popts$xmin) - as.numeric(nopts$iszero))) ||
             (as.numeric(y[1]) > (as.numeric(popts$xmax) + as.numeric(nopts$iszero)))) {
           msg <- "Computation halted:\nMinimum or maximum of x-axis domain reached\n"
-          if (debug) cat(msg)
-          else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
           break
         }
         if (curvetype == "EQ") {
           if (popts$ycol == 1) {
             if (all(as.numeric(y[(2:(statedim+1))]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero)))) {
               msg <- "Computation halted:\nMinimum of y-axis domain reached for all y-axis variables\n"
-              if (debug) cat(msg)
-              else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              else cat(msg)
               break
             }
             if (all(as.numeric(y[(2:(statedim+1))]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
               msg <- "Computation halted:\nMaximum of y-axis domain reached for all y-axis variables\n"
-              if (debug) cat(msg)
-              else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              else cat(msg)
               break
             }
           } else {
             if ((as.numeric(y[popts$ycol]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
                 (as.numeric(y[popts$ycol]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
               msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
-              if (debug) cat(msg)
-              else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              else cat(msg)
               break
             }
             if ((popts$y2col > 1) &&
                 ((as.numeric(y[popts$y2col]) < (as.numeric(popts$y2min) - as.numeric(nopts$iszero))) ||
                  (as.numeric(y[popts$y2col]) > (as.numeric(popts$y2max) + as.numeric(nopts$iszero))))) {
               msg <- "Computation halted:\nMaximum or maximum of y-axis domain reached for 2nd y-axis variable\n"
-              if (debug) cat(msg)
-              else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+              else cat(msg)
               break
             }
           }
@@ -269,16 +292,16 @@ computeCurve <- function(model, state, parms, freepars, popts, nopts, starttype,
           if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
               (as.numeric(y[2]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
             msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
-            if (debug) cat(msg)
-            else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+            if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+            else cat(msg)
             break
           }
         }
 
         if (any(as.numeric(y[(1:(freeparsdim + statedim))]) < 0 - as.numeric(nopts$iszero))) {
           msg <- "Computation halted:\nOne of the variables has become negative\n"
-          if (debug) cat(msg)
-          else if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
+          else cat(msg)
           break
         }
       }
