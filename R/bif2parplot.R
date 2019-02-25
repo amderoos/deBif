@@ -1,4 +1,4 @@
-bif2parplot <- function(curvelist = NULL, output, session, popts) {
+bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
   # Plot the bifurcation curves
 
   par(mar = as.numeric(popts$plotmar))
@@ -13,14 +13,12 @@ bif2parplot <- function(curvelist = NULL, output, session, popts) {
       cnames <- colnames(curvelist[[i]]$points)
       if (cnames[1] != popts$xlab) {
         msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
-        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
-        else cat(msg)
+        if (!is.null(session)) updateConsoleLog(session, msg)
         return(NA)
       }
       if (cnames[2] != popts$ylab) {
         msg <- paste0("Curve plotting skipped: parameter '", popts$ylab, "' not one of the curve variables\n")
-        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
-        else cat(msg)
+        if (!is.null(session)) updateConsoleLog(session, msg)
         return(NA)
       }
       colindx <- match(curvelist[[i]]$type, c("BP", "HP", "LP"))

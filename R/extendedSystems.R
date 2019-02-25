@@ -518,7 +518,7 @@ initLP <- function(state, parms, model, tanvec, statedim, freeparsdim, starttype
   return(list(y = c(state, eigval, as.numeric(q), as.numeric(p))))
 }
 
-analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
+analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
   bpval <- EQ_BPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
   names(bpval) <- NULL
@@ -550,13 +550,13 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
                             statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       })
@@ -601,7 +601,7 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
         else if (biftype == "HP") msg <- "Locating Hopf bifurcation point failed\n"
         else msg <- "Locating limit point failed\n"
 
-        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
         else cat(msg)
       }
     }
@@ -609,7 +609,7 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
   return(testvals)
 }
 
-analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
+analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
   btval <- HP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
   names(btval) <- NULL
@@ -629,13 +629,13 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
                             statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       })
@@ -679,7 +679,7 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
       } else {
         if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
 
-        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
         else cat(msg)
       }
     }
@@ -687,7 +687,7 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
   return(testvals)
 }
 
-analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, output) {
+analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
   btval <- LP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
   names(btval) <- NULL
@@ -713,13 +713,13 @@ analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
                             statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
                         else cat(msg)
                         return(NULL)
                       })
@@ -765,7 +765,7 @@ analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
         if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
         else msg <- "Locating cusp point failed\n"
 
-        if (!is.null(output)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
         else cat(msg)
       }
     }

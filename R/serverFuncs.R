@@ -1,245 +1,88 @@
-processTabSwitch <- function(input, output, session, state, parms, bifenv) {
-  curtab <- as.numeric(input$plottab)
+updateConsoleLog <- function(session, addtext) {
+  if ("alltext" %in% names(session$userData)) session$userData$alltext <- paste(session$userData$alltext, addtext, sep = "")
+  else session$userData$alltext <- addtext
+}
 
+updateCurveMenu <- function(session, clist) {
   # Update the save and delete curve menu
-  clist <- get("curveList", envir=bifenv)
-  lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-  ids <- c((0:length(clist[[curtab]])), -1)
+  lbls <- do.call("rbind", lapply(clist, "[[", "label"))
+  ids <- c((0:length(clist)), -1)
   names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
   updateSelectInput(session, "deletecurve", choices=ids, selected=0)
   updateSelectInput(session, "savecurve", choices=ids, selected=0)
+}
 
+updatePlotOptionEntries <- function(session, curtab, popts, snames, pnames) {
   # Update the plot options
-  popts <- get("plotopts", envir=bifenv)
   if (curtab == 1){
     updateSelectInput(session, "xcol",  label=h4('Variable(s) on X-axis'),
-                      choices=c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$xcol)
+                      choices=c("Time" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$xcol)
     updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
-                      choices=c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$ycol)
+                      choices=c("All" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$ycol)
     updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
-                      choices=c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$y2col)
+                      choices=c("None" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$y2col)
   } else if (curtab == 2){
     updateSelectInput(session, "xcol",  label=h4('Bifurcation parameter'),
-                      choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$xcol)
+                      choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$xcol)
     updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
-                      choices=c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$ycol)
+                      choices=c("All" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$ycol)
     updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
-                      choices=c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=popts[[curtab]]$y2col)
+                      choices=c("None" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$y2col)
   } else {
     updateSelectInput(session, "xcol",  label=h4('1st bifurcation parameter'),
-                      choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$xcol)
+                      choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$xcol)
     updateSelectInput(session, "ycol",  label=h4('2nd bifurcation parameter'),
-                      choices=c(setNames((1:(length(parms))), names(parms))), selected=popts[[curtab]]$ycol)
+                      choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$ycol)
   }
-  updateSelectInput(session,  "logx", selected=popts[[curtab]]$logx)
-  updateNumericInput(session, "xmin", value=popts[[curtab]]$xmin)
-  updateNumericInput(session, "xmax", value=popts[[curtab]]$xmax)
-  popts[[curtab]]$xlab <- ifelse(curtab == 1, (c("Time", names(state)))[popts[[curtab]]$xcol], (names(parms))[popts[[curtab]]$xcol])
+  updateSelectInput(session,  "logx", selected=popts$logx)
+  updateNumericInput(session, "xmin", value=popts$xmin)
+  updateNumericInput(session, "xmax", value=popts$xmax)
+  popts$xlab <- ifelse(curtab == 1, (c("Time", snames))[popts$xcol], pnames[popts$xcol])
 
-  updateSelectInput(session,  "logy", selected=popts[[curtab]]$logy)
-  updateNumericInput(session, "ymin", value=popts[[curtab]]$ymin)
-  updateNumericInput(session, "ymax", value=popts[[curtab]]$ymax)
-  popts[[curtab]]$ylab <- ifelse(curtab < 3, (c("State variables", names(state)))[popts[[curtab]]$ycol],
-                                 (names(parms))[popts[[curtab]]$ycol])
+  updateSelectInput(session,  "logy", selected=popts$logy)
+  updateNumericInput(session, "ymin", value=popts$ymin)
+  updateNumericInput(session, "ymax", value=popts$ymax)
+  popts$ylab <- ifelse(curtab < 3, (c("State variables", snames))[popts$ycol], pnames[popts$ycol])
 
-  updateSelectInput(session,  "logy2", selected=popts[[curtab]]$logy2)
-  updateNumericInput(session, "y2min", value=popts[[curtab]]$y2min)
-  updateNumericInput(session, "y2max", value=popts[[curtab]]$y2max)
-  popts[[curtab]]$y2lab <- (c("None", names(state)))[popts[[curtab]]$y2col]
-
-  output[[paste0("plot", curtab)]] <- renderPlot({
-    if (curtab == 1) biforbitplot(clist[[1]], output, session, popts[[1]])
-    else if (curtab == 2) bif1parplot(clist[[2]], output, session, popts[[2]])
-    else bif2parplot(clist[[3]], output, session, popts[[3]])
-  },
-  height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
-  width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
+  updateSelectInput(session,  "logy2", selected=popts$logy2)
+  updateNumericInput(session, "y2min", value=popts$y2min)
+  updateNumericInput(session, "y2max", value=popts$y2max)
+  popts$y2lab <- (c("None", snames))[popts$y2col]
+  return(popts)
 }
 
-processDeleteCurve <- function(input, output, session, bifenv) {
-  curtab <- as.numeric(input$plottab)
-  clist <- get("curveList", envir=bifenv)
-  popts <- get("plotopts", envir=bifenv)
-  deletenr <- as.numeric(input$deletecurve)
-  totalcurves <- as.numeric(length((clist[[curtab]])))
-
-  if ((totalcurves > 0) && ((deletenr > 0) || (deletenr == -1)) && (deletenr < (totalcurves + 1))) {
-
-    if (deletenr == -1) clist[[curtab]] <- list()
-    else clist[[curtab]][[deletenr]] <- NULL
-
-    # Update the save and delete curve menu
-    lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-    ids <- c((0:length(clist[[curtab]])), -1)
-    names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
-    updateSelectInput(session, "deletecurve", choices=ids, selected=0)
-    updateSelectInput(session, "savecurve", choices=ids, selected=0)
-
-    rm("curveList", envir=bifenv)
-    assign("curveList", clist, envir=bifenv)
-
-    if (exists("CurveList", envir = .GlobalEnv)) {
-      rm("CurveList", envir = .GlobalEnv)
-    }
-    assign("CurveList", clist, envir = .GlobalEnv)
-
-    output[[paste0("plot", curtab)]] <- renderPlot({
-      if (curtab == 1) biforbitplot(clist[[1]], output, session, popts[[1]])
-      else if (curtab == 2) bif1parplot(clist[[2]], output, session, popts[[2]])
-      else bif2parplot(clist[[3]], output, session, popts[[3]])
-    },
-    height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
-    width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
-  }
-}
-
-processSaveCurve <- function(input, output, session, bifenv) {
-  curtab <- as.numeric(input$plottab)
-  clist <- get("curveList", envir=bifenv)
-  savenr <- as.numeric(input$savecurve)
-  totalcurves <- as.numeric(length((clist[[curtab]])))
-
-  if ((totalcurves > 0) && ((savenr > 0) || (savenr == -1)) && (savenr < (totalcurves + 1))) {
-    varname <- make.names(input$curvename, unique = TRUE)
-    if (exists(varname, envir = .GlobalEnv)) {
-      rm(varname, envir = .GlobalEnv)
-    }
-    if (savenr == -1) assign(varname, clist[[curtab]], envir = .GlobalEnv)
-    else assign(varname, clist[[curtab]][[savenr]], envir = .GlobalEnv)
-  }
-}
-
-processLoadCurve <- function(input, output, session, bifenv, replace = FALSE) {
-  curtab <- as.numeric(input$plottab)
-  clist <- get("curveList", envir=bifenv)
-  popts <- get("plotopts", envir=bifenv)
-  snames <- names(get("state", envir=bifenv))
-  pnames <- names(get("parms", envir=bifenv))
-
-  varname <- input$loadcurve
-  if (exists(varname, envir = .GlobalEnv)) {
-    inlist <- get(varname, envir = .GlobalEnv)
-  } else return(NULL)
-
-  # If inlist is a list containing elements 'Orbits', 'BifurcationCurves',
-  # 'BifurcationBounds', and 'TotalCurves' assume that it is a correct list
-  # generated by an earlier call to bifurcation()
-  if (is.list(inlist) &&
-      all(c("Orbits", "BifurcationCurves", "BifurcationBounds", "TotalCurves") %in% names(inlist))) {
-    clist <- inlist
-  } else {
-    # If inlist is a list containing elements that each contain elements
-    # 'points' and 'special.points' with columns that have appropriate names
-    # assume that it is a correct list generated by an earlier call to
-    # bifurcation()
-    if (curtab == 1) {
-      if (is.list(inlist) && !is.null(inlist[[1]]) &&
-          all(unlist(lapply(inlist, function(x) {((c("points", "special.points") %in% names(x)) &&
-                                               all((colnames(x$points))[1] == "Time") &&
-                                               all((colnames(x$points))[2:ncol(x$points)] %in% snames))})))) {
-
-        if (replace) clist[[curtab]] <- inlist
-        else clist[[curtab]] <- c(clist[[curtab]], inlist)
-      } else {
-        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
-        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
-        else cat(msg)
-        inlist <- NULL
-      }
-    } else if (curtab == 2) {
-      if (is.list(inlist) && !is.null(inlist[[1]]) &&
-          all(unlist(lapply(inlist, function(x) {((c("points", "eigvals", "tangent", "special.points", "special.tags",
-                                                  "special.eigvals", "special.tangent") %in% names(x)) &&
-                                               all((colnames(x$points))[1] %in% pnames) &&
-                                               all((colnames(x$points))[2:ncol(x$points)] %in% snames))})))) {
-        if (replace) clist[[curtab]] <- inlist
-        else clist[[curtab]] <- c(clist[[curtab]], inlist)
-      } else {
-        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
-        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
-        else cat(msg)
-        inlist <- NULL
-      }
-    } else if (curtab == 3) {
-      if (is.list(inlist) && !is.null(inlist[[1]]) &&
-          all(unlist(lapply(inlist, function(x) {((c("points", "eigvals", "tangent", "special.points", "special.tags",
-                                                  "special.eigvals", "special.tangent") %in% names(x)) &&
-                                               all((colnames(x$points))[1:2] %in% pnames) &&
-                                               all((colnames(x$points))[3:ncol(x$points)] %in% snames))})))) {
-        if (replace) clist[[curtab]] <- inlist
-        else clist[[curtab]] <- c(clist[[curtab]], inlist)
-      } else {
-        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
-        if (!is.null(output)) output[["console"]] <- updateConsoleText(session, msg)
-        else cat(msg)
-        inlist <- NULL
-      }
-    } else inlist <- NULL
-  }
-
-  if (!is.null(inlist)) {
-    # Update the save and delete curve menu
-    lbls <- do.call("rbind", lapply(clist[[curtab]], "[[", "label"))
-    ids <- c((0:length(clist[[curtab]])), -1)
-    names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
-    updateSelectInput(session, "deletecurve", choices=ids, selected=0)
-    updateSelectInput(session, "savecurve", choices=ids, selected=0)
-
-    rm("curveList", envir=bifenv)
-    assign("curveList", clist, envir=bifenv)
-
-    if (exists("CurveList", envir = .GlobalEnv)) {
-      rm("CurveList", envir = .GlobalEnv)
-    }
-    assign("CurveList", clist, envir = .GlobalEnv)
-
-    # If called via the load curve button, replot the current plot
-    output[[paste0("plot", curtab)]] <- renderPlot({
-      if (curtab == 1) biforbitplot(clist[[1]], output, session, popts[[1]])
-      else if (curtab == 2) bif1parplot(clist[[2]], output, session, popts[[2]])
-      else bif2parplot(clist[[3]], output, session, popts[[3]])
-    },
-    height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
-    width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
-  }
-}
-
-updateSelectedPoint <- function(input, session, state, parms, bifenv) {
-  curtab <- as.numeric(input$plottab)
-  clist <- get("curveList", envir=bifenv)
-
-  pointid <- as.numeric(input$selectpoint)
+updateSelectedPoint <- function(session, curtab, clist, pointid, snames, pnames) {
   if (pointid > 0) {
     ind1 <- round(pointid/1000000)
     ind2 <- round((pointid-ind1*1000000)/1000)
     ind3 <- round(pointid-ind1*1000000-ind2*1000)
+    cln1 <- (c('Orbits', 'BifurcationCurves', 'BifurcationBounds'))[ind1]
     ii <- ifelse((ind1 == 3), 2, 1)   # 2 parameter bifurcation points have 2 columns before the state, otherwise 1 only
-    lapply(1:length(state), function(i){updateNumericInput(session, paste0(names(state[i]), "_", curtab), value=as.numeric(clist[[ind1]][[ind2]]$special.points[[ind3,(i+ii)]]))})
-    lapply(1:length(parms), function(i){updateNumericInput(session, paste0(names(parms[i]), "_", curtab), value=as.numeric(clist[[ind1]][[ind2]]$parameters[[i]]))})
+    lapply(1:length(snames), function(i){updateNumericInput(session, paste0(snames[i], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,(i+ii)]]))})
+    lapply(1:length(pnames), function(i){updateNumericInput(session, paste0(pnames[i], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$parameters[[i]]))})
     if (ind1 > 1) {
-      cnames <- colnames(clist[[ind1]][[ind2]]$special.points)
-      updateNumericInput(session, paste0(names(parms[cnames[1]]), "_", curtab), value=as.numeric(clist[[ind1]][[ind2]]$special.points[[ind3,1]]))
+      cnames <- colnames(clist[[cln1]][[ind2]]$special.points)
+      updateNumericInput(session, paste0(pnames[cnames[1]], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,1]]))
       if (ind1 == 3) {
-        updateNumericInput(session, paste0(names(parms[cnames[2]]), "_", curtab), value=as.numeric(clist[[ind1]][[ind2]]$special.points[[ind3,2]]))
+        updateNumericInput(session, paste0(pnames[cnames[2]], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,2]]))
       }
     }
   }
 }
 
-updateSpecialPointsList <- function(session, selected, bifenv) {
-  clist <- get("curveList", envir=bifenv)
-
+updateSpecialPointsList <- function(session, clist, selected) {
   splist <- list()
   listlbls <- NULL
   for (i in (1:3)) {
-    if (length(clist[[i]]) > 0) {
-      listlbls <- c(listlbls, unlist(lapply((1:length(clist[[i]])), function(j){return(clist[[i]][[j]]$label)})))
-      splist <- c(splist, lapply((1:length(clist[[i]])),
+    cln <- (c('Orbits', 'BifurcationCurves', 'BifurcationBounds'))[i]
+    if (length(clist[[cln]]) > 0) {
+      listlbls <- c(listlbls, unlist(lapply((1:length(clist[[cln]])), function(j){return(clist[[cln]][[j]]$label)})))
+      splist <- c(splist, lapply((1:length(clist[[cln]])),
                                  function(j){
-                                   lbls <- unlist(clist[[i]][[j]]$special.tags[,"Description"], use.names=FALSE);
+                                   lbls <- unlist(clist[[cln]][[j]]$special.tags[,"Description"], use.names=FALSE);
                                    ids <- ((i*1000000)+j*1000)+(1:length(lbls)); names(ids) <- lbls;
                                    return(ids)}))
-      }
+    }
   }
   if (length(splist) > 0) {
     names(splist) <- listlbls
@@ -249,49 +92,48 @@ updateSpecialPointsList <- function(session, selected, bifenv) {
   }
 }
 
-processOptionsApply <- function(input, output, session, state, parms, bifenv) {
-  curtab <- as.numeric(input$plottab)
-  popts <- get("plotopts", envir=bifenv)
-  nopts <- get("numopts", envir=bifenv)
-  clist <- get("curveList", envir=bifenv)
+processPlotOptionsApply <- function(session, input, curtab, popts, snames, pnames) {
+  popts$xcol <- as.numeric(input[["xcol"]])
+  popts$logx <- as.numeric(input[["logx"]])
+  popts$xmin <- ifelse(input[["logx"]] == 1, max(as.numeric(input[["xmin"]]), 1.0E-10), as.numeric(input[["xmin"]]))
+  popts$xmax <- as.numeric(input[["xmax"]])
+  popts$xlab <- ifelse(curtab == 1, (c("Time", snames))[popts$xcol], pnames[popts$xcol])
+  popts$ycol <- as.numeric(input[["ycol"]])
+  popts$logy <- as.numeric(input[["logy"]])
+  popts$ymin <- ifelse(input[["logy"]] == 1, max(as.numeric(input[["ymin"]]), 1.0E-10), as.numeric(input[["ymin"]]))
+  popts$ymax <- as.numeric(input[["ymax"]])
+  popts$ylab <- ifelse(curtab < 3, (c("State variables", snames))[popts$ycol], pnames[popts$ycol])
 
-  popts[[curtab]]$xcol <- as.numeric(input[["xcol"]])
-  popts[[curtab]]$logx <- as.numeric(input[["logx"]])
-  popts[[curtab]]$xmin <- ifelse(input[["logx"]] == 1,
-                                 max(as.numeric(input[["xmin"]]), 1.0E-10), as.numeric(input[["xmin"]]))
-  popts[[curtab]]$xmax <- as.numeric(input[["xmax"]])
-  popts[[curtab]]$xlab <- ifelse(curtab == 1, (c("Time", names(state)))[popts[[curtab]]$xcol], (names(parms))[popts[[curtab]]$xcol])
-  popts[[curtab]]$ycol <- as.numeric(input[["ycol"]])
-  popts[[curtab]]$logy <- as.numeric(input[["logy"]])
-  popts[[curtab]]$ymin <- ifelse(input[["logy"]] == 1,
-                                 max(as.numeric(input[["ymin"]]), 1.0E-10), as.numeric(input[["ymin"]]))
-  popts[[curtab]]$ymax <- as.numeric(input[["ymax"]])
-  popts[[curtab]]$ylab <- ifelse(curtab < 3, (c("State variables", names(state)))[popts[[curtab]]$ycol],
-                                 (names(parms))[popts[[curtab]]$ycol])
-
-  if (popts[[curtab]]$xmax < 1.0001*popts[[curtab]]$xmin) {
-    cat("Maximum of x-axis not significantly different from its minimum\n")
-    popts[[curtab]]$xmax <- 1.0001*popts[[curtab]]$xmin
+  if (popts$xmax < 1.0001*popts$xmin) {
+    updateConsoleLog(session, "Maximum of x-axis not significantly different from its minimum\n")
+    popts$xmax <- 1.0001*popts$xmin
   }
-  if (popts[[curtab]]$ymax < 1.0001*popts[[curtab]]$ymin) {
-    cat("Maximum of y-axis not significantly different from its minimum\n")
-    popts[[curtab]]$ymax <- 1.0001*popts[[curtab]]$ymin
+  if (popts$ymax < 1.0001*popts$ymin) {
+    updateConsoleLog(session, "Maximum of y-axis not significantly different from its minimum\n")
+    popts$ymax <- 1.0001*popts$ymin
   }
 
-  if ((curtab < 3) && (popts[[curtab]]$ycol > 1)) {
-    popts[[curtab]]$y2col <- as.numeric(input[["y2col"]])
-    popts[[curtab]]$logy2 <- as.numeric(input[["logy2"]])
-    popts[[curtab]]$y2min <- ifelse(input[["logy2"]] == 1,
-                                    max(as.numeric(input[["y2min"]]), 1.0E-10), as.numeric(input[["y2min"]]))
-    popts[[curtab]]$y2max <- as.numeric(input[["y2max"]])
-    popts[[curtab]]$y2lab <- (c("None", names(state)))[popts[[curtab]]$y2col]
+  popts$plot3d <- as.numeric(0)
+  if ((curtab < 3) && (popts$ycol > 1)) {
+    popts$y2col <- as.numeric(input[["y2col"]])
+    popts$logy2 <- as.numeric(input[["logy2"]])
+    popts$y2min <- ifelse(input[["logy2"]] == 1, max(as.numeric(input[["y2min"]]), 1.0E-10), as.numeric(input[["y2min"]]))
+    popts$y2max <- as.numeric(input[["y2max"]])
+    popts$y2lab <- (c("None", snames))[popts$y2col]
+    popts$plot3d <- ifelse((popts$y2col > 1), as.numeric(input[["plot3d"]]), 0)
+    popts$theta <- as.numeric(input[["theta"]])
+    popts$theta <- max(popts$theta, -90)
+    popts$theta <- min(popts$theta, 90)
 
-    if (popts[[curtab]]$y2max < 1.0001*popts[[curtab]]$y2min) {
-      cat("Maximum of y-axis not significantly different from its minimum\n")
-      popts[[curtab]]$y2max <- 1.0001*popts[[curtab]]$y2min
+    if (popts$y2max < 1.0001*popts$y2min) {
+      updateConsoleLog(session, "Maximum of y-axis not significantly different from its minimum\n")
+      popts$y2max <- 1.0001*popts$y2min
     }
   }
+  return(popts)
+}
 
+processNumOptionsApply <- function(session, input, curtab, nopts) {
   text2numeric <- function(oldval, newval){
     newval2 <- gsub("[^0-9.E+-]*", "", newval)
     if (!is.na(suppressWarnings(as.numeric(newval2)))) return (as.numeric(newval2))
@@ -317,26 +159,106 @@ processOptionsApply <- function(input, output, session, state, parms, bifenv) {
     nopts$minstepsize <- max(as.numeric(input[["minstepsize"]]), 1.0E-10)
     nopts$maxiter <- max(as.numeric(input[["maxiter"]]), 1)
     nopts$maxpoints <- max(as.numeric(input[["maxpoints"]]), 1)
-    nopts$computedelay <- max(as.numeric(input[["computedelay"]]), 0.0)
+    nopts$replotfreq <- max(round(as.numeric(input[["replotfreq"]])), 1)
   }
-
-  rm("numopts", envir=bifenv)
-  assign("numopts", nopts, envir=bifenv)
-
-  rm("plotopts", envir=bifenv)
-  assign("plotopts", popts, envir=bifenv)
-
-  output[[paste0("plot", curtab)]] <- renderPlot({
-    if (curtab == 1) biforbitplot(clist[[1]], output, session, popts[[1]])
-    else if (curtab == 2) bif1parplot(clist[[2]], output, session, popts[[2]])
-    else bif2parplot(clist[[3]], output, session, popts[[3]])
-  },
-  height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
-  width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
+  return(nopts)
 }
 
-updateConsoleText <- function(session, addtext) {
-  if ("alltext" %in% names(session$userData)) session$userData$alltext <- paste(session$userData$alltext, addtext, sep = "")
-  else session$userData$alltext <- addtext
-  return(renderText({session$userData$alltext}))
+processDeleteCurve <- function(session, curtab, clist, deletenr) {
+  totalcurves <- as.numeric(length((clist)))
+
+  if ((totalcurves > 0) && ((deletenr > 0) || (deletenr == -1)) && (deletenr < (totalcurves + 1))) {
+
+    if (deletenr == -1) clist <- list()
+    else clist[[deletenr]] <- NULL
+
+    return(clist)
+  }
+}
+
+processSaveCurve <- function(curtab, clist, savenr, varname) {
+  totalcurves <- as.numeric(length((clist)))
+
+  if ((totalcurves > 0) && ((savenr > 0) || (savenr == -1)) && (savenr < (totalcurves + 1))) {
+    if (exists(varname, envir = .GlobalEnv)) {
+      rm(varname, envir = .GlobalEnv)
+    }
+    if (savenr == -1) assign(varname, clist, envir = .GlobalEnv)
+    else assign(varname, clist[[savenr]], envir = .GlobalEnv)
+  }
+}
+
+processLoadCurve <- function(session = NULL, curtab, clist, varname, snames, pnames, replace = FALSE) {
+  if (exists(varname, envir = .GlobalEnv)) {
+    inlist <- get(varname, envir = .GlobalEnv)
+  } else {
+    msg <- paste0("Curves not loaded: variable '", varname, "' not found in the global environment\n")
+    if (!is.null(session)) updateConsoleLog(session, msg)
+    else cat(msg)
+    return(NULL)
+  }
+
+  # If inlist is a list containing elements 'Orbits', 'BifurcationCurves',
+  # 'BifurcationBounds', and 'TotalCurves' assume that it is a correct list
+  # generated by an earlier call to bifurcation()
+  if (is.list(inlist) &&
+      all(c("Orbits", "BifurcationCurves", "BifurcationBounds", "TotalCurves") %in% names(inlist))) {
+
+    if (replace) clist <- inlist
+    else {
+      clist[['Orbits']] <- c(clist[['Orbits']], inlist)
+      clist[['BifurcationCurves']] <- c(clist[['BifurcationCurves']], inlist)
+      clist[['BifurcationBounds']] <- c(clist[['BifurcationBounds']], inlist)
+      clist[['TotalCurves']] <- as.numeric(clist[['TotalCurves']]) + as.numeric(inlist[['TotalCurves']])
+    }
+  } else {
+    # If inlist is a list containing elements that each contain elements
+    # 'points' and 'special.points' with columns that have appropriate names
+    # assume that it is a correct list generated by an earlier call to
+    # bifurcation()
+    if (curtab == 1) {
+      if (is.list(inlist) && !is.null(inlist[[1]]) &&
+          all(unlist(lapply(inlist, function(x) {((c("points", "special.points") %in% names(x)) &&
+                                                  all((colnames(x$points))[1] == "Time") &&
+                                                  all((colnames(x$points))[2:ncol(x$points)] %in% snames))})))) {
+
+        if (replace) clist[['Orbits']] <- inlist
+        else clist[['Orbits']] <- c(clist[['Orbits']], inlist)
+      } else {
+        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
+        if (!is.null(session)) updateConsoleLog(session, msg)
+        else cat(msg)
+        clist <- NULL
+      }
+    } else if (curtab == 2) {
+      if (is.list(inlist) && !is.null(inlist[[1]]) &&
+          all(unlist(lapply(inlist, function(x) {((c("points", "eigvals", "tangent", "special.points", "special.tags",
+                                                     "special.eigvals", "special.tangent") %in% names(x)) &&
+                                                  all((colnames(x$points))[1] %in% pnames) &&
+                                                  all((colnames(x$points))[2:ncol(x$points)] %in% snames))})))) {
+        if (replace) clist[['BifurcationCurves']] <- inlist
+        else clist[['BifurcationCurves']] <- c(clist[['BifurcationCurves']], inlist)
+      } else {
+        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
+        if (!is.null(session)) updateConsoleLog(session, msg)
+        else cat(msg)
+        clist <- NULL
+      }
+    } else if (curtab == 3) {
+      if (is.list(inlist) && !is.null(inlist[[1]]) &&
+          all(unlist(lapply(inlist, function(x) {((c("points", "eigvals", "tangent", "special.points", "special.tags",
+                                                     "special.eigvals", "special.tangent") %in% names(x)) &&
+                                                  all((colnames(x$points))[1:2] %in% pnames) &&
+                                                  all((colnames(x$points))[3:ncol(x$points)] %in% snames))})))) {
+        if (replace) clist[['BifurcationBounds']] <- inlist
+        else clist[['BifurcationBounds']] <- c(clist[['BifurcationBounds']], inlist)
+      } else {
+        msg <- paste0("Curves not loaded: variable '", varname, "' does not have the correct structure for this plot\n")
+        if (!is.null(session)) updateConsoleLog(session, msg)
+        else cat(msg)
+        clist <- NULL
+      }
+    } else clist <- NULL
+  }
+  return(clist)
 }

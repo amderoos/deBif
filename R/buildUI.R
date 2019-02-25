@@ -120,7 +120,34 @@ buildUI <- function(state, parms, plotopts, numopts) {
                  actionButton("deletebtn", "Delete curve"),
                  tabName = "deletetab"
         ),
-        radioButtons("reportlevel", "Console report level", choiceNames = c("None", "Normal", "Full"), choiceValues = (0:2), inline = TRUE)
+        radioButtons("reportlevel", "Console report level", choiceNames = c("None", "Normal", "Full"), choiceValues = (0:2), inline = TRUE),
+        div(style="line-height: 18px !important", br()),
+        conditionalPanel(
+          condition = "input.plottab == 2 | input.plottab == 3",
+          shinyjs::hidden(actionButton("pausebtn", "Pause", icon("pause-circle"), style = "color: white;
+                       background-color: green;
+                       font-size: 18px;
+                       position: relative;
+                       left: 18px;
+                       height: 45px;
+                       width: 150px;
+                       text-align:center;
+                       text-indent: -2px;
+                       border-radius: 6px;
+                       border-width: 2px")),
+          div(style="line-height: 8px !important", br()),
+          shinyjs::hidden(actionButton("stopbtn", "Stop", icon("stop-circle"), style = "color: white;
+                       background-color: red;
+                       font-size: 18px;
+                       position: relative;
+                       left: 18px;
+                       height: 45px;
+                       width: 150px;
+                       text-align:center;
+                       text-indent: -2px;
+                       border-radius: 6px;
+                       border-width: 2px"))
+        )
       )
     ),
     ########## Main panels
@@ -129,11 +156,21 @@ buildUI <- function(state, parms, plotopts, numopts) {
       shiny::tags$head(shiny::tags$style(shiny::HTML(
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),
+      tags$script(
+        '
+        Shiny.addCustomMessageHandler("scrollCallback",
+        function(color) {
+        var objDiv = document.getElementById("console");
+        objDiv.scrollTop = objDiv.scrollHeight;
+        }
+        );'
+      ),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#progress { font-size: 10px; width: calc(100%); left: calc(242px); height: 72px; overflow: auto; }"
+        "#progress { font-size: 10px; width: calc(100%); left: calc(242px); height: 72px; overflow: auto;}"
       ))),
+      tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "90px", verbatimTextOutput("progress", placeholder = TRUE))
     ),
     ########## Right side-bar
@@ -180,9 +217,12 @@ buildUI <- function(state, parms, plotopts, numopts) {
             splitLayout(cellWidths = c("50%", "50%"),
                         numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
                         numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
-            selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2)
+            selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
+            radioButtons("plot3d", "Plot type", choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d, inline = TRUE),
+            numericInput(inputId="theta", label="Viewing angle", value=plotopts[[1]]$theta, min=-90, max=90, step=5)
           )
         ),
+        div(style="line-height: 12px !important", br()),
         actionButton("plotoptsapply", "Apply", icon("refresh"))
       ),
       # sidebarMenu() and menuItem() do not work in the right sidebar. Only conditionpanels can be used
@@ -216,7 +256,8 @@ buildUI <- function(state, parms, plotopts, numopts) {
           h4("Iterations"),
           numericInput(inputId="maxiter", label="Maximum number of iterations", value=numopts$maxiter),
           numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
-          numericInput(inputId="computedelay", label="Computational delay", min=0.0, max=1.0, value=numopts$computedelay, step=0.01)
+          numericInput(inputId="replotfreq", label="Points between plot updates", min=1, max=10000,
+                       value=numopts$replotfreq, step=1)
           ),
         div(style="line-height: 12px !important", br()),
         actionButton("numoptsapply", "Apply", icon("refresh"))
