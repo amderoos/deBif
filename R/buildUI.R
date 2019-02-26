@@ -218,8 +218,12 @@ buildUI <- function(state, parms, plotopts, numopts) {
                         numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
                         numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
             selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
-            radioButtons("plot3d", "Plot type", choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d, inline = TRUE),
-            numericInput(inputId="theta", label="Viewing angle", value=plotopts[[1]]$theta, min=-90, max=90, step=5)
+            splitLayout(cellWidths = c("50%", "50%"),
+                        strong("Plot type"),
+                        radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
+                                     inline = TRUE)),
+            sliderInput(inputId="theta", label="Viewing angle", min=-90, max=90, value=plotopts[[1]]$theta, step=1,
+                        ticks = FALSE, round=TRUE)
           )
         ),
         div(style="line-height: 12px !important", br()),
