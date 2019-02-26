@@ -37,7 +37,7 @@ approxNullVec <- function(A) {
   return (as.numeric(eigvec))
 }
 
-TangentVecEQ <- function(state, parms, model, statedim, freeparsdim, nopts) {
+TangentVecEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts) {
 
   # Routine calculates the tangent vector to the curve determined by the equation
   #
@@ -74,27 +74,42 @@ TangentVecEQ <- function(state, parms, model, statedim, freeparsdim, nopts) {
   # latter being the derivative w.r.t. second free parameters
   jac <- jac[(1:(statedim+1)), c(1, ((freeparsdim+1):(freeparsdim+statedim)))]
 
-  # Set the last row with NA to 0
-  jac[nrow(jac),] <- 0
+  tvdone <- FALSE
+  if (!is.null(tanvec)) {
+    jac[nrow(jac),] <- tanvec
+    if (rcond(jac) > nopts$atol) {
+      # Solve for the tangent vector to the curve of the 1st free parameter and
+      # the state variables.
+      tvnew <- solve(jac, c(rep(0, (length(tanvec)-1)), 1))
+      tvdone <- TRUE
+    }
+  }
 
-  # Estimate the condition numbers
-  condnrs <- unlist(lapply((1:ncol(jac)),
-                           function(i){
-                             jacc <- jac;
-                             jacc[nrow(jac),i] <- 1;
-                             if (abs(det(jacc)) > 1.0E-5) return(rcond(jacc))
-                             else return(0.0)
-                           }))
-  maxind <- which.max(condnrs)
+  if (!tvdone) {
+    # Set the last row with NA to 0
+    jac[nrow(jac),] <- 0
 
-  # Solve for the tangent vector to the curve of the 1st free parameter and
-  # the state variables.
-  jac[nrow(jac),maxind] <- 1
-  tvlp <- solve(jac, c(rep(0, (nrow(jac)-1)), 1))
-  names(tvlp) <- NULL
+    # Estimate the condition numbers
+    condnrs <- unlist(lapply((1:ncol(jac)),
+                             function(i){
+                               jacc <- jac;
+                               jacc[nrow(jac),i] <- 1;
+                               if (abs(det(jacc)) > 1.0E-5) return(rcond(jacc))
+                               else return(0.0)
+                             }))
+    maxind <- which.max(condnrs)
+    jac[nrow(jac),maxind] <- 1
+
+    # Solve for the tangent vector to the curve of the 1st free parameter and
+    # the state variables.
+    tvnew <- solve(jac, c(rep(0, (nrow(jac)-1)), 1))
+  }
+  tvnorm <- sqrt(sum(tvnew^2))
+  tvnew <- tvnew/tvnorm
+  names(tvnew) <- NULL
   jac[nrow(jac),] <- NA
 
-  return (list(jacobian = jac, tanvec = tvlp))
+  return (list(jacobian = jac, tanvec = tvnew))
 }
 
 ExtSystem <- function(t, state, parms, model, ystart = NULL, tanvec = NULL, condfun = NULL, statedim, freeparsdim, nopts = NULL) {
@@ -105,7 +120,7 @@ ExtSystem <- function(t, state, parms, model, ystart = NULL, tanvec = NULL, cond
   # add possible conditions for freeparsdim > 1 continuation
   if (!is.null(condfun)) {
     for (i in (1:length(condfun))) {
-      rhsval <- do.call(condfun[[i]], list(state, parms, model, statedim, freeparsdim, nopts = nopts, rhsval))
+      rhsval <- do.call(condfun[[i]], list(state, parms, model, tanvec, statedim, freeparsdim, nopts = nopts, rhsval))
     }
     names(rhsval) <- NULL
   }
@@ -278,16 +293,16 @@ LPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rh
   return(unlist(rhsval))
 }
 
-EQ_BPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+EQ_BPtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
-  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+  res <- TangentVecEQ(state, parms, model, tanvec, statedim, freeparsdim, nopts)
   jac <- res$jacobian
   jac[nrow(jac),] <- res$tanvec
 
   return(c(unlist(rhsval), det(jac)))
 }
 
-EQ_HPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+EQ_HPtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   #  When freeparsdim == 2 the Jacobian equals the following square (n+2)x(n+2)
   #  matrix of partial derivatives:
@@ -322,22 +337,23 @@ EQ_HPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval)
   return(c(unlist(rhsval), det(twoAI)))
 }
 
-EQ_LPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+EQ_LPtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
-  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+  res <- TangentVecEQ(state, parms, model, tanvec, statedim, freeparsdim, nopts)
 
-  return(c(unlist(rhsval), det(res$jac[(1:statedim),((freeparsdim+1):(freeparsdim+statedim))])))
+  return(c(unlist(rhsval), res$tanvec[1]))
+  # return(c(unlist(rhsval), det(res$jac[(1:statedim),((freeparsdim+1):(freeparsdim+statedim))])))
 }
 
-HP_BTtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+HP_BTtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
-  res <- TangentVecEQ(state, parms, model, statedim, freeparsdim, nopts)
+  res <- TangentVecEQ(state, parms, model, tanvec, statedim, freeparsdim, nopts)
   jac <- res$jac[(1:statedim),(2:(statedim+1))]
 
   return(c(unlist(rhsval), det(jac)))
 }
 
-LP_BTtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+LP_BTtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   # Extract the additional variables from the state
   q = unlist(state[(freeparsdim + statedim + 2):(freeparsdim + statedim + 1 + statedim)]);
@@ -348,7 +364,7 @@ LP_BTtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval)
   return(c(unlist(rhsval), as.numeric(p %*% q)))
 }
 
-LP_CPtest <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+LP_CPtest <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   # Extract the additional variables from the state
   q = unlist(state[(freeparsdim + statedim + 2):(freeparsdim + statedim + 1 + statedim)]);
@@ -520,11 +536,11 @@ initLP <- function(state, parms, model, tanvec, statedim, freeparsdim, starttype
 
 analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
-  bpval <- EQ_BPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  bpval <- EQ_BPtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(bpval) <- NULL
-  hpval <- EQ_HPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  hpval <- EQ_HPtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(hpval) <- NULL
-  lpval <- EQ_LPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  lpval <- EQ_LPtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(lpval) <- NULL
 
   testvals <- list()
@@ -547,16 +563,16 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
       cfun <- get(paste0("EQ_", biftype, "test"), mode = "function")
       res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
                             maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(cfun),
-                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
+                            tanvec = tanvec, statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       })
@@ -601,7 +617,7 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
         else if (biftype == "HP") msg <- "Locating Hopf bifurcation point failed\n"
         else msg <- "Locating limit point failed\n"
 
-        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
       }
     }
@@ -611,7 +627,7 @@ analyseEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
 
 analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
-  btval <- HP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  btval <- HP_BTtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(btval) <- NULL
 
   testvals <- list()
@@ -626,16 +642,16 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
       cfun <- get(paste0("HP_", biftype, "test"), mode = "function")
       res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
                             maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(HPcontinuation, cfun),
-                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
+                            tanvec = tanvec, statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       })
@@ -679,7 +695,7 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
       } else {
         if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
 
-        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
       }
     }
@@ -689,9 +705,9 @@ analyseHP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
 
 analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastvals, nopts, session) {
 
-  btval <- LP_BTtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  btval <- LP_BTtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(btval) <- NULL
-  cpval <- LP_CPtest(state, parms, model, statedim, freeparsdim, nopts, NULL)
+  cpval <- LP_CPtest(state, parms, model, tanvec, statedim, freeparsdim, nopts, NULL)
   names(cpval) <- NULL
 
   testvals <- list()
@@ -710,16 +726,16 @@ analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
       cfun <- get(paste0("LP_", biftype, "test"), mode = "function")
       res <- tryCatch(stode(state, time = 0, func = ExtSystem, parms = parms, rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
                             maxiter = nopts$maxiter, verbose = FALSE, model = model, condfun = c(LPcontinuation, cfun),
-                            statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
+                            tanvec = tanvec, statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       },
                       error = function(e) {
                         msg <- gsub(".*:", "Error in rootSolve:", e)
-                        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                        if (!is.null(session)) updateConsoleLog(session, msg)
                         else cat(msg)
                         return(NULL)
                       })
@@ -765,7 +781,7 @@ analyseLP <- function(state, parms, model, tanvec, statedim, freeparsdim, lastva
         if (biftype == "BT") msg <- "Locating Bogdanov-Takens point failed\n"
         else msg <- "Locating cusp point failed\n"
 
-        if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+        if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
       }
     }

@@ -89,13 +89,13 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   nsol <- tryCatch(nextCurvePoints(1, computeSpecs, popts, nopts, session = session),
                    warning = function(e) {
                      msg <- gsub(".*:", "Warning in nextCurvePoints:", e)
-                     if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                     if (!is.null(session)) updateConsoleLog(session, msg)
                      else cat(msg)
                      return(NULL)
                    },
                    error = function(e) {
                      msg <- gsub(".*:", "Error in nextCurvePoints:", e)
-                     if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                     if (!is.null(session)) updateConsoleLog(session, msg)
                      else cat(msg)
                      return(NULL)
                    })
@@ -164,13 +164,13 @@ nextCurvePoints <- function(maxpoints, computeSpecs, popts, nopts, session = NUL
                           statedim = statedim, freeparsdim = freeparsdim, nopts = nopts),
                     warning = function(e) {
                       msg <- gsub(".*:", "Warning in rootSolve:", e)
-                      if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      if (!is.null(session)) updateConsoleLog(session, msg)
                       else cat(msg)
                       return(NULL)
                     },
                     error = function(e) {
                       msg <- gsub(".*:", "Error in rootSolve:", e)
-                      if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                      if (!is.null(session)) updateConsoleLog(session, msg)
                       else cat(msg)
                       return(NULL)
                     })
@@ -223,10 +223,10 @@ nextCurvePoints <- function(maxpoints, computeSpecs, popts, nopts, session = NUL
                         collapse=', ')
           specialtags <- rbind(specialtags, c("Type" = testvals$biftype, "Description" = paste0(testvals$biftype, ": ", dscp)))
 
-          if (testvals$biftype == "BP") msg <- paste("Branching point found:\n", dscp, "\n", sep=" ")
-          else if (testvals$biftype == "HP") msg <- paste("Hopf bifurcation point found:\n", dscp, "\n", sep=" ")
-          else if (testvals$biftype == "LP") msg <- paste("Limit point found:\n", dscp, "\n", sep=" ")
-          else if (testvals$biftype == "BT") msg <- paste("Bogdanov-Takens point found:\n", dscp, "\n", sep=" ")
+          if (testvals$biftype == "BP") msg <- paste("Solution ", pntnr, ": Branching point found:\n", dscp, "\n", sep=" ")
+          else if (testvals$biftype == "HP") msg <- paste("Solution ", pntnr, ": Hopf bifurcation point found:\n", dscp, "\n", sep=" ")
+          else if (testvals$biftype == "LP") msg <- paste("Solution ", pntnr, ": Limit point found:\n", dscp, "\n", sep=" ")
+          else if (testvals$biftype == "BT") msg <- paste("Solution ", pntnr, ": Bogdanov-Takens point found:\n", dscp, "\n", sep=" ")
           else msg <- paste("Cusp point found:\n", dscp, "\n", sep=" ")
           msg <- paste0(msg, "Eigenvalues:\n",
                         paste(unlist(lapply(1:length(eigval),
@@ -246,6 +246,7 @@ nextCurvePoints <- function(maxpoints, computeSpecs, popts, nopts, session = NUL
             if ("lpval" %in% names(testvals)) msg <- paste0(msg, "LP:", sprintf("%12.5E", testvals$lpval), "; ")
             if ("btval" %in% names(testvals)) msg <- paste0(msg, "BT:", sprintf("%12.5E", testvals$btval), "; ")
             if ("cpval" %in% names(testvals)) msg <- paste0(msg, "CP:", sprintf("%12.5E", testvals$cpval), "; ")
+            msg <- paste0(msg, "\n")
             cat(msg)
           }
           else if (reportlevel == 1) {

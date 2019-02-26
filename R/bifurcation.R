@@ -264,14 +264,14 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
                                          plotopts[[computeSpecs$tabname]], numopts, session = session),
                          warning = function(e) {
                            msg <- gsub(".*:", "Warning in nextCurvePoints:", e)
-                           if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                           if (!is.null(session)) updateConsoleLog(session, msg)
                            else cat(msg)
                            session$userData$computeSpecs <- NULL
                            return(NULL)
                          },
                          error = function(e) {
                            msg <- gsub(".*:", "Error in nextCurvePoints:", e)
-                           if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
+                           if (!is.null(session)) updateConsoleLog(session, msg)
                            else cat(msg)
                            session$userData$computeSpecs <- NULL
                            return(NULL)
