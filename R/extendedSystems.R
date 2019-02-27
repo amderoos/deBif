@@ -75,7 +75,12 @@ TangentVecEQ <- function(state, parms, model, tanvec, statedim, freeparsdim, nop
   jac <- jac[(1:(statedim+1)), c(1, ((freeparsdim+1):(freeparsdim+statedim)))]
 
   tvdone <- FALSE
-  if (!is.null(tanvec)) {
+  # Append the current tangent vector as the last row to the jacobian to
+  # preserve direction. See the matcont manual at
+  # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
+  # But only do this if the tangent vector passed as argument has the same
+  # dimension as the equilibrium curve
+  if (!is.null(tanvec) && (length(tanvec) == (statedim + 1))) {
     jac[nrow(jac),] <- tanvec
     if (rcond(jac) > nopts$atol) {
       # Solve for the tangent vector to the curve of the 1st free parameter and
@@ -134,7 +139,7 @@ ExtSystem <- function(t, state, parms, model, ystart = NULL, tanvec = NULL, cond
   return(list(rhsval))
 }
 
-BPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+BPcontinuation <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   # Continuation of a branching point is carried out using the defining system
   # eq. 41 on page 36 of the Matcont documentation (august 2011):
@@ -193,7 +198,7 @@ BPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rh
   return(rhsval)
 }
 
-HPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+HPcontinuation <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   #  When freeparsdim == 2 the Jacobian equals the following square (n+2)x(n+2)
   #  matrix of partial derivatives:
@@ -228,7 +233,7 @@ HPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rh
   return(c(unlist(rhsval), det(twoAI)))
 }
 
-LPcontinuation <- function(state, parms, model, statedim, freeparsdim, nopts, rhsval) {
+LPcontinuation <- function(state, parms, model, tanvec, statedim, freeparsdim, nopts, rhsval) {
 
   # Continuation of a limitpoint is carried out using the defining system
   # (10.97) on page 515 of Kuznetsov (1996):

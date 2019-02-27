@@ -198,6 +198,23 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
     })
 
     observe({
+      pointid <- as.numeric(input$selectpoint)
+      if (pointid > 0) {
+        isolate({
+            clist <- reactiveValuesToList(curveList)
+            ind1 <- round(pointid/1000000)
+            ind2 <- round((pointid-ind1*1000000)/1000)
+            ind3 <- round(pointid-ind1*1000000-ind2*1000)
+            cln1 <- curveListNames[ind1]
+            inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
+            if (inittype %in% c("BP", "HP", "LP")) {
+              updateSelectInput(session, "curvetype", selected = inittype)
+            }
+        })
+      }
+    })
+
+    observe({
       if (as.numeric(curveDirection()) == 0) return(NULL)
 
       isolate({
@@ -248,6 +265,8 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
           updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
           shinyjs::show("pausebtn")
           shinyjs::show("stopbtn")
+        } else {
+          curveDirection(0)
         }
 
         # Update the console log
