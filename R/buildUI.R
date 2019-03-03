@@ -154,6 +154,10 @@ buildUI <- function(state, parms, plotopts, numopts) {
     body = dashboardBody(
       do.call(tabsetPanel, c(myTabs, id = "plottab")),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
+        "#saveplot { left: calc(100% - 120px); top: 70px; position: absolute;}"
+      ))),
+      downloadButton("saveplot", label = "Save png"),
+      shiny::tags$head(shiny::tags$style(shiny::HTML(
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),
       tags$script(

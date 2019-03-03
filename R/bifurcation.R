@@ -167,6 +167,23 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       consoleLog(session$userData$alltext)
     })
 
+    output$saveplot <- downloadHandler(
+      filename = function() {
+        tempfile(pattern = "Rplot", tmpdir = '', fileext = ".png")
+      },
+      content = function(file) {
+        curtab <- as.numeric(isolate(input$plottab))
+        curtabname <- curveListNames[curtab]
+        png(file,
+            height = 0.75*session$clientData[[paste0("output_plot", curtab, "_width")]],
+            width = 0.99*session$clientData[[paste0("output_plot", curtab, "_width")]])
+        if (curtab == 1) biforbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
+        else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
+        else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
+        dev.off()
+      },
+      contentType = "image/png")
+
     # React to changes in curveList by updating the special point selection menu
     observe({
       if (as.numeric(isolate(busyComputing())) == 1) return(NULL)
