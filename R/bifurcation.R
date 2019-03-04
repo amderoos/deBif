@@ -292,30 +292,30 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
     })
 
     observe({
-      if ((as.numeric(busyComputing()) != 1) || is.null(session$userData$computeSpecs)) return(NULL)
+      if ((as.numeric(busyComputing()) != 1) || is.null(session$userData$curveData)) return(NULL)
 
       isolate({
-        computeSpecs <- session$userData$computeSpecs
-        nsol <- tryCatch(nextCurvePoints(isolate(round(as.numeric(numopts$replotfreq))), session$userData$computeSpecs,
-                                         plotopts[[computeSpecs$tabname]], numopts, session = session),
+        curveData <- session$userData$curveData
+        nsol <- tryCatch(nextCurvePoints(isolate(round(as.numeric(numopts$replotfreq))), session$userData$curveData,
+                                         plotopts[[curveData$tabname]], numopts, session = session),
                          warning = function(e) {
                            msg <- gsub(".*:", "Warning in nextCurvePoints:", e)
                            if (!is.null(session)) updateConsoleLog(session, msg)
                            else cat(msg)
-                           session$userData$computeSpecs <- NULL
+                           session$userData$curveData <- NULL
                            return(NULL)
                          },
                          error = function(e) {
                            msg <- gsub(".*:", "Error in nextCurvePoints:", e)
                            if (!is.null(session)) updateConsoleLog(session, msg)
                            else cat(msg)
-                           session$userData$computeSpecs <- NULL
+                           session$userData$curveData <- NULL
                            return(NULL)
                          })
 
         if (!is.null(nsol) && (length(nsol) > 0) && !is.null(nsol$points)) {
 
-          newcurve <- curveList[[computeSpecs$tabname]][[computeSpecs$newcurvenr]]
+          newcurve <- curveList[[curveData$tabname]][[curveData$newcurvenr]]
           newcurve$points <- rbind(newcurve$points, nsol$points)
           newcurve$eigvals <- rbind(newcurve$eigvals, nsol$eigvals)
           newcurve$tangent <- rbind(newcurve$tangent, nsol$tangent)
@@ -324,7 +324,7 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
           newcurve$special.eigvals <- rbind(newcurve$special.eigvals, nsol$special.eigvals)
           newcurve$special.tangent <- rbind(newcurve$special.tangent, nsol$special.tangent)
 
-          curveList[[computeSpecs$tabname]][[computeSpecs$newcurvenr]] <- newcurve
+          curveList[[curveData$tabname]][[curveData$newcurvenr]] <- newcurve
         }
       })
 
@@ -332,7 +332,7 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       consoleLog(session$userData$alltext)
 
       # Invalidate this for later if computation has not ended
-      if (!is.null(session$userData$computeSpecs)) {
+      if (!is.null(session$userData$curveData)) {
         updatePlot(1)
         invalidateLater(0, session)
       } else {
@@ -365,28 +365,28 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       if (as.numeric(isolate(busyComputing())) == 0) return(NULL)
       updateConsoleLog(session, "Computation interrupted by the user\n")
 
-      computeSpecs <- session$userData$computeSpecs
+      curveData <- session$userData$curveData
 
       # Add the final points as special point
-      newcurve <- curveList[[computeSpecs$tabname]][[computeSpecs$newcurvenr]]
+      newcurve <- curveList[[curveData$tabname]][[curveData$newcurvenr]]
       if (!is.null(newcurve) && !is.null(newcurve$points)) {
-        endPnt <- c("Type" = computeSpecs$curvetype,
+        endPnt <- c("Type" = curveData$curvetype,
                     "Description" = paste(unlist(lapply(1:length(newcurve$points[1,]),
                                                         function(i) {paste0(names(newcurve$points[1,i]), "=",
                                                                             round(newcurve$points[nrow(newcurve$points), i], 3))})),
                                           collapse=', '))
         updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))
-        endPnt["Description"] <- paste0(sprintf("%04d: ", (computeSpecs$pntnr-1)), endPnt["Description"])
+        endPnt["Description"] <- paste0(sprintf("%04d: ", (curveData$pntnr-1)), endPnt["Description"])
 
         newcurve$special.points <- rbind(newcurve$special.points, newcurve$points[nrow(newcurve$points),])
         newcurve$special.eigvals <- rbind(newcurve$special.eigvals, newcurve$special.eigvals[nrow(newcurve$special.eigvals),])
         newcurve$special.tangent <- rbind(newcurve$special.tangent, newcurve$special.tangent[nrow(newcurve$special.tangent),])
         newcurve$special.tags <- rbind(newcurve$special.tags, c(endPnt))
 
-        curveList[[computeSpecs$tabname]][[computeSpecs$newcurvenr]] <- newcurve
+        curveList[[curveData$tabname]][[curveData$newcurvenr]] <- newcurve
       }
 
-      session$userData$computeSpecs <- NULL
+      session$userData$curveData <- NULL
       changeCurveMenu(1)
       updatePlot(1)
       curveDirection(0)
