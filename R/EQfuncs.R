@@ -1,4 +1,4 @@
-initEQ <- function(state, parms, curveData, nopts) {
+initEQ <- function(state, parms, curveData, nopts, session = NULL) {
   if (curveData$inittype == "BP") {
     #  The Jacobian equals the following square (n+1)x(n+1) matrix of partial
     #  derivatives:
@@ -96,7 +96,7 @@ initEQ <- function(state, parms, curveData, nopts) {
     guess <- state + c(as.numeric(nopts$stepsize)*dyscaled)
 
     return(list(y = guess, tanvec = v2))
-  } else return(NULL)
+  } else return(list())
 }
 
 ExtSystemEQ <- function(t, state, parms, curveData, nopts = NULL) {

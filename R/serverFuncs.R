@@ -160,6 +160,13 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
     nopts$maxiter <- max(as.numeric(input[["maxiter"]]), 1)
     nopts$maxpoints <- max(as.numeric(input[["maxpoints"]]), 1)
     nopts$replotfreq <- max(round(as.numeric(input[["replotfreq"]])), 1)
+
+    nopts$ninterval <- min(max(round(as.numeric(input[["ninterval"]])), 1), 40)
+    updateTextInput(session, "ninterval", value=nopts$ninterval)
+    nopts$glorder <- min(max(round(as.numeric(input[["glorder"]])), 2), 7)
+    updateTextInput(session, "glorder", value=nopts$glorder)
+    nopts$lcampl <- max(text2numeric(nopts$lcampl, input[["lcampl"]]), 1.0E-7)
+    updateTextInput(session, "lcampl", value=sprintf("%.1E", nopts$lcampl))
   }
   return(nopts)
 }

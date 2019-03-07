@@ -78,7 +78,8 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
                     args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                     methods_run = as.character(formals(deSolve::ode)$method),
                     rtol = 1e-7, atol = 1e-9, ctol = 1e-8, jacdif = 1.0E-6, maxiter = 100,
-                    maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-5, replotfreq = 10
+                    maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-5, replotfreq = 10,
+                    ninterval = 10, glorder = 4, lcampl = 1.0E-6
   )
 
   # Options for plotting etc.
@@ -218,14 +219,19 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       pointid <- as.numeric(input$selectpoint)
       if (pointid > 0) {
         isolate({
-            clist <- reactiveValuesToList(curveList)
+          curtab <- as.numeric(isolate(input$plottab))
+          curtabname <- curveListNames[curtab]
+          clist <- reactiveValuesToList(curveList)
             ind1 <- round(pointid/1000000)
             ind2 <- round((pointid-ind1*1000000)/1000)
             ind3 <- round(pointid-ind1*1000000-ind2*1000)
             cln1 <- curveListNames[ind1]
             inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
-            if (inittype %in% c("BP", "HP", "LP")) {
-              updateSelectInput(session, "curvetype", selected = inittype)
+            if ((curtabname == 'BifurcationBounds') && (inittype %in% c("BP", "HP", "LP"))) {
+              updateSelectInput(session, "curvetype3", selected = inittype)
+            } else if (curtabname == 'BifurcationCurves') {
+              if (inittype == "HP") updateSelectInput(session, "curvetype2", selected = "LC")
+              else updateSelectInput(session, "curvetype2", selected = "EQ")
             }
         })
       }
@@ -243,7 +249,8 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
         pointid <- as.numeric(input$selectpoint)
-        curvetype <- ifelse((curtabname == 'BifurcationCurves'), "EQ", input$curvetype)
+        if (curtabname == 'BifurcationCurves') curvetype <- input$curvetype2
+        else if (curtabname == 'BifurcationBounds') curvetype <- input$curvetype3
         clist <- reactiveValuesToList(curveList)
         popts <- reactiveValuesToList(plotopts)
         numopts$stepsize <- as.numeric(curveDirection())*abs(numopts$stepsize)
@@ -370,11 +377,31 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       # Add the final points as special point
       newcurve <- curveList[[curveData$tabname]][[curveData$newcurvenr]]
       if (!is.null(newcurve) && !is.null(newcurve$points)) {
-        endPnt <- c("Type" = curveData$curvetype,
-                    "Description" = paste(unlist(lapply(1:length(newcurve$points[1,]),
-                                                        function(i) {paste0(names(newcurve$points[1,i]), "=",
-                                                                            round(newcurve$points[nrow(newcurve$points), i], 3))})),
-                                          collapse=', '))
+        if (curveData$curvetype == "LC") {
+          statedim <- length(newcurve$initstate)
+          freeparsdim <- length(newcurve$bifpars)
+
+          vals <- lapply((1:statedim), function(i) {
+            indxrange <- statedim*(1:(numopts$ninterval*numopts$glorder))
+            yname <- names(newcurve$points[1, freeparsdim+i])
+            y <- newcurve$points[nrow(newcurve$points), freeparsdim+i+indxrange]
+            return(paste0("Min.", yname, "=", round(min(y), 3), ", Max.", yname, "=", round(max(y), 3)))
+          })
+          endPnt <- c("Type" = curveData$curvetype,
+                      "Description" = paste0(names(newcurve$points[1, 1]), "=",
+                                             round(newcurve$points[nrow(newcurve$points), 1], 3), ", ",
+                                             names(newcurve$points[1, ncol(newcurve$points)]), "=",
+                                             round(newcurve$points[nrow(newcurve$points), ncol(newcurve$points)], 3), ", ",
+                                             paste(unlist(vals), collapse = ', ')))
+        } else {
+          endPnt <- c("Type" = curveData$curvetype,
+                      "Description" = paste(unlist(lapply(1:length(newcurve$points[1,]),
+                                                          function(i) {
+                                                            paste0(names(newcurve$points[1,i]), "=",
+                                                                   round(newcurve$points[nrow(newcurve$points), i], 3))
+                                                            })),
+                                            collapse=', '))
+        }
         updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))
         endPnt["Description"] <- paste0(sprintf("%04d: ", (curveData$pntnr-1)), endPnt["Description"])
 
@@ -486,6 +513,9 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       if (!is.null(newlist)) lapply((1:length(newlist)),
                                     function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
 
+      updateCurveMenu(session, curveList)
+      updateSpecialPointsList(session, curveList, 0)
+
       # Update the console log
       consoleLog(session$userData$alltext)
     })
@@ -497,6 +527,9 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       newlist <- processLoadCurve(session, curtab, clist, input$loadcurve, statenames, parmsnames, replace = TRUE)
       if (!is.null(newlist)) lapply((1:length(newlist)),
                                     function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
+
+      updateCurveMenu(session, curveList)
+      updateSpecialPointsList(session, curveList, 0)
 
       # Update the console log
       consoleLog(session$userData$alltext)

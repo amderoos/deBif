@@ -1,4 +1,4 @@
-initLP <- function(state, parms, curveData, nopts) {
+initLP <- function(state, parms, curveData, nopts, session = NULL) {
 
   # To continue an LP curve we use the extended system of eqs. (10.76) on pg. 504 in
   # Kuznetsov (1996), as the matrix of this system has full rank at a Bogdanov-Takens

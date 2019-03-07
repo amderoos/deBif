@@ -1,4 +1,4 @@
-initBP <- function(state, parms, curveData, nopts) {
+initBP <- function(state, parms, curveData, nopts, session = NULL) {
 
   # Compute the Jacobian
   jac <- jacobian.full(y=state, func=curveData$model, parms=parms, pert = nopts$jacdif)

@@ -4,7 +4,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   if (exists("deBifverbose", envir = .GlobalEnv)) verbose <- get("deBifverbose", envir = .GlobalEnv)
   else verbose <- FALSE
 
-  if (!(curvetype %in% c("EQ", "BP", "HP", "LP"))) {
+  if (!(curvetype %in% c("EQ", "BP", "HP", "LP", "LC"))) {
     msg <- paste0("Computation aborted:\nContinuation for curve type ", curvetype, " not implemented\n")
     if (!is.null(session)) updateConsoleLog(session, msg)
     else cat(msg)
@@ -27,7 +27,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   eignames <- unlist(lapply((1:statedim), function(i){paste0("Eigenvalue", i)}))
   tvnames <- unlist(lapply((1:length(y)), function(i){paste0("d", varnames[i])}))
 
-  if (curvetype == "EQ") {
+  if ((curvetype == "EQ") || (curvetype == "LC")) {
     condfun <- NULL
   } else {
     if (exists(paste0(curvetype, "continuation"), mode = "function"))
@@ -47,40 +47,46 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   }
   else analysefun <- NULL
 
-  curveData <- list()
-  curveData$guess <- y
-  curveData$yold <- y
-  curveData$tanvec <- tanvec
-  curveData$testvals <- NULL
-  curveData$pntnr <- 1
-  curveData$stepscalefac <- 1
+  cData <- list()
+  cData$guess <- y
+  cData$yold <- y
+  cData$tanvec <- tanvec
+  cData$testvals <- NULL
+  cData$pntnr <- 1
+  cData$stepscalefac <- 1
 
-  curveData$tabname <- curtabname
-  curveData$model <- model
-  curveData$fixedpars <- fixedpars
-  curveData$condfun <- condfun
-  curveData$extSys <- switch(curvetype, "BP" = ExtSystemEQ, "EQ" = ExtSystemEQ, "HP" = ExtSystemEQ, "LP" = ExtSystemEQ,
-                             "LC" = ExtSystemLC)
-  curveData$analysefun <- analysefun
-  curveData$statedim <- statedim
-  curveData$freeparsdim <- freeparsdim
-  curveData$pointdim <- freeparsdim + statedim
-  curveData$inittype <- inittype
-  curveData$curvetype <- curvetype
-  curveData$eignames <- eignames
-  curveData$tvnames <- tvnames
-  curveData$reportlevel <- reportlevel
-  curveData$newcurvenr <- length((clist[[curtabname]]))+1
+  cData$tabname <- curtabname
+  cData$model <- model
+  cData$fixedpars <- fixedpars
+  cData$condfun <- condfun
+  cData$extSys <- switch(curvetype, "BP" = ExtSystemEQ, "EQ" = ExtSystemEQ, "HP" = ExtSystemEQ, "LP" = ExtSystemEQ, "LC" = ExtSystemLC)
+
+  if (curvetype == "LC") cData$jacfun <- ExtSystemLCjac
+  else cData$jacfun <- jacobian.full
+  cData$analysefun <- analysefun
+  cData$statedim <- statedim
+  cData$freeparsdim <- freeparsdim
+  cData$pointdim <- freeparsdim + statedim
+  cData$inittype <- inittype
+  cData$curvetype <- curvetype
+  cData$varnames <- varnames
+  cData$eignames <- eignames
+  cData$tvnames <- tvnames
+  cData$reportlevel <- reportlevel
+  cData$newcurvenr <- length((clist[[curtabname]]))+1
 
   # If present run the initializer
   if (exists(paste0("init", curvetype), mode = "function")) {
     initfun <- get(paste0("init", curvetype), mode = "function")
     names(y) <- varnames
-    initres <- initfun(y, fixedpars, curveData, nopts)
-    if (!is.null(initres)) {
+    initres <- initfun(y, fixedpars, cData, nopts, session)
+    if (is.null(initres)) {
+      return(NULL)
+    } else {
+      if (!is.null(initres$curveData)) cData <- initres$curveData
       if (!is.null(initres$y)) {
         y <- c(as.numeric(initres$y))
-        names(y) <- varnames
+        names(y) <- cData$varnames
       }
       if (!is.null(initres$tanvec)) tanvec <- c(as.numeric(initres$tanvec))
     }
@@ -90,11 +96,11 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
     tanvec <- c(1.0, rep(0, (length(y)-1)))
   else if (abs(tanvec[1]) > nopts$iszero) tanvec <- sign(tanvec[1])*tanvec
 
-  curveData$guess <- y
-  curveData$yold <- y
-  curveData$tanvec <- tanvec
+  cData$guess <- y
+  cData$yold <- y
+  cData$tanvec <- tanvec
 
-  nsol <- tryCatch(nextCurvePoints(1, curveData, popts, nopts, session = session),
+  nsol <- tryCatch(nextCurvePoints(1, cData, popts, nopts, session = session),
                    warning = function(e) {
                      msg <- gsub(".*:", "Warning in nextCurvePoints:", e)
                      if (!is.null(session)) updateConsoleLog(session, msg)
@@ -109,11 +115,25 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
                    })
 
   if (!is.null(nsol) && (length(nsol) > 0) && !is.null(nsol$points)) {
-    startPnt <- c("Type" = curvetype,
-                  "Description" = paste(unlist(lapply(1:length(nsol$points[1,]),
-                                                      function(i) {paste0(names(nsol$points[1,i]), "=",
-                                                                          round(nsol$points[1, i], 3))})),
-                                        collapse=', '))
+    if (curvetype == "LC") {
+      vals <- lapply((1:statedim), function(i) {
+        indxrange <- statedim*(1:(nopts$ninterval*nopts$glorder))
+        y <- nsol$points[1, freeparsdim+i+indxrange]
+        yname <- names(nsol$points[1, freeparsdim+i])
+        paste0("Min.", yname, "=", round(min(y), 3), ", Max.", yname, "=", round(max(y), 3))
+      })
+      startPnt <- c("Type" = curvetype,
+                    "Description" = paste0(names(nsol$points[1, 1]), "=", round(nsol$points[1, 1], 3), ", ",
+                                           names(nsol$points[1, ncol(nsol$points)]), "=",
+                                           round(nsol$points[1, ncol(nsol$points)], 3), ", ",
+                                           paste(unlist(vals), collapse = ', ')))
+    } else {
+      startPnt <- c("Type" = curvetype,
+                    "Description" = paste(unlist(lapply(1:length(nsol$points[1,]),
+                                                        function(i) {paste0(names(nsol$points[1,i]), "=",
+                                                                            round(nsol$points[1, i], 3))})),
+                                          collapse=', '))
+    }
     lbl <- paste0(curvetype, sprintf("%02d", (clist$TotalCurves + 1)),": ", startPnt["Description"])
     startPnt["Description"] <- paste0(sprintf("%04d: ", 1), startPnt["Description"])
 
@@ -122,7 +142,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
                      special.points = nsol$points, special.eigvals = nsol$eigvals,
                      special.tangent = nsol$tangent, special.tags = rbind(NULL, c(startPnt)))
 
-    clist[[curveData$tabname]][[curveData$newcurvenr]] <- newcurve
+    clist[[cData$tabname]][[cData$newcurvenr]] <- newcurve
     clist$TotalCurves <- (clist$TotalCurves + 1)
     return(clist)
   }
@@ -139,6 +159,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
   cData <- curveData
   curvetype <- cData$curvetype
   pntnr <- cData$pntnr
+  statedim <- cData$statedim
+  freeparsdim <- cData$freeparsdim
 
   allsols <- NULL
   alltvs <- NULL
@@ -150,7 +172,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
   while ((pntnr - cData$pntnr) < as.numeric(maxpoints)) {
     res <- tryCatch(stode(cData$guess, time = 0, func = cData$extSys, parms = cData$fixedpars,
-                          rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                          rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol, jacfunc = cData$jacfun,
                           maxiter = nopts$maxiter, verbose = verbose, curveData = cData, nopts = nopts),
                     warning = function(e) {
                       msg <- gsub(".*:", "Warning in rootSolve:", e)
@@ -170,19 +192,23 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
       # Compute the Jacobian w.r.t. to free parameters (the first cData$freeparsdim
       # columns) and the state variables
-      jac <- jacobian.full(y=y, func=cData$extSys, parms=cData$fixedpars, pert = nopts$jacdif, curveData = cData, nopts = nopts)
+      jac <- cData$jacfun(y=y, func=cData$extSys, parms=cData$fixedpars, pert = nopts$jacdif, curveData = cData, nopts = nopts)
 
-      # Compute the eigenvalues of the restricted Jacobian (exclude the first cData$freeparsdim columns
-      # and takink only as many rows as there are state variables)
-      eig <- eigen(jac[(1:cData$statedim),((cData$freeparsdim+1):cData$pointdim)])
-      # Sort them on decreasing real part
-      eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
-      names(eigval) <- cData$eignames
+      if (curvetype == "LC") {
+        cData$upoldp <- updateRefSol(0, y, cData$fixedpars, cData, nopts)
+      } else {
+        # Compute the eigenvalues of the restricted Jacobian (exclude the first cData$freeparsdim columns
+        # and takink only as many rows as there are state variables)
+        eig <- eigen(jac[(1:cData$statedim),((cData$freeparsdim+1):cData$pointdim)])
+        # Sort them on decreasing real part
+        eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
+        names(eigval) <- cData$eignames
+      }
 
       # Append the current tangent vector as the last row to the jacobian to
       # preserve direction. See the matcont manual at
       # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
-      # Notice that jacobian.full returns a square matrix with NA values on the last row
+      # Notice that cData$jacfun returns a square matrix with NA values on the last row
       jac[nrow(jac),] <- cData$tanvec
       if (rcond(jac) > nopts$atol) {
         tvnew <- solve(jac, c(rep(0, (length(cData$tanvec)-1)), 1))
@@ -190,7 +216,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         tvnew <- tvnew/tvnorm
         names(tvnew) <- cData$tvnames
         cData$tanvec <- tvnew
-      }
+      } else tvnew <- cData$tanvec
 
       ############## Execute the test functions and store the results
       if (!is.null(cData$analysefun)) {
@@ -199,11 +225,15 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
           allsols <- rbind(allsols, c(testvals$y[1:cData$pointdim]))
           alltvs <- rbind(alltvs, c(testvals$tanvec[1:cData$pointdim]))
-          alleigs <- rbind(alleigs, c(testvals$eigval[1:length(eigval)]))
+          if (!is.null(testvals$eigval)) {
+            alleigs <- rbind(alleigs, c(testvals$eigval[1:length(eigval)]))
+          }
 
           specialsols <- rbind(specialsols, c(allsols[nrow(allsols),]))
           specialtvs <- rbind(specialtvs, c(alltvs[nrow(alltvs),]))
-          specialeigs <- rbind(specialeigs, c(alleigs[nrow(alleigs),]))
+          if (!is.null(testvals$eigval)) {
+            specialeigs <- rbind(specialeigs, c(alleigs[nrow(alleigs),]))
+          }
 
           dscp <- paste(unlist(lapply(1:cData$pointdim, function(i) {paste0(names(y[i]), "=", round(c(testvals$y)[i], 3))})),
                         collapse=', ')
@@ -212,14 +242,16 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           msg <- switch(testvals$biftype,
                         BP = "Branching", HP = "Hopf bifurcation", LP = "Limit", BT = "Bogdanov-Takens", CP = "Cusp")
           msg <- paste0("Solution ", pntnr, ": ", msg, " point found:\n", dscp, "\n")
-          msg <- paste0(msg, "Eigenvalues:\n",
-                        paste(unlist(lapply(1:length(eigval),
-                                            function(i) {paste0(ifelse(is.complex(testvals$eigval[i]),
-                                                                       sprintf("%12.5E + %12.5Ei", Re(testvals$eigval[i]),
-                                                                               Im(testvals$eigval[i])),
-                                                                       sprintf("%12.5E", testvals$eigval[i])))})),
-                              collapse=' '), "\n")
 
+          if (curvetype != "LC") {
+            msg <- paste0(msg, "Eigenvalues:\n",
+                          paste(unlist(lapply(1:length(eigval),
+                                              function(i) {paste0(ifelse(is.complex(testvals$eigval[i]),
+                                                                         sprintf("%12.5E + %12.5Ei", Re(testvals$eigval[i]),
+                                                                                 Im(testvals$eigval[i])),
+                                                                         sprintf("%12.5E", testvals$eigval[i])))})),
+                                collapse=' '), "\n")
+          }
           if (!is.null(session)) updateConsoleLog(session, msg)
           else cat(msg)
 
@@ -242,7 +274,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
           testvals$y <- NULL
           testvals$tanvec <- NULL
-          testvals$eigval <- NULL
+          if (curvetype != "LC") testvals$eigval <- NULL
           testvals$biftype <- NULL
 
           pntnr <- pntnr + 1
@@ -251,14 +283,34 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
 
       ############## Report the solution point and the eigenvalues
-      msg <- paste0("Solution ", pntnr, " found:\n",
-                    paste(unlist(lapply(1:cData$pointdim,
-                                        function(i) {paste0(names(y[i]), "=", sprintf("%12.5E", y[i]))})), collapse=', '), "\n")
-      msg <- paste0(msg, "Eigenvalues:\n",
-                    paste(unlist(lapply(1:length(eigval),
-                                        function(i) {paste0(ifelse(is.complex(eigval[i]),
-                                                                   sprintf("%12.5E + %12.5Ei", Re(eigval[i]), Im(eigval[i])),
-                                                                   sprintf("%12.5E", eigval[i])))})), collapse=' '), "\n")
+      if (curvetype == "LC") {
+        msg <- paste0("Solution ", pntnr, " found:\n",
+                      "     ",
+                      paste(unlist(lapply(c((1:(cData$freeparsdim+cData$statedim)), cData$pointdim),
+                                          function(i) {sprintf("%12s", names(y[i]))})), collapse = " "),
+                      "\nMin. ",
+                      sprintf("%12.5E", y[cData$freeparsdim]), " ",
+                      paste(unlist(lapply((1:cData$statedim),
+                                          function(i) {sprintf("%12.5E", min(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))]))})),
+                            collapse = " "), " ",
+                      sprintf("%12.5E", y[cData$pointdim]),
+                      "\nMax. ",
+                      sprintf("%12.5E", y[cData$freeparsdim]), " ",
+                      paste(unlist(lapply((1:cData$statedim),
+                                          function(i) {sprintf("%12.5E", max(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))]))})),
+                            collapse = " "), " ",
+                      sprintf("%12.5E", y[cData$pointdim]),
+                      "\n")
+      } else {
+        msg <- paste0("Solution ", pntnr, " found:\n",
+                      paste(unlist(lapply(1:cData$pointdim,
+                                          function(i) {paste0(names(y[i]), "=", sprintf("%12.5E", y[i]))})), collapse=', '), "\n")
+        msg <- paste0(msg, "Eigenvalues:\n",
+                      paste(unlist(lapply(1:length(eigval),
+                                          function(i) {paste0(ifelse(is.complex(eigval[i]),
+                                                                     sprintf("%12.5E + %12.5Ei", Re(eigval[i]), Im(eigval[i])),
+                                                                     sprintf("%12.5E", eigval[i])))})), collapse=' '), "\n")
+      }
       if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
       else cat(msg)
 
@@ -274,16 +326,34 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         cat(msg)
       }
       else if (cData$reportlevel == 1) {
-        yy <- c(as.numeric(y), eigval)
-        if (pntnr == 1) names(yy) <- c(names(y), cData$eignames)
-        else names(yy) <- NULL
-        print(c(yy), print.gap = 2, digits = 6, right = TRUE)
+        if (curvetype == "LC") {
+          yy <- c(as.numeric(y[1:cData$freeparsdim]),
+                  unlist(lapply((1:cData$statedim),
+                                function(i) {c(min(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))]),
+                                               max(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))]))})),
+                  as.numeric(y[cData$pointdim]))
+          if (pntnr == 1) {
+            namesyy <- c(names(y[1:cData$freeparsdim]),
+                         unlist(lapply((1:cData$statedim),
+                                       function(i){c(paste0("min. ", varnames[i+1]),
+                                                     paste0("max. ", varnames[i+1]))})),
+                         names(y[cData$pointdim]))
+            cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
+          }
+        } else {
+          yy <- c(as.numeric(y), eigval)
+          if (pntnr == 1) {
+            names(yy) <- c(names(y), cData$eignames)
+            cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
+          }
+        }
+        cat(paste(unlist(lapply(yy, function(x) {sprintf("%12.5E", x)})), collapse = " "), "\n")
       }
 
       ############## Store the results
       allsols <- rbind(allsols, (c(y)[1:cData$pointdim]))
       alltvs <- rbind(alltvs, (c(tvnew)[1:cData$pointdim]))
-      alleigs <- rbind(alleigs, c(eigval))
+      if (curvetype != "LC") alleigs <- rbind(alleigs, c(eigval))
 
       ############## Take a new step along the curve
       # Determine the relative change in the components and the index of the largest change
@@ -294,10 +364,12 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
       dy <- as.numeric(nopts$stepsize)*tvnew
 
-      dyscaled <- max(abs(as.numeric(nopts$stepsize)*y[dyind]), as.numeric(nopts$minstepsize))*(dy/abs(dy[dyind]))
+      cData$dyscaled <- max(abs(as.numeric(nopts$stepsize)*y[dyind]), as.numeric(nopts$minstepsize))*(dy/abs(dy[dyind]))
+
+      if (any(is.infinite(cData$dyscaled)) || any(is.na(cData$dyscaled))) cData$dyscaled <- dy
 
       cData$stepscalefac <- max(1, cData$stepscalefac/2)
-      cData$guess <- y + dyscaled/cData$stepscalefac
+      cData$guess <- y + cData$dyscaled/cData$stepscalefac
       cData$yold <- y
       tanvec <- tvnew
 
@@ -313,8 +385,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
 
       if (pntnr > 10) {
-        if (pntnr > as.numeric(nopts$maxpoints) ||
-            (as.numeric(y[1]) < (as.numeric(popts$xmin) - as.numeric(nopts$iszero))) ||
+        if ((as.numeric(y[1]) < (as.numeric(popts$xmin) - as.numeric(nopts$iszero))) ||
             (as.numeric(y[1]) > (as.numeric(popts$xmax) + as.numeric(nopts$iszero)))) {
           msg <- "Computation halted:\nMinimum or maximum of x-axis domain reached\n"
           if (!is.null(session)) updateConsoleLog(session, msg)
@@ -366,24 +437,25 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               cData <- NULL
               break
             }
-          }
-          if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
-              (as.numeric(y[2]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
-            msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
-            if (!is.null(session)) updateConsoleLog(session, msg)
-            else cat(msg)
-            cData <- NULL
-            break
+          } else if (curvetype != "LC") {
+            if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
+                (as.numeric(y[2]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
+              msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
+              if (!is.null(session)) updateConsoleLog(session, msg)
+              else cat(msg)
+              cData <- NULL
+              break
+            }
           }
         }
 
-        if (any(as.numeric(y[(1:(cData$freeparsdim + cData$statedim))]) < 0 - as.numeric(nopts$iszero))) {
-          msg <- "Computation halted:\nOne of the variables has become negative\n"
-          if (!is.null(session)) updateConsoleLog(session, msg)
-          else cat(msg)
-          cData <- NULL
-          break
-        }
+        # if (any(as.numeric(y[(1:(cData$freeparsdim + cData$statedim))]) < 0 - as.numeric(nopts$iszero))) {
+        #   msg <- "Computation halted:\nOne of the variables has become negative\n"
+        #   if (!is.null(session)) updateConsoleLog(session, msg)
+        #   else cat(msg)
+        #   cData <- NULL
+        #   break
+        # }
       }
     } else {                                      # Solution not found
       if (pntnr == 1) {
@@ -400,22 +472,36 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         break
       }
       cData$stepscalefac <- cData$stepscalefac*2
-      cData$guess <- cData$yold + dyscaled/cData$stepscalefac
+      cData$guess <- cData$yold + cData$dyscaled/cData$stepscalefac
     }
   }
   if (is.null(cData)) {
     if (!is.null(allsols)) {
-      endPnt <- c("Type" = curvetype,
-                  "Description" = paste(unlist(lapply(1:length(allsols[1,]),
-                                                      function(i) {paste0(names(allsols[1,i]), "=",
-                                                                          round(allsols[nrow(allsols), i], 3))})),
-                                        collapse=', '))
+      if (curvetype == "LC") {
+        vals <- lapply((1:statedim), function(i) {
+          indxrange <- statedim*(1:(nopts$ninterval*nopts$glorder))
+          yname <- names(allsols[1, freeparsdim+i])
+          y <- c(allsols[1, freeparsdim+i+indxrange])
+          paste0("Min.", yname, "=", round(min(y), 3), ", Max.", yname, "=", round(max(y), 3))
+        })
+        endPnt <- c("Type" = curvetype,
+                    "Description" = paste0(names(allsols[1, 1]), "=", round(allsols[nrow(allsols), 1], 3), ', ',
+                                           names(allsols[1, ncol(allsols)]), "=",
+                                           round(allsols[nrow(allsols), ncol(allsols)], 3), ', ',
+                                           paste(unlist(vals), collapse = ', ')))
+      } else {
+        endPnt <- c("Type" = curvetype,
+                    "Description" = paste(unlist(lapply(1:length(allsols[1,]),
+                                                        function(i) {paste0(names(allsols[1,i]), "=",
+                                                                            round(allsols[nrow(allsols), i], 3))})),
+                                          collapse=', '))
+      }
       updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))
       endPnt["Description"] <- paste0(sprintf("%04d: ", pntnr-1), endPnt["Description"])
 
       specialsols <- rbind(specialsols, c(allsols[nrow(allsols),]))
       specialtvs <- rbind(specialtvs, c(alltvs[nrow(alltvs),]))
-      specialeigs <- rbind(specialeigs, c(alleigs[nrow(alleigs),]))
+      if (curvetype != "LC") specialeigs <- rbind(specialeigs, c(alleigs[nrow(alleigs),]))
       specialtags <- rbind(specialtags, c(endPnt))
     }
   } else {

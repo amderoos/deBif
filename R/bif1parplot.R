@@ -1,3 +1,16 @@
+cliptrans3d <- function(x0, y0, z0, ...) {
+  x <- as.numeric(c(x0))
+  xin <- ((x >= 0) & (x <= 1))
+  y <- as.numeric(c(y0))
+  yin <- ((y >= 0) & (y <= 1))
+  z <- as.numeric(c(z0))
+  zin <- ((z >= 0) & (z <= 1))
+  allin <- xin & yin & zin
+  if (any(allin))
+    return(trans3d(x[allin], y[allin], z[allin], ...))
+  else return(NULL)
+}
+
 bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
   # Plot the bifurcation curves
   if (popts$plot3d == 1) {
@@ -156,32 +169,50 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
           if (!is.null(session)) updateConsoleLog(session, msg)
           return(NA)
         }
-        evmax <- Re(curvelist[[i]]$eigvals[,1])
-        sp <- (evmax < 0)
-        x <- converty2y(curvelist[[i]]$points[,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
-        y <- converty2y(curvelist[[i]]$points[,popts$y2col], 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
-        z <- converty2y(curvelist[[i]]$points[,popts$ycol], 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
-        runlen <- rle(sp)$lengths
-        runval <- rle(sp)$values
-        runend <- cumsum(runlen)
-        runstart <- (c(1, (1 + runend)))[1:length(runend)]
-        for (j in (1:length(runstart))) {
-          if (runval[j])
-            lines(trans3d(x[runstart[j]:runend[j]], y[runstart[j]:runend[j]], z[runstart[j]:runend[j]], pmat),
-                  colvar = NULL, col=popts$colors[1], lwd=popts$lwd)
-          else
-            lines(trans3d(x[runstart[j]:runend[j]], y[runstart[j]:runend[j]], z[runstart[j]:runend[j]], pmat),
-                  colvar = NULL, col=popts$colors[1], lty=popts$unstablelty, lwd=popts$lwd)
-        }
-        if (!is.null(curvelist[[i]]$special.points)) {
-          lbls <- c(curvelist[[i]]$special.tags[,1])
-          bps <- (lbls %in% c("BP", "HP", "LP"))
-          if (any(bps)) {
-            x <- converty2y(curvelist[[i]]$special.points[bps,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
-            y <- converty2y(curvelist[[i]]$special.points[bps,popts$y2col], 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
-            z <- converty2y(curvelist[[i]]$special.points[bps,popts$ycol], 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
-            points(trans3d(x, y, z, pmat), pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
-            text(trans3d(x, y, z, pmat), labels=lbls[bps], pos = popts$biflblpos)
+        if (curvelist[[i]]$type == "LC") {
+          sdim <- length(curvelist[[i]]$initstate)
+          mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
+          mrange <- sdim*(0:(mdim-1))
+          for (j in (1:nrow(curvelist[[i]]$points))){
+            x <- converty2y(curvelist[[i]]$points[j,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
+            y <- converty2y(c(curvelist[[i]]$points[j,popts$y2col + mrange]), 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
+            z <- converty2y(c(curvelist[[i]]$points[j,popts$ycol + mrange]), 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
+            x <- rep(x, each=length(mrange))
+            tr3d <- cliptrans3d(x, y, z, pmat)
+            if (!is.null(tr3d)) lines(tr3d, colvar = NULL, col=popts$colors[2], lwd=1)
+          }
+        } else {
+          evmax <- Re(curvelist[[i]]$eigvals[,1])
+          sp <- (evmax < 0)
+          x <- converty2y(curvelist[[i]]$points[,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
+          y <- converty2y(curvelist[[i]]$points[,popts$y2col], 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
+          z <- converty2y(curvelist[[i]]$points[,popts$ycol], 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
+          runlen <- rle(sp)$lengths
+          runval <- rle(sp)$values
+          runend <- cumsum(runlen)
+          runstart <- (c(1, (1 + runend)))[1:length(runend)]
+          for (j in (1:length(runstart))) {
+            tr3d <- cliptrans3d(x[runstart[j]:runend[j]], y[runstart[j]:runend[j]], z[runstart[j]:runend[j]], pmat)
+            if (!is.null(tr3d)) {
+              if (runval[j])
+                lines(tr3d, colvar = NULL, col=popts$colors[1], lwd=popts$lwd)
+              else
+                lines(tr3d, colvar = NULL, col=popts$colors[1], lty=popts$unstablelty, lwd=popts$lwd)
+            }
+          }
+          if (!is.null(curvelist[[i]]$special.points)) {
+            lbls <- c(curvelist[[i]]$special.tags[,1])
+            bps <- (lbls %in% c("BP", "HP", "LP"))
+            if (any(bps)) {
+              x <- converty2y(curvelist[[i]]$special.points[bps,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
+              y <- converty2y(curvelist[[i]]$special.points[bps,popts$y2col], 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
+              z <- converty2y(curvelist[[i]]$special.points[bps,popts$ycol], 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
+              tr3d <- cliptrans3d(x, y, z, pmat)
+              if (!is.null(tr3d)) {
+                points(tr3d, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+                text(tr3d, labels=lbls[bps], pos = popts$biflblpos)
+              }
+            }
           }
         }
       })
@@ -214,30 +245,49 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
             if (!is.null(session)) updateConsoleLog(session, msg)
             return(NA)
           }
-          lapply(2:ncol(curvelist[[i]]$points), function(j) {
-            evmax <- Re(curvelist[[i]]$eigvals[,1])
-            sp <- (evmax < 0)
-            x <- curvelist[[i]]$points[,1]
-            y <- curvelist[[i]]$points[,j]
-            x[!sp] <- NA
-            y[!sp] <- NA
-            lines(x, y, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
-            x <- curvelist[[i]]$points[,1]
-            y <- curvelist[[i]]$points[,j]
-            x[sp] <- NA
-            y[sp] <- NA
-            lines(x, y, lty=popts$unstablelty, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
-            if (!is.null(curvelist[[i]]$special.points)) {
-              lbls <- c(curvelist[[i]]$special.tags[,1])
-              bps <- (lbls %in% c("BP", "HP", "LP"))
-              if (any(bps)) {
-                x <- curvelist[[i]]$special.points[bps,1]
-                y <- curvelist[[i]]$special.points[bps,j]
-                points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
-                text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+          if (curvelist[[i]]$type == "LC") {
+            sdim <- length(curvelist[[i]]$initstate)
+            mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
+            mrange <- sdim*(0:(mdim-1))
+            lapply(2:(sdim+1), function(j) {
+              x <- curvelist[[i]]$points[,1]
+              if (nrow(curvelist[[i]]$points) > 1)
+                y <- apply(curvelist[[i]]$points[, j+mrange], 1, min)
+              else
+                y <- min(curvelist[[i]]$points[, j+mrange])
+              lines(x, y, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+              if (nrow(curvelist[[i]]$points) > 1)
+                y <- apply(curvelist[[i]]$points[, j+mrange], 1, max)
+              else
+                y <- max(curvelist[[i]]$points[, j+mrange])
+              lines(x, y, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+            })
+          } else {
+            lapply(2:ncol(curvelist[[i]]$points), function(j) {
+              evmax <- Re(curvelist[[i]]$eigvals[,1])
+              sp <- (evmax < 0)
+              x <- curvelist[[i]]$points[,1]
+              y <- curvelist[[i]]$points[,j]
+              x[!sp] <- NA
+              y[!sp] <- NA
+              lines(x, y, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+              x <- curvelist[[i]]$points[,1]
+              y <- curvelist[[i]]$points[,j]
+              x[sp] <- NA
+              y[sp] <- NA
+              lines(x, y, lty=popts$unstablelty, col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+              if (!is.null(curvelist[[i]]$special.points)) {
+                lbls <- c(curvelist[[i]]$special.tags[,1])
+                bps <- (lbls %in% c("BP", "HP", "LP"))
+                if (any(bps)) {
+                  x <- curvelist[[i]]$special.points[bps,1]
+                  y <- curvelist[[i]]$special.points[bps,j]
+                  points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+                  text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+                }
               }
-            }
-          })
+            })
+          }
         })
         legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
       } else {
@@ -253,26 +303,43 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
             if (!is.null(session)) updateConsoleLog(session, msg)
             return(NA)
           }
-          evmax <- Re(curvelist[[i]]$eigvals[,1])
-          sp <- (evmax < 0)
-          x <- curvelist[[i]]$points[,1]
-          y <- curvelist[[i]]$points[,popts$ycol]
-          x[!sp] <- NA
-          y[!sp] <- NA
-          lines(x, y, col=popts$colors[1], lwd=popts$lwd)
-          x <- curvelist[[i]]$points[,1]
-          y <- curvelist[[i]]$points[,popts$ycol]
-          x[sp] <- NA
-          y[sp] <- NA
-          lines(x, y, lty=popts$unstablelty, col=popts$colors[1], lwd=popts$lwd)
-          if (!is.null(curvelist[[i]]$special.points)) {
-            lbls <- c(curvelist[[i]]$special.tags[,1])
-            bps <- (lbls %in% c("BP", "HP", "LP"))
-            if (any(bps)) {
-              x <- curvelist[[i]]$special.points[bps,1]
-              y <- curvelist[[i]]$special.points[bps,popts$ycol]
-              points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
-              text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+          if (curvelist[[i]]$type == "LC") {
+            sdim <- length(curvelist[[i]]$initstate)
+            mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
+            mrange <- sdim*(0:(mdim-1))
+            x <- curvelist[[i]]$points[,1]
+            if (nrow(curvelist[[i]]$points) > 1)
+              y <- apply(curvelist[[i]]$points[, popts$ycol+mrange], 1, min)
+            else
+              y <- min(curvelist[[i]]$points[, popts$ycol+mrange])
+            lines(x, y, col=popts$colors[1], lwd=popts$lwd)
+            if (nrow(curvelist[[i]]$points) > 1)
+              y <- apply(curvelist[[i]]$points[, popts$ycol+mrange], 1, max)
+            else
+              y <- max(curvelist[[i]]$points[, popts$ycol+mrange])
+            lines(x, y, col=popts$colors[1], lwd=popts$lwd)
+          } else {
+            evmax <- Re(curvelist[[i]]$eigvals[,1])
+            sp <- (evmax < 0)
+            x <- curvelist[[i]]$points[,1]
+            y <- curvelist[[i]]$points[,popts$ycol]
+            x[!sp] <- NA
+            y[!sp] <- NA
+            lines(x, y, col=popts$colors[1], lwd=popts$lwd)
+            x <- curvelist[[i]]$points[,1]
+            y <- curvelist[[i]]$points[,popts$ycol]
+            x[sp] <- NA
+            y[sp] <- NA
+            lines(x, y, lty=popts$unstablelty, col=popts$colors[1], lwd=popts$lwd)
+            if (!is.null(curvelist[[i]]$special.points)) {
+              lbls <- c(curvelist[[i]]$special.tags[,1])
+              bps <- (lbls %in% c("BP", "HP", "LP"))
+              if (any(bps)) {
+                x <- curvelist[[i]]$special.points[bps,1]
+                y <- curvelist[[i]]$special.points[bps,popts$ycol]
+                points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+                text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+              }
             }
           }
         })
@@ -284,26 +351,45 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
               if (!is.null(session)) updateConsoleLog(session, msg)
               return(NA)
             }
-            evmax <- Re(curvelist[[i]]$eigvals[,1])
-            sp <- (evmax < 0)
-            x <- curvelist[[i]]$points[,1]
-            y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
-            x[!sp] <- NA
-            y[!sp] <- NA
-            lines(x, y, col=popts$colors[2], lwd=popts$lwd)
-            x <- curvelist[[i]]$points[,1]
-            y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
-            x[sp] <- NA
-            y[sp] <- NA
-            lines(x, y, lty=popts$unstablelty, col=popts$colors[2], lwd=popts$lwd)
-            if (!is.null(curvelist[[i]]$special.points)) {
-              lbls <- c(curvelist[[i]]$special.tags[,1])
-              bps <- (lbls %in% c("BP", "HP", "LP"))
-              if (any(bps)) {
-                x <- curvelist[[i]]$special.points[bps,1]
-                y <- converty2y(curvelist[[i]]$special.points[bps,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
-                points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
-                text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+            if (curvelist[[i]]$type == "LC") {
+              sdim <- length(curvelist[[i]]$initstate)
+              mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
+              mrange <- sdim*(0:(mdim-1))
+              x <- curvelist[[i]]$points[,1]
+              if (nrow(curvelist[[i]]$points) > 1)
+                y <- apply(curvelist[[i]]$points[, popts$y2col+mrange], 1, min)
+              else
+                y <- min(curvelist[[i]]$points[, popts$y2col+mrange])
+              y <- converty2y(y, popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+              lines(x, y, col=popts$colors[2], lwd=popts$lwd)
+              if (nrow(curvelist[[i]]$points) > 1)
+                y <- apply(curvelist[[i]]$points[, popts$y2col+mrange], 1, max)
+              else
+                y <- max(curvelist[[i]]$points[, popts$y2col+mrange])
+              y <- converty2y(y, popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+              lines(x, y, col=popts$colors[2], lwd=popts$lwd)
+            } else {
+              evmax <- Re(curvelist[[i]]$eigvals[,1])
+              sp <- (evmax < 0)
+              x <- curvelist[[i]]$points[,1]
+              y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+              x[!sp] <- NA
+              y[!sp] <- NA
+              lines(x, y, col=popts$colors[2], lwd=popts$lwd)
+              x <- curvelist[[i]]$points[,1]
+              y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+              x[sp] <- NA
+              y[sp] <- NA
+              lines(x, y, lty=popts$unstablelty, col=popts$colors[2], lwd=popts$lwd)
+              if (!is.null(curvelist[[i]]$special.points)) {
+                lbls <- c(curvelist[[i]]$special.tags[,1])
+                bps <- (lbls %in% c("BP", "HP", "LP"))
+                if (any(bps)) {
+                  x <- curvelist[[i]]$special.points[bps,1]
+                  y <- converty2y(curvelist[[i]]$special.points[bps,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
+                  points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
+                  text(x, y, labels=lbls[bps], pos = popts$biflblpos)
+                }
               }
             }
           })

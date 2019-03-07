@@ -66,6 +66,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
                                             value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")}),
             tabName = "pars2tab"
           ),
+          radioButtons("curvetype2", "Curve type to compute", choices = c("EQ", "LC"), inline = TRUE),
           br(),
           splitLayout(cellWidths = c("50%", "50%"),
                       actionButton("computebwrd2", "Compute", icon("backward")),
@@ -91,14 +92,14 @@ buildUI <- function(state, parms, plotopts, numopts) {
                                             value=as.numeric(parms[i]), step=0.1*as.numeric(parms[i]),width="95%")}),
             tabName = "pars3tab"
           ),
+          radioButtons("curvetype3", "Curve type to compute", choices = c("BP", "HP", "LP"), inline = TRUE),
           br(),
           splitLayout(cellWidths = c("50%", "50%"),
                       actionButton("computebwrd3", "Compute", icon("backward")),
                       actionButton("computefwrd3", "Compute", icon("forward"))),
           br(),
           id = "leftsbmenu"
-        ),
-        radioButtons("curvetype", "Curve type to compute", choices = c("BP", "HP", "LP"), inline = TRUE)
+        )
       ),
       sidebarMenu(
         h4("Curve management", align = "center"),
@@ -186,11 +187,36 @@ buildUI <- function(state, parms, plotopts, numopts) {
         tags$head(
           tags$style(
             HTML(
-              "
+              '
               .form-group {
-              margin-bottom: 0 !important;
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
               }
-              "
+              .shiny-split-layout {
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
+              }
+              #xmin{height: 30px}
+              #xmax{height: 30px}
+              #ymin{height: 30px}
+              #ymax{height: 30px}
+              #y2min{height: 30px}
+              #y2max{height: 30px}
+              #tmax{height: 30px}
+              #tsep{height: 30px}
+              #rtol{height: 30px}
+              #atol{height: 30px}
+              #iszero{height: 30px}
+              #jacdif{height: 30px}
+              #stepsize{height: 30px}
+              #minstepsize{height: 30px}
+              #maxiter{height: 30px}
+              #maxpoints{height: 30px}
+              #replotfreq{height: 30px}
+              #ninterval{height: 30px}
+              #glorder{height: 30px}
+              #lcampl{height: 30px}
+              '
             )
           )
         ),
@@ -250,23 +276,27 @@ buildUI <- function(state, parms, plotopts, numopts) {
         conditionalPanel(
           condition = "input.plottab > 1",
           h4("Curve continuation"),
-          h4("Tolerances"),
+          div(style="font-size: 18px; line-height: 0px; margin-top: 20px; margin-bottom: 12px; !important", ("Tolerances")),
           splitLayout(cellWidths = c("50%", "50%"),
                       textInput(inputId="rtol", label="Relative", value=sprintf("%.1E", numopts$rtol)),
                       textInput(inputId="atol", label="Absolute", value=sprintf("%.1E", numopts$atol))),
           textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
           textInput(inputId="jacdif", label="Jacobian pertubation", value=sprintf("%.1E", numopts$jacdif)),
-          div(style="line-height: 6px !important", br()),
-          h4("Step size"),
+          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="stepsize", label="Target", value=numopts$stepsize),
                       numericInput(inputId="minstepsize", label="Minimum", value=numopts$minstepsize)),
-          h4("Iterations"),
+          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Iterations")),
           numericInput(inputId="maxiter", label="Maximum number of iterations", value=numopts$maxiter),
           numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
           numericInput(inputId="replotfreq", label="Points between plot updates", min=1, max=10000,
-                       value=numopts$replotfreq, step=1)
-          ),
+                       value=numopts$replotfreq, step=1),
+          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Limit cycle continuation")),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="ninterval", label="Intervals", value=numopts$ninterval, min = 1, max = 40, step = 1),
+                      numericInput(inputId="glorder", label="Order", value=numopts$glorder), min = 2, max = 7, step = 1),
+          textInput(inputId="lcampl", label="Initial amplitude", value=sprintf("%.1E", numopts$lcampl))
+        ),
         div(style="line-height: 12px !important", br()),
         actionButton("numoptsapply", "Apply", icon("refresh"))
       )
