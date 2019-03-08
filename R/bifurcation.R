@@ -66,6 +66,7 @@
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
+#' @importFrom grDevices dev.off png
 #' @export
 bifurcation <- function(model, state, parms, inlist = NULL) {
 

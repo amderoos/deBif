@@ -37,6 +37,14 @@ approxNullVec <- function(A) {
   return (as.numeric(eigvec))
 }
 
+rcprintf <- function(fmt, x) {
+  # Prints x to string using sprintf(fmt,...), handling both real and complex numbers
+  if (is.complex(x) && Im(x) != 0) {
+    if (Im(x) > 0) return(sprintf("%12.5E+%11.5Ei", Re(x), abs(Im(x))))
+    else return(sprintf("%12.5E-%11.5Ei", Re(x), abs(Im(x))))
+  } else return(sprintf("%12.5E", abs(x)))
+}
+
 converty2y <- function(y, ymin1, ymax1, logy1, ymin2, ymax2, logy2) {
   # Convert values on the second y axis to corresponding values on the first y-axis
   if (logy2 == 0) {

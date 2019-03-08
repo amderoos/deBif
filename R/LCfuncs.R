@@ -92,7 +92,7 @@ initLC <- function(state, parms, curveData, nopts, session = NULL) {
     v0 <- c(0, Re(c(t)), 0)
 
     y <- c(state[1], rep(state[2:cData$pointdim], length(cData$finemesh)), 2*pi/omega) + nopts$lcampl*v0
-    varnames <<- c(names(state[1]), rep(names(state[2:cData$pointdim]), length(cData$finemesh)), "LCperiod")
+    varnames <- c(names(state[1]), rep(names(state[2:cData$pointdim]), length(cData$finemesh)), "LCperiod")
     names(y) <- varnames
     v0 <- v0/norm(v0, type = "2")
 

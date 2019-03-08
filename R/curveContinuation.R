@@ -246,11 +246,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           if (curvetype != "LC") {
             msg <- paste0(msg, "Eigenvalues:\n",
                           paste(unlist(lapply(1:length(eigval),
-                                              function(i) {paste0(ifelse(is.complex(testvals$eigval[i]),
-                                                                         sprintf("%12.5E + %12.5Ei", Re(testvals$eigval[i]),
-                                                                                 Im(testvals$eigval[i])),
-                                                                         sprintf("%12.5E", testvals$eigval[i])))})),
-                                collapse=' '), "\n")
+                                              function(i) {rcprintf("%12.5E", testvals$eigval[i])})), collapse=' '), "\n")
           }
           if (!is.null(session)) updateConsoleLog(session, msg)
           else cat(msg)
@@ -267,9 +263,9 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           }
           else if (cData$reportlevel == 1) {
             yy <- c(as.numeric(y), eigval)
-            if (pntnr == 1) names(yy) <- c(names(y), cData$eignames)
-            else names(yy) <- NULL
-            print(c(yy), print.gap = 2, digits = 6, right = TRUE)
+            names(yy) <- NULL
+            cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "),
+                sprintf("**%s**\n", testvals$biftype))
           }
 
           testvals$y <- NULL
@@ -306,10 +302,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                       paste(unlist(lapply(1:cData$pointdim,
                                           function(i) {paste0(names(y[i]), "=", sprintf("%12.5E", y[i]))})), collapse=', '), "\n")
         msg <- paste0(msg, "Eigenvalues:\n",
-                      paste(unlist(lapply(1:length(eigval),
-                                          function(i) {paste0(ifelse(is.complex(eigval[i]),
-                                                                     sprintf("%12.5E + %12.5Ei", Re(eigval[i]), Im(eigval[i])),
-                                                                     sprintf("%12.5E", eigval[i])))})), collapse=' '), "\n")
+                      paste(unlist(lapply(1:length(eigval), function(i) {rcprintf("%12.5E", eigval[i])})), collapse=' '), "\n")
       }
       if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
       else cat(msg)
@@ -335,19 +328,19 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           if (pntnr == 1) {
             namesyy <- c(names(y[1:cData$freeparsdim]),
                          unlist(lapply((1:cData$statedim),
-                                       function(i){c(paste0("min. ", varnames[i+1]),
-                                                     paste0("max. ", varnames[i+1]))})),
+                                       function(i){c(paste0("min.", cData$varnames[i+1]),
+                                                     paste0("max.", cData$varnames[i+1]))})),
                          names(y[cData$pointdim]))
             cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
           }
         } else {
           yy <- c(as.numeric(y), eigval)
           if (pntnr == 1) {
-            names(yy) <- c(names(y), cData$eignames)
+            namesyy <- c(names(y), cData$eignames)
             cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
           }
         }
-        cat(paste(unlist(lapply(yy, function(x) {sprintf("%12.5E", x)})), collapse = " "), "\n")
+        cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
       }
 
       ############## Store the results
