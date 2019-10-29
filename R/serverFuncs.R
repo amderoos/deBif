@@ -15,23 +15,23 @@ updateCurveMenu <- function(session, clist) {
 updatePlotOptionEntries <- function(session, curtab, popts, snames, pnames) {
   # Update the plot options
   if (curtab == 1){
-    updateSelectInput(session, "xcol",  label=h4('Variable(s) on X-axis'),
+    updateSelectInput(session, "xcol",  label='Variable(s) on X-axis',
                       choices=c("Time" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$xcol)
-    updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
+    updateSelectInput(session, "ycol",  label='Variable(s) on Y-axis',
                       choices=c("All" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$ycol)
-    updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
+    updateSelectInput(session, "y2col", label='Variable on 2nd Y-axis',
                       choices=c("None" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$y2col)
   } else if (curtab == 2){
-    updateSelectInput(session, "xcol",  label=h4('Bifurcation parameter'),
+    updateSelectInput(session, "xcol",  label='Bifurcation parameter',
                       choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$xcol)
-    updateSelectInput(session, "ycol",  label=h4('Variable(s) on Y-axis'),
+    updateSelectInput(session, "ycol",  label='Variable(s) on Y-axis',
                       choices=c("All" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$ycol)
-    updateSelectInput(session, "y2col", label=h4("Variable on 2nd Y-axis"),
+    updateSelectInput(session, "y2col", label='Variable on 2nd Y-axis',
                       choices=c("None" = 1, setNames((2:(length(snames)+1)), snames)), selected=popts$y2col)
   } else {
-    updateSelectInput(session, "xcol",  label=h4('1st bifurcation parameter'),
+    updateSelectInput(session, "xcol",  label='1st bifurcation parameter',
                       choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$xcol)
-    updateSelectInput(session, "ycol",  label=h4('2nd bifurcation parameter'),
+    updateSelectInput(session, "ycol",  label='2nd bifurcation parameter',
                       choices=c(setNames((1:(length(pnames))), pnames)), selected=popts$ycol)
   }
   updateSelectInput(session,  "logx", selected=popts$logx)
@@ -178,9 +178,9 @@ processDeleteCurve <- function(session, curtab, clist, deletenr) {
 
     if (deletenr == -1) clist <- list()
     else clist[[deletenr]] <- NULL
-
-    return(clist)
   }
+
+  return(clist)
 }
 
 processSaveCurve <- function(curtab, clist, savenr, varname) {

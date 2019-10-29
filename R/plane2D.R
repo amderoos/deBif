@@ -20,11 +20,11 @@ plane2D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, par
   if (logy) yc <- 10^seq(log10(ymin), log10(ymax), length.out=npixels)
   else yc <- seq(ymin+eps, ymax, length.out=npixels)
   xvar <- names(state)[x]; yvar <- names(state)[y]
-  par(mar = dbopts$plotmar)
-  do.call('plot', c(list(1, 1, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xvar, ylab=yvar, log=log,
-                         cex.main=dbopts$plotopts["cex.main"], cex.lab=dbopts$plotopts["cex.lab"], cex.axis=dbopts$plotopts["cex.axis"],
-                         font.main=dbopts$plotopts["font.main"], font.sub=dbopts$plotopts["font.sub"]), dots[names(dots) %in% dbopts$args_plot]))
-  legend("topright", legend=names(state)[ishows], col=dbopts$colors[ishows], lty=1, lwd=dbopts$plotopts["lwd"], cex=dbopts$plotopts["sizeLegend"])
+  par(cex = dbopts$plotopts["cex"], mar = dbopts$plotmar)
+  do.call('plot', c(list(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xvar, ylab=yvar, log=log,
+                         cex.lab=dbopts$plotopts["cex.lab"], cex.axis=dbopts$plotopts["cex.axis"]),
+                    dots[names(dots) %in% dbopts$args_plot]))
+  legend("topright", legend=names(state)[ishows], col=dbopts$colors[ishows], lty=1, lwd=dbopts$plotopts["lwd"], cex=dbopts$plotopts["cex.legend"])
 
   vstate <- as.list(state)
   npixels2 <- npixels^2

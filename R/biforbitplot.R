@@ -1,8 +1,8 @@
 biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
   # Plot the computed time series
   if (popts$plot3d == 1) {
-    if (popts$theta < 0) par(oma=c(0,0,0,0), mar = c(2.5,5,1,2))
-    else par(oma=c(0,0,0,0), mar = c(2.5,2,1,5))
+    if (popts$theta < 0) par(oma=c(0,0,0,0), cex = popts$cex, mar = c(2.5,5,1,2))
+    else par(oma=c(0,0,0,0), cex = popts$cex, mar = c(2.5,2,1,5))
 
     get_axp <- function(x) 10^c(ceiling(x[1]), floor(x[2]))
     pmat <- persp( c(0,1), c(0,1),  matrix(0, nrow=2, ncol=2), scale = FALSE,
@@ -164,22 +164,23 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
     }
   } else {
     if ((popts$ycol > 1) && (popts$y2col > 1)) {
-      par(mar = (as.numeric(popts$plotmar) + c(0, 0, 0, 1)))
+      par(cex = popts$cex, mar = as.numeric(c(1.6*(popts$cex.lab+popts$cex.axis), 1.6*(popts$cex.lab+popts$cex.axis), 2, 1.6*(popts$cex.lab+popts$cex.axis))))
       logxy <- ifelse(popts$logx == 1, ifelse(popts$logy2 == 1, "xy", "x"), ifelse(popts$logy2 == 1, "y", ""))
-      plot(1, 1, type='n', xlab="", ylab="", xaxs = "i", yaxs = "i", xaxt = "n", yaxt = "n",
+      plot(NULL, type='n', xlab="", ylab="", xaxs = "i", yaxs = "i", xaxt = "n", yaxt = "n",
            xlim=c(popts$xmin,popts$xmax), ylim=c(popts$y2min,popts$y2max), log=logxy)
       axis(4, cex.axis=popts$cex.axis)
-      mtext(popts$y2lab, side = 4, line = 3, cex=popts$cex.lab)
+      mtext(popts$y2lab, side = 4, line = (popts$cex.lab+popts$cex.axis), cex=(popts$cex.lab*popts$cex))
       par(new = TRUE)
     } else {
-      par(mar = as.numeric(popts$plotmar))
+      par(cex = popts$cex, mar = as.numeric(c(1.6*(popts$cex.lab+popts$cex.axis), 1.6*(popts$cex.lab+popts$cex.axis), 2, 2)))
     }
 
     logxy <- ifelse(popts$logx == 1, ifelse(popts$logy == 1, "xy", "x"), ifelse(popts$logy == 1, "y", ""))
-    plot(1, 1, type='n', xlab=popts$xlab, ylab=popts$ylab, xaxs = "i", yaxs = "i",
+    plot(NULL, type='n', xlab="", ylab="", xaxs = "i", yaxs = "i",
          xlim=c(popts$xmin,popts$xmax), ylim=c(popts$ymin,popts$ymax), log=logxy,
-         cex.main=popts$cex.main, cex.lab=popts$cex.lab, cex.axis=popts$cex.axis,
-         font.main=popts$font.main, font.sub=popts$font.sub)
+         cex.axis=popts$cex.axis, mgp = c((popts$cex.lab+popts$cex.axis), popts$cex.axis, 0))
+    title(xlab=popts$xlab, cex.lab=popts$cex.lab, line = (popts$cex.lab+popts$cex.axis))
+    title(ylab=popts$ylab, cex.lab=popts$cex.lab, line = (popts$cex.lab+popts$cex.axis))
 
     if (!is.null(curvelist) && (length(curvelist) > 0)) {
       if (popts$ycol == 1) {
@@ -194,7 +195,7 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
             lines(curvelist[[i]]$points[,1], curvelist[[i]]$points[,j], col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
           })
         })
-        legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
+        legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
       } else {
         lapply((1:length(curvelist)), function(i) {
           cnames <- colnames(curvelist[[i]]$points)
@@ -222,7 +223,7 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
                   converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2),
                   col=popts$colors[2], lwd=popts$lwd)
           })
-          legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
+          legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
         }
       }
     }

@@ -168,7 +168,11 @@ buildUI <- function(state, parms, plotopts, numopts) {
         var objDiv = document.getElementById("console");
         objDiv.scrollTop = objDiv.scrollHeight;
         }
-        );'
+        );
+        // Bind function to the toggle sidebar button
+        $("i.fa.fa-gears").on("click",function(){
+          $(window).trigger("resize"); // Trigger resize event
+        });'
       ),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
@@ -224,14 +228,14 @@ buildUI <- function(state, parms, plotopts, numopts) {
         id = "control-sidebar-plotopttab-tab",
         icon = "chart-line",
         h3("Plot options"),
-        selectInput('xcol', ('Variable(s) on X-axis'),
+        selectInput('xcol', 'Variable(s) on X-axis',
                     c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$xcol),
         splitLayout(cellWidths = c("50%", "50%"),
                     numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
                     numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
         selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
         div(style="line-height: 6px !important", br()),
-        selectInput('ycol', ('Variable(s) on Y-axis'),
+        selectInput('ycol', 'Variable(s) on Y-axis',
                     c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
         splitLayout(cellWidths = c("50%", "50%"),
                     numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
@@ -240,7 +244,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
         div(style="line-height: 6px !important", br()),
         conditionalPanel(
           condition = "input.plottab != 3 && input.ycol > 1",
-          selectInput('y2col', ("Variable on 2nd Y-axis"),
+          selectInput('y2col', 'Variable on 2nd Y-axis',
                       c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
           conditionalPanel(
             condition = "input.y2col > 1",

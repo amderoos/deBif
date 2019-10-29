@@ -1,12 +1,12 @@
 bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
   # Plot the bifurcation curves
 
-  par(mar = as.numeric(popts$plotmar))
+  par(cex = popts$cex, mar = as.numeric(c(1.6*(popts$cex.lab+popts$cex.axis), 1.6*(popts$cex.lab+popts$cex.axis), 2, 2)))
   logxy <- ifelse(popts$logx == 1, ifelse(popts$logy == 1, "xy", "x"), ifelse(popts$logy == 1, "y", ""))
-  plot(1, 1, type='n', xlab=popts$xlab, ylab=popts$ylab, xaxs = "i", yaxs = "i",
-       xlim=c(popts$xmin,popts$xmax), ylim=c(popts$ymin,popts$ymax), log=logxy,
-       cex.main=popts$cex.main, cex.lab=popts$cex.lab, cex.axis=popts$cex.axis,
-       font.main=popts$font.main, font.sub=popts$font.sub)
+  plot(NULL, type='n', xlab="", ylab="", xaxs = "i", yaxs = "i",
+       xlim=c(popts$xmin,popts$xmax), ylim=c(popts$ymin,popts$ymax), log=logxy, cex.axis=popts$cex.axis)
+  title(xlab=popts$xlab, cex.lab=popts$cex.lab, line = (popts$cex.lab+popts$cex.axis))
+  title(ylab=popts$ylab, cex.lab=popts$cex.lab, line = (popts$cex.lab+popts$cex.axis))
 
   if (!is.null(curvelist) && (length(curvelist) > 0)) {
     lapply((1:length(curvelist)), function(i) {
@@ -35,6 +35,6 @@ bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
         }
       }
     })
-    legend("topright", legend=c("BP", "HP", "LP"), col=popts$colors[c(1, 2, 3)], lty=1, lwd=popts$lwd, cex=popts$sizeLegend)
+    legend("topright", legend=c("BP", "HP", "LP"), col=popts$colors[c(1, 2, 3)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
   }
 }

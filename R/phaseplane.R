@@ -3,7 +3,7 @@
 #' \code{phaseplane}
 #'
 #'
-#'   phaseplane(model, state, parms)
+#'   phaseplane(model, state, parms, ...)
 #'
 #'
 #' @param   model  (function, required)
@@ -58,16 +58,27 @@
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom shinyjs useShinyjs click removeClass
 #' @export
-phaseplane <- function(model, state, parms) {
-  debifOpts <- list(plotopts = c(lwd = 2, pch = 20, sizeLegend = 1, font.main = 2, font.sub = 1, cex.main = 2, cex.lab = 1.4, cex.axis = 1.2),
+phaseplane <- function(model, state, parms, ...) {
+  debifOpts <- list(plotopts = c(lwd = 2, pch = 20, cex = 1.2, cex.lab = 1.25, cex.axis = 1, cex.legend = 1),
                     colors = c("red","blue","darkgreen","darkorange","darkmagenta","gold","darkorchid","aquamarine","deeppink","gray",seq(2,991)),
                     #colors = seq(2,101),  # Use standard R colors
                     args_plot = names(formals(graphics::plot.default)),
                     args_run = unique(names(c(formals(run),formals(deSolve::ode),formals(deSolve::lsoda)))),
                     methods_run = as.character(formals(deSolve::ode)$method),
                     plotdefaults = graphics::par(no.readonly = TRUE),
-                    plotmar = c(5,5,4,4)
-  )
+                    plotmar = c(5,5,4,4))
+
+  adjustableopts <- c("lwd", "pch", "cex")
+  dots <- list(...)
+  if (!is.null(dots)) {
+    useropts <- dots[names(dots) %in% adjustableopts]
+
+    if (!is.null(useropts)) {
+      for (j in 1:length(useropts)) {
+        debifOpts$plotopts[names(useropts)[j]] <- useropts[j]
+      }
+    }
+  }
 
   if (length(state) == 1)
     choices <- c("Time plot"=0, "Nullclines"=1, "Steady state"=2)
@@ -153,10 +164,12 @@ phaseplane <- function(model, state, parms) {
         input$numoptsapply
 
         observeEvent(input$plotoptsapply, {
-          shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
+          # Close the rightSidebar
+          shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
         })
         observeEvent(input$numoptsapply, {
-          shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
+          # Close the rightSidebar
+          shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
         })
 
         isolate({
@@ -191,14 +204,13 @@ phaseplane <- function(model, state, parms) {
 
           if (plottype == 0) {
             nsol <- run(tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, dbopts=debifOpts, method=input$method)
-            par(mar = debifOpts$plotmar)
-            plot(1, 1, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), log=logxy, xlab="Time", ylab="State variables",
-                 cex.main=debifOpts$plotopts["cex.main"], cex.lab=debifOpts$plotopts["cex.lab"], cex.axis=debifOpts$plotopts["cex.axis"],
-                 font.main=debifOpts$plotopts["font.main"], font.sub=debifOpts$plotopts["font.sub"])
+            par(cex = debifOpts$plotopts["cex"], mar = debifOpts$plotmar)
+            plot(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), log=logxy, xlab="Time", ylab="State variables",
+                 cex.lab=debifOpts$plotopts["cex.lab"], cex.axis=debifOpts$plotopts["cex.axis"])
             lapply(2:ncol(nsol), function(i) {
               lines(nsol[,1], nsol[,i], col=debifOpts$colors[min(i-1, length(debifOpts$colors))], lwd=debifOpts$plotopts["lwd"], pch=(i-1))
               })
-            legend("topright", legend=names(state), col=debifOpts$colors[1:(ncol(nsol)-1)], lty=1, lwd=debifOpts$plotopts["lwd"], cex=debifOpts$plotopts["sizeLegend"])
+            legend("topright", legend=names(state), col=debifOpts$colors[1:(ncol(nsol)-1)], lty=1, lwd=debifOpts$plotopts["lwd"], cex=debifOpts$plotopts["cex.legend"])
 
             msg <- paste(unlist(lapply(1:length(state), function(i) {paste(names(state[i]), "=",round(nsol[nrow(nsol), (1+i)],5), sep=" ")})), collapse=', ')
             msg <- paste("Ended in ", msg, "\n", sep=" ")

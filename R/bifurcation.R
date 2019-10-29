@@ -3,7 +3,7 @@
 #' \code{bifurcation}
 #'
 #'
-#'   bifurcation(model, state, parms, inlist = NULL)
+#'   bifurcation(model, state, parms, inlist = NULL, ...)
 #'
 #'
 #' @param   model  (function, required)
@@ -68,7 +68,7 @@
 #' @importFrom stats setNames
 #' @importFrom grDevices dev.off png
 #' @export
-bifurcation <- function(model, state, parms, inlist = NULL) {
+bifurcation <- function(model, state, parms, inlist = NULL, ...) {
 
   # Get the names of the state variables and the parameters
   statenames <- names(state)
@@ -89,13 +89,22 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
     initpopts[[i]] <- list(xcol = 1, xmin = 0, xmax = 1, logx = 0, xlab = "",
                            ycol = 1, ymin = 0, ymax = 1, logy = 0, ylab = "",
                            y2col = 1, y2min = 0, y2max = 1, logy2 = 0, y2lab = "None", plot3d = 0,
-                           lwd = 3, stablesym = 20, unstablesym = 1, bifsym = 8, unstablelty = "dotted", sizeLegend = 1,
+                           lwd = 3, stablesym = 20, unstablesym = 1, bifsym = 8, unstablelty = "dotted",
                            tcl.len = 0.03, theta = -35,
-                           font.main = 2, font.sub = 1,
-                           cex.main = 2, cex.lab = 1.4, cex.axis = 1.2, cex.sym = 1.2, biflblpos = 3,
+                           cex = 1.2, cex.lab = 1.25, cex.axis = 1, cex.legend = 1, cex.sym = 1, biflblpos = 3,
                            colors = c("red","blue","darkgreen","darkorange","darkmagenta",
-                                      "gold","darkorchid","aquamarine","deeppink","gray",seq(2,991)),
-                           plotmar = c(5,5,2,4))
+                                      "gold","darkorchid","aquamarine","deeppink","gray",seq(2,991)))
+  }
+
+  adjustableopts <- c("lwd", "cex", "tcl.len", "stablesym", "unstablesym", "bifsym", "biflblpos", "unstablelty")
+  dots <- list(...)
+  if (!is.null(dots)) {
+    useropts <- dots[names(dots) %in% adjustableopts]
+    if (!is.null(useropts)) {
+      for (j in 1:length(useropts)) {
+          for (i in 1:length(initpopts)) initpopts[[i]][names(useropts)[j]] <- useropts[j]
+      }
+    }
   }
 
   initpopts[[1]]$xlab <- "Time"
@@ -242,9 +251,11 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
       if (as.numeric(curveDirection()) == 0) return(NULL)
 
       isolate({
-        shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
-        shinyjs::hide(selector = "ul.menu-open");
+        # Close the rightSidebar
+        shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
+        # Collapse the State variables and Parameters stacks
         shinyjs::removeClass(selector = "li.treeview", class = "active")
+        shinyjs::hide(selector = "ul.menu-open");
         updateSelectInput(session, "deletecurve", selected = 0)
 
         curtab <- as.numeric(input$plottab)
@@ -445,7 +456,8 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
     })
 
     observeEvent(c(input$plotoptsapply, input$numoptsapply), {
-      shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
+      # Close the rightSidebar
+      # shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
 
       curtab <- as.numeric(input$plottab)
       curtabname <- curveListNames[curtab]
@@ -460,9 +472,11 @@ bifurcation <- function(model, state, parms, inlist = NULL) {
 
     observeEvent(input$computebtn, {
       if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
-      shinyjs::removeClass(selector = "aside.control-sidebar", class = "control-sidebar-open")
-      shinyjs::hide(selector = "ul.menu-open");
+      # Close the rightSidebar
+      shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
+      # Collapse the State variables and Parameters stacks
       shinyjs::removeClass(selector = "li.treeview", class = "active")
+      shinyjs::hide(selector = "ul.menu-open");
       updateSelectInput(session, "deletecurve", selected = 0)
 
       clist <- reactiveValuesToList(curveList)
