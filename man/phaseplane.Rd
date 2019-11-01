@@ -4,7 +4,7 @@
 \alias{phaseplane}
 \title{Phaseplane analysis of a system of ODEs}
 \usage{
-phaseplane(model, state, parms)
+phaseplane(model, state, parms, ...)
 }
 \arguments{
 \item{model}{(function, required)
@@ -30,6 +30,16 @@ phaseplane(model, state, parms)
 \preformatted{}
               The values of the parameters in the ODE system. This vector should
               have name attributes for all its elements}
+
+\item{....}{(optional arguments)
+\preformatted{}
+              Additional arguments that can be included at the command line to tweak
+              graphical default values used by the application.
+              Valid arguments are:
+\preformatted{}
+              \code{lwd}: Line width (default 2)
+\preformatted{}
+              \code{cex}: Base font size (default 1.2)}
 }
 \value{
 None.
@@ -38,10 +48,16 @@ None.
 \code{phaseplane}
 }
 \details{
-phaseplane(model, state, parms)
+phaseplane(model, state, parms, ...)
 }
 \examples{
 \dontrun{
+# The initial state of the system has to be specified as a named vector of state values.
+state <- c(R=1, N=0.01)
+
+# Parameters has to be specified as a named vector of parameters.
+parms <- c(r=1, K=1, a=1, c=1, delta=0.5)
+
 # The model has to be specified as a function that returns
 # the derivatives as a list.
 model <- function(t, state, parms) {
@@ -53,12 +69,6 @@ model <- function(t, state, parms) {
     return(list(c(dR, dN)))
   })
 }
-
-# The initial state of the system has to be specified as a named vector of state values.
-state <- c(R=1, N=0.01)
-
-# Parameters has to be specified as a named vector of parameters.
-parms <- c(r=1, K=1, a=1, c=1, delta=0.5)
 
 phaseplane(model, state, parms)
 }

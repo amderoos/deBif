@@ -29,6 +29,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
       conditionalPanel(
         condition = "input.plottab == 1",
         sidebarMenu(
+          id = "varsparsmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -45,13 +46,13 @@ buildUI <- function(state, parms, plotopts, numopts) {
           ),
           br(),
           actionButton("computebtn", "Compute", icon("forward")),
-          br(),
-          id = "leftsbmenu"
+          br()
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 2",
         sidebarMenu(
+          id = "varsparsmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -71,13 +72,13 @@ buildUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("50%", "50%"),
                       actionButton("computebwrd2", "Compute", icon("backward")),
                       actionButton("computefwrd2", "Compute", icon("forward"))),
-          br(),
-          id = "leftsbmenu"
+          br()
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 3",
         sidebarMenu(
+          id = "varsparsmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -97,11 +98,11 @@ buildUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("50%", "50%"),
                       actionButton("computebwrd3", "Compute", icon("backward")),
                       actionButton("computefwrd3", "Compute", icon("forward"))),
-          br(),
-          id = "leftsbmenu"
+          br()
         )
       ),
       sidebarMenu(
+        id = "curvesmenu",
         h4("Curve management", align = "center"),
         menuItem(h4("Load curves"),
                  textInput("loadcurve", "Give a valid R variable name"),
@@ -153,6 +154,9 @@ buildUI <- function(state, parms, plotopts, numopts) {
     ),
     ########## Main panels
     body = dashboardBody(
+      # tags$head(
+      #   tags$style("body { min-height: 611px; height: auto; min-width: 800px; margin: auto; }")
+      # ),
       do.call(tabsetPanel, c(myTabs, id = "plottab")),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
         "#saveplot { left: calc(100% - 120px); top: 70px; position: absolute;}"
@@ -162,17 +166,22 @@ buildUI <- function(state, parms, plotopts, numopts) {
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),
       tags$script(
-        '
-        Shiny.addCustomMessageHandler("scrollCallback",
+        "
+        Shiny.addCustomMessageHandler('scrollCallback',
         function(color) {
-        var objDiv = document.getElementById("console");
+        var objDiv = document.getElementById('console');
         objDiv.scrollTop = objDiv.scrollHeight;
         }
         );
         // Bind function to the toggle sidebar button
-        $("i.fa.fa-gears").on("click",function(){
-          $(window).trigger("resize"); // Trigger resize event
-        });'
+        $('i.fa.fa-gears').on('click',function(){
+          $(window).trigger('resize'); // Trigger resize event
+        });
+        $(document).on('mouseleave', '.sidebar-menu', function () {
+          $(this).removeClass('active');
+          $(this).find( 'ul' ).removeClass('menu-open');
+          $(this).find( 'ul' ).css('display', 'none');
+        });"
       ),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),

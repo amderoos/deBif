@@ -1,0 +1,27 @@
+---
+title: "deBif"
+subtitle: A package for bifurcation analysis of ordinary differential equation systems
+author: "André M. de Roos"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: 
+  bookdown::gitbook
+documentclass: book
+bibliography: deBif.bib
+biblio-style: apalike
+link-citations: yes
+description: "Manual for the use of the deBif package"
+---
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, results='hide'}
+knitr::opts_chunk$set(comment=NA, out.width='100%', fig.path='images/', echo=FALSE, cache=TRUE)
+```
+
+# Preface {-}
+This software package is developed for equilibrium and bifurcation analysis of systems of ordinary differential equations (ODEs). If you are not familiar with the bifurcation theory of continuous-time systems described in terms of ODEs the book by @Kuznetsov1995 is an excellent source to consult that I highly recommend. Many of the numerical procedures implemented in this package are tasken from that book. 
+
+This package consists of two functions, called `phaseplane()` and `bifurcation()`, that both start up a `shiny` application [@shinyapp]. `Shiny` is a web application framework for R, which also allows to run an application on your local machine. I used `shiny` [@shinyapp] and the related packages `shinydashboard` [@shinydashboard] and `shinydashboardPlus` [@shinydashboardPlus] to create a graphical user interface. Under the hood, I use the packages `deSolve` [@deSolve] and `rootSolve` [@rootSolve] for time integration of the ODEs and numerical solution of equilibrium and bifurcation conditions, respectively.
+
+The package is free software and released under the GNU General Public License without any warranty or even the implied warranty of merchantability or fitness for a particular purpose (the official statement of the GPL). If you are using the software for publications, you are kindly asked to credit this software package by a reference to this documentation and the website that hosts the software package, as these are currently the only sources to be referred to.
+
+In case you encounter any problem with the software package, please first verify the problem is not in your own model-specific file, but indeed is a bug in the general software layer. If you are convinced it is a bug in my programming, send me an email with as accurate a description of the problem as possible. Do not not forget to include your model-specific file and details about how to trigger the problems. Any comments and feedback, both on the code and on the current manual is appreciated and will be considered carefully. In particular concrete comments, for example, explicit suggestions for textual changes in the manual and/or corrections of the mistakes (they are definitely there!) will be highly valued and acknowledged.

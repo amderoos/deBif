@@ -20,11 +20,11 @@ plane2D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, par
   if (logy) yc <- 10^seq(log10(ymin), log10(ymax), length.out=npixels)
   else yc <- seq(ymin+eps, ymax, length.out=npixels)
   xvar <- names(state)[x]; yvar <- names(state)[y]
-  par(cex = dbopts$plotopts["cex"], mar = dbopts$plotmar)
+  par(cex = as.numeric(dbopts$plotopts["cex"]), mar = dbopts$plotmar)
   do.call('plot', c(list(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xvar, ylab=yvar, log=log,
-                         cex.lab=dbopts$plotopts["cex.lab"], cex.axis=dbopts$plotopts["cex.axis"]),
+                         cex.lab=as.numeric(dbopts$plotopts["cex.lab"]), cex.axis=as.numeric(dbopts$plotopts["cex.axis"])),
                     dots[names(dots) %in% dbopts$args_plot]))
-  legend("topright", legend=names(state)[ishows], col=dbopts$colors[ishows], lty=1, lwd=dbopts$plotopts["lwd"], cex=dbopts$plotopts["cex.legend"])
+  legend("topright", legend=names(state)[ishows], col=dbopts$colors[ishows], lty=1, lwd=dbopts$plotopts["lwd"], cex=as.numeric(dbopts$plotopts["cex.legend"]))
 
   vstate <- as.list(state)
   npixels2 <- npixels^2
@@ -50,7 +50,7 @@ plane2D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, par
         if (logy) state[y] <- 10^((j-1)*dy + dy/2 + log10(ymin))
         else state[y] <- (j-1)*dy + dy/2 + ymin
         if (portrait) {
-          points(state[x], state[y], pch=20)
+          points(state[x], state[y], pch=as.numeric(dbopts$plotopts["pch"]))
           nsol <- do.call('run', c(list(state=state, parms=parms, odes=odes, dbopts=dbopts), dots_run))
           lines(cbind(nsol[x+1], nsol[y+1]), col="black")
         }
