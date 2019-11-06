@@ -141,7 +141,9 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
     if (!is.null(curvelist) && (length(curvelist) > 0)) {
       lapply((1:length(curvelist)), function(i) {
         cnames <- colnames(curvelist[[i]]$points)
-        if (cnames[1] != popts$xlab) {
+        if (popts$xlab %in% cnames) {
+          xcol <- match(popts$xlab, cnames)
+        } else {
           msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
           if (!is.null(session)) updateConsoleLog(session, msg)
           return(NA)
@@ -156,7 +158,7 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
           if (!is.null(session)) updateConsoleLog(session, msg)
           return(NA)
         }
-        x <- converty2y(curvelist[[i]]$points[,1], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
+        x <- converty2y(curvelist[[i]]$points[,xcol], 0, 1, 0, popts$xmin, popts$xmax, popts$logx)
         y <- converty2y(curvelist[[i]]$points[,popts$y2col], 0, 1, 0, popts$y2min, popts$y2max, popts$logy2)
         z <- converty2y(curvelist[[i]]$points[,popts$ycol], 0, 1, 0, popts$ymin, popts$ymax, popts$logy)
         lines(trans3d(x, y, z, pmat), col=popts$colors[1], lwd=popts$lwd)
@@ -186,42 +188,53 @@ biforbitplot <- function(session = NULL, curvelist = NULL, popts) {
       if (popts$ycol == 1) {
         lapply((1:length(curvelist)), function(i) {
           cnames <- colnames(curvelist[[i]]$points)
-          if (cnames[1] != popts$xlab) {
+          if (popts$xlab %in% cnames) {
+            xcol <- match(popts$xlab, cnames)
+            lapply(2:ncol(curvelist[[i]]$points), function(j) {
+              lines(curvelist[[i]]$points[,xcol], curvelist[[i]]$points[,j], col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
+            })
+          } else {
             msg <- paste0("Curve plotting skipped: '", popts$xlab, "' not one of the curve variables\n")
             if (!is.null(session)) updateConsoleLog(session, msg)
             return(NA)
           }
-          lapply(2:ncol(curvelist[[i]]$points), function(j) {
-            lines(curvelist[[i]]$points[,1], curvelist[[i]]$points[,j], col=popts$colors[min(j-1, length(popts$colors))], lwd=popts$lwd)
-          })
         })
         legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
       } else {
         lapply((1:length(curvelist)), function(i) {
           cnames <- colnames(curvelist[[i]]$points)
-          if (cnames[1] != popts$xlab) {
+          if (popts$xlab %in% cnames) {
+            xcol <- match(popts$xlab, cnames)
+            if (cnames[as.numeric(popts$ycol)] != popts$ylab) {
+              msg <- paste0("Curve plotting skipped: variable '", popts$ylab, "' not one of the curve variables\n")
+              if (!is.null(session)) updateConsoleLog(session, msg)
+              return(NA)
+            }
+            lines(curvelist[[i]]$points[,xcol], curvelist[[i]]$points[,popts$ycol], col=popts$colors[1], lwd=popts$lwd)
+          } else {
             msg <- paste0("Curve plotting skipped: '", popts$xlab, "' not one of the curve variables\n")
             if (!is.null(session)) updateConsoleLog(session, msg)
             return(NA)
           }
-          if (cnames[as.numeric(popts$ycol)] != popts$ylab) {
-            msg <- paste0("Curve plotting skipped: variable '", popts$ylab, "' not one of the curve variables\n")
-            if (!is.null(session)) updateConsoleLog(session, msg)
-            return(NA)
-          }
-          lines(curvelist[[i]]$points[,1], curvelist[[i]]$points[,popts$ycol], col=popts$colors[1], lwd=popts$lwd)
         })
         if (popts$y2col > 1) {
           lapply((1:length(curvelist)), function(i) {
             cnames <- colnames(curvelist[[i]]$points)
-            if (cnames[as.numeric(popts$y2col)] != popts$y2lab) {
-              msg <- paste0("Curve plotting skipped: variable '", popts$y2lab, "' not one of the curve variables\n")
+            if (popts$xlab %in% cnames) {
+              xcol <- match(popts$xlab, cnames)
+              if (cnames[as.numeric(popts$y2col)] != popts$y2lab) {
+                msg <- paste0("Curve plotting skipped: variable '", popts$y2lab, "' not one of the curve variables\n")
+                if (!is.null(session)) updateConsoleLog(session, msg)
+                return(NA)
+              }
+              lines(curvelist[[i]]$points[,xcol],
+                    converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2),
+                    col=popts$colors[2], lwd=popts$lwd)
+            } else {
+              msg <- paste0("Curve plotting skipped: '", popts$xlab, "' not one of the curve variables\n")
               if (!is.null(session)) updateConsoleLog(session, msg)
               return(NA)
             }
-            lines(curvelist[[i]]$points[,1],
-                  converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2),
-                  col=popts$colors[2], lwd=popts$lwd)
           })
           legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
         }
