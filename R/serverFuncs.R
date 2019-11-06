@@ -190,8 +190,11 @@ processSaveCurve <- function(curtab, clist, savenr, varname) {
     if (exists(varname, envir = .GlobalEnv)) {
       rm(varname, envir = .GlobalEnv)
     }
-    if (savenr == -1) assign(varname, clist, envir = .GlobalEnv)
-    else assign(varname, clist[[savenr]], envir = .GlobalEnv)
+    # if (savenr == -1) assign(varname, clist, envir = .GlobalEnv)
+    # else assign(varname, clist[[savenr]], envir = .GlobalEnv)
+    # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
+    if (savenr == -1) (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist, 1L)
+    else (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist[[savenr]], 1L)
   }
 }
 

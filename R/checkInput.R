@@ -37,7 +37,7 @@ checkNumSettings <- function(oldopts, inlist) {
 }
 
 
-checkPlotSettings <- function(oldopts, inlist) {
+checkPlotSettings <- function(oldopts, inlist, state, parms) {
   initpopts <- oldopts
   if (is.list(inlist) && ("plotopts" %in% names(inlist)) &&
       all(names(inlist$plotopts) %in% c("Orbits", "BifurcationCurves", "BifurcationBounds"))) {
@@ -100,7 +100,7 @@ checkInputCurves <- function(oldcurves, inlist, snames, pnames) {
       nlist <- inlist$Orbits
       for (i in (1:length(nlist))) {
         if (all(c("label", "type", "initstate", "parameters", "points", "special.points", "special.tags") %in% names(nlist[[i]]))
-            && (ncol(nlist[[i]]$points) == (length(state)+1))
+            && (ncol(nlist[[i]]$points) == (length(snames)+1))
             && all(colnames(nlist[[i]]$points) == c("Time", snames))) {
           clist$Orbits[[length((clist$Orbits))+1]] <- nlist[[i]]
           clist$TotalCurves <- clist$TotalCurves + 1
@@ -112,9 +112,9 @@ checkInputCurves <- function(oldcurves, inlist, snames, pnames) {
       for (i in (1:length(nlist))) {
         if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
                   "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
-            && (ncol(nlist[[i]]$points) == (length(state)+1))
+            && (ncol(nlist[[i]]$points) == (length(snames)+1))
             && ((colnames(nlist[[i]]$points))[1] %in% pnames)
-            && all(colnames(nlist[[i]]$points)[2:(length(state)+1)] == snames)) {
+            && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
           clist$BifurcationCurves[[length((clist$BifurcationCurves))+1]] <- nlist[[i]]
           clist$TotalCurves <- clist$TotalCurves + 1
         }
@@ -125,9 +125,9 @@ checkInputCurves <- function(oldcurves, inlist, snames, pnames) {
       for (i in (1:length(nlist))) {
         if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
                   "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
-            && (ncol(nlist[[i]]$points) == (length(state)+2))
+            && (ncol(nlist[[i]]$points) == (length(snames)+2))
             && all((colnames(nlist[[i]]$points))[1:2] %in% pnames)
-            && all(colnames(nlist[[i]]$points)[3:(length(state)+2)] == snames))
+            && all(colnames(nlist[[i]]$points)[3:(length(snames)+2)] == snames))
         {
           clist$BifurcationBounds[[length((clist$BifurcationBounds))+1]] <- nlist[[i]]
           clist$TotalCurves <- clist$TotalCurves + 1

@@ -40,7 +40,7 @@
 #'               numerical and plot settings of this last session in these global
 #'               variables 'deBifCurves' and 'deBifSettings'.
 #'
-#' @param   ....  (optional arguments)
+#' @param   ...  (optional arguments)
 #' \preformatted{}
 #'               Additional arguments that can be included at the command line to tweak
 #'               graphical default values used by the application.
@@ -87,7 +87,7 @@
 #'
 #' bifurcation(model, state, parms)
 #' }
-#' @importFrom graphics contour legend lines par plot points text axis mtext persp axTicks segments
+#' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
 #' @importFrom grDevices trans3d
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom shinyjs useShinyjs click removeClass html
@@ -128,7 +128,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     if (resume && exists("deBifSettings", envir = .GlobalEnv)) {
       inlist    <- get("deBifSettings", envir = .GlobalEnv)
       initnopts <- checkNumSettings(initnopts, inlist)
-      initpopts <- checkPlotSettings(initpopts, inlist)
+      initpopts <- checkPlotSettings(initpopts, inlist, state, parms)
     }
 
     # Read options from the command line
@@ -583,14 +583,18 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           if (exists("deBifCurves", envir = .GlobalEnv)) {
             rm("deBifCurves", envir = .GlobalEnv)
           }
-          assign("deBifCurves", list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
-                                     BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), envir = .GlobalEnv)
-
+          # assign("deBifCurves", list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
+          #                            BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), envir = .GlobalEnv)
+          # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifCurves", list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
+                                                                                                   BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), 1L)
           # Save the plot and numerical settings in the global environment
           if (exists("deBifSettings", envir = .GlobalEnv)) {
             rm("deBifSettings", envir = .GlobalEnv)
           }
-          assign("deBifSettings", list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), envir = .GlobalEnv)
+          # assign("deBifSettings", list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), envir = .GlobalEnv)
+          # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifSettings", list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), 1L)
         })
       })
     }
@@ -609,3 +613,4 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
   }
 }
 
+# global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `

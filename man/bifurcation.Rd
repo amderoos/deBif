@@ -41,7 +41,7 @@ bifurcation(model, state, parms, resume = TRUE, ...)
               numerical and plot settings of this last session in these global
               variables 'deBifCurves' and 'deBifSettings'.}
 
-\item{....}{(optional arguments)
+\item{...}{(optional arguments)
 \preformatted{}
               Additional arguments that can be included at the command line to tweak
               graphical default values used by the application.

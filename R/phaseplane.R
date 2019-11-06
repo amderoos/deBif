@@ -30,7 +30,7 @@
 #'               The values of the parameters in the ODE system. This vector should
 #'               have name attributes for all its elements
 #'
-#' @param   ....  (optional arguments)
+#' @param   ...  (optional arguments)
 #' \preformatted{}
 #'               Additional arguments that can be included at the command line to tweak
 #'               graphical default values used by the application.
