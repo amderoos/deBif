@@ -15,11 +15,11 @@ LazyData: true
 Imports: graphics,
          deSolve  (>= 1.2), 
          rootSolve (>= 1.7),
-         shiny (>= 1.2), 
+         shiny (>= 1.4), 
          shinyjs (>= 1.0), 
          shinydashboard (>= 0.7), 
-         shinydashboardPlus  (>= 0.6)
+         shinydashboardPlus  (>= 0.7)
 Suggests: knitr, rmarkdown
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
-Depends: R (>= 3.5)
+Depends: R (>= 3.6)
