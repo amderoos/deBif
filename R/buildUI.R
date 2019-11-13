@@ -69,7 +69,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
           ),
           radioButtons("curvetype2", "Curve type to compute", choices = c("EQ", "LC"), inline = TRUE),
           br(),
-          splitLayout(cellWidths = c("50%", "50%"),
+          splitLayout(cellWidths = c("52%", "48%"),
                       actionButton("computebwrd2", "Compute", icon("backward")),
                       actionButton("computefwrd2", "Compute", icon("forward"))),
           br()
@@ -95,7 +95,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
           ),
           radioButtons("curvetype3", "Curve type to compute", choices = c("BP", "HP", "LP"), inline = TRUE),
           br(),
-          splitLayout(cellWidths = c("50%", "50%"),
+          splitLayout(cellWidths = c("52%", "48%"),
                       actionButton("computebwrd3", "Compute", icon("backward")),
                       actionButton("computefwrd3", "Compute", icon("forward"))),
           br()

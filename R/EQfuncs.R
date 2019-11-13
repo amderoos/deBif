@@ -205,8 +205,12 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
 
   bpval <- EQ_BPtest(state, parms, curveData, nopts, NULL)
   names(bpval) <- NULL
-  hpval <- EQ_HPtest(state, parms, curveData, nopts, NULL)
-  names(hpval) <- NULL
+  if (length(state) > 2) {
+    hpval <- EQ_HPtest(state, parms, curveData, nopts, NULL)
+    names(hpval) <- NULL
+  } else {
+    hpval <- 1.0
+  }
   lpval <- EQ_LPtest(state, parms, curveData, nopts, NULL)
   names(lpval) <- NULL
 
