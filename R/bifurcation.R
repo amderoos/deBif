@@ -381,7 +381,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         # Invalidate this for later if computation has not ended
         if (!is.null(session$userData$curveData)) {
           updatePlot(1)
-          invalidateLater(0, session)
+          invalidateLater(10, session)
         } else {
           changeCurveMenu(1)
           updatePlot(1)

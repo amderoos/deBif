@@ -177,12 +177,13 @@ buildUI <- function(state, parms, plotopts, numopts) {
         $('i.fa.fa-gears').on('click',function(){
           $(window).trigger('resize'); // Trigger resize event
         });
-        $(document).on('mouseleave', '.sidebar-menu', function () {
-          $(this).removeClass('active');
-          $(this).find( 'ul' ).removeClass('menu-open');
-          $(this).find( 'ul' ).css('display', 'none');
-        });"
+          "
       ),
+      # $(document).on('mouseleave', '.sidebar-menu', function () {
+      #   $(this).removeClass('active');
+      #   $(this).find( 'ul' ).removeClass('menu-open');
+      #   $(this).find( 'ul' ).css('display', 'none');
+      # });
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
@@ -265,8 +266,10 @@ buildUI <- function(state, parms, plotopts, numopts) {
                         strong("Plot type"),
                         radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
                                      inline = TRUE)),
-            sliderInput(inputId="theta", label="Viewing angle", min=-90, max=90, value=plotopts[[1]]$theta, step=1,
-                        ticks = FALSE, round=TRUE)
+            conditionalPanel(condition = "input.plot3d == 1",
+                             sliderInput(inputId="theta", label="Viewing angle",
+                                         min=-90, max=90, value=plotopts[[1]]$theta, step=1,
+                                         ticks = FALSE, round=TRUE))
           )
         ),
         div(style="line-height: 12px !important", br()),

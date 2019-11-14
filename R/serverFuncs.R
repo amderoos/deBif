@@ -188,7 +188,7 @@ processSaveCurve <- function(curtab, clist, savenr, varname) {
 
   if ((totalcurves > 0) && ((savenr > 0) || (savenr == -1)) && (savenr < (totalcurves + 1))) {
     if (exists(varname, envir = .GlobalEnv)) {
-      rm(varname, envir = .GlobalEnv)
+      rm(list = varname, envir = .GlobalEnv)
     }
     # if (savenr == -1) assign(varname, clist, envir = .GlobalEnv)
     # else assign(varname, clist[[savenr]], envir = .GlobalEnv)

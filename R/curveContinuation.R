@@ -162,6 +162,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
   statedim <- cData$statedim
   freeparsdim <- cData$freeparsdim
 
+  if (curvetype == "LC") maxpoints <- 1
+
   allsols <- NULL
   alltvs <- NULL
   alleigs <- NULL

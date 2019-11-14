@@ -125,13 +125,13 @@ phaseplane <- function(model, state, parms, ...) {
         )
       ),
       body = dashboardBody(
-        tags$script(
-        "$(document).on('mouseleave', '.sidebar-menu', function () {
-          $(this).removeClass('active');
-          $(this).find( 'ul' ).removeClass('menu-open');
-          $(this).find( 'ul' ).css('display', 'none');
-        });"
-        ),
+        # tags$script(
+        # "$(document).on('mouseleave', '.sidebar-menu', function () {
+        #   $(this).removeClass('active');
+        #   $(this).find( 'ul' ).removeClass('menu-open');
+        #   $(this).find( 'ul' ).css('display', 'none');
+        # });"
+        # ),
         do.call(tabsetPanel, c(myTabs, id = "plottab")),
         box(width = NULL, height = NULL, verbatimTextOutput("console"))
       ),

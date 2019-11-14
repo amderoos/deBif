@@ -107,16 +107,27 @@ checkInputCurves <- function(oldcurves, inlist, snames, pnames) {
         }
       }
     }
-    if (("BifurcationCurves" %in% names(inlist))  && (length(inlist$BifurcationCurves) > 0)){
+    if (("BifurcationCurves" %in% names(inlist))  && (length(inlist$BifurcationCurves) > 0)) {
       nlist <- inlist$BifurcationCurves
       for (i in (1:length(nlist))) {
-        if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
-                  "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
-            && (ncol(nlist[[i]]$points) == (length(snames)+1))
-            && ((colnames(nlist[[i]]$points))[1] %in% pnames)
-            && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
-          clist$BifurcationCurves[[length((clist$BifurcationCurves))+1]] <- nlist[[i]]
-          clist$TotalCurves <- clist$TotalCurves + 1
+        if (nlist[[i]]$type == "EQ") {
+          if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
+                    "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
+              && (ncol(nlist[[i]]$points) == (length(snames)+1))
+              && ((colnames(nlist[[i]]$points))[1] %in% pnames)
+              && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
+            clist$BifurcationCurves[[length((clist$BifurcationCurves))+1]] <- nlist[[i]]
+            clist$TotalCurves <- clist$TotalCurves + 1
+          }
+        }
+        if (nlist[[i]]$type == "LC") {
+          if (all(c("label", "type", "initstate", "parameters", "bifpars", "points",
+                    "tangent", "special.points", "special.tangent", "special.tags") %in% names(nlist[[i]]))
+              && ((colnames(nlist[[i]]$points))[1] %in% pnames)
+              && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
+            clist$BifurcationCurves[[length((clist$BifurcationCurves))+1]] <- nlist[[i]]
+            clist$TotalCurves <- clist$TotalCurves + 1
+          }
         }
       }
     }
