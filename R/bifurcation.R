@@ -206,8 +206,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
         },
-        height = function() {0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]},
-        width = function() {0.99*session$clientData[[paste0("output_plot", curtab, "_width")]]})
+        height = function() {setPlotHeight(session, input)},
+        width = function() {setPlotWidth(session, input)})
         updatePlot(0)
 
         # Update the console log
@@ -222,8 +222,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           curtab <- as.numeric(isolate(input$plottab))
           curtabname <- curveListNames[curtab]
           png(file,
-              height = 0.75*session$clientData[[paste0("output_plot", curtab, "_width")]],
-              width = 0.99*session$clientData[[paste0("output_plot", curtab, "_width")]])
+              height = setPlotHeight(session, input),
+              width = setPlotWidth(session, input))
           if (curtab == 1) biforbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
@@ -284,7 +284,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           # Collapse the State variables and Parameters stacks
           shinyjs::removeClass(selector = "li.treeview", class = "active")
           shinyjs::hide(selector = "ul.menu-open");
-          updateSelectInput(session, "deletecurve", selected = 0)
+          updateSelectInput(session, "deletecurve1", selected = 0)
+          updateSelectInput(session, "deletecurve2", selected = 0)
+          updateSelectInput(session, "deletecurve3", selected = 0)
 
           curtab <- as.numeric(input$plottab)
           curtabname <- curveListNames[curtab]
@@ -505,7 +507,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         # Collapse the State variables and Parameters stacks
         shinyjs::removeClass(selector = "li.treeview", class = "active")
         shinyjs::hide(selector = "ul.menu-open");
-        updateSelectInput(session, "deletecurve", selected = 0)
+        updateSelectInput(session, "deletecurve1", selected = 0)
+        updateSelectInput(session, "deletecurve2", selected = 0)
+        updateSelectInput(session, "deletecurve3", selected = 0)
 
         clist <- reactiveValuesToList(curveList)
 
@@ -533,26 +537,29 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         curveDirection(-1)
       }, ignoreInit = TRUE)
 
-      observeEvent(input$deletebtn, {
+      observeEvent(c(input$deletebtn1, input$deletebtn2, input$deletebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
-        curveList[[curtabname]] <- processDeleteCurve(session, curtab, curveList[[curtabname]], as.numeric(input$deletecurve))
+        curveList[[curtabname]] <- processDeleteCurve(session, curtab, curveList[[curtabname]], as.numeric(input[[paste0('deletecurve', curtab)]]))
         changeCurveMenu(-1)
       })
 
-      observeEvent(input$savebtn, {
+      observeEvent(c(input$savebtn1, input$savebtn2, input$savebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
-        processSaveCurve(curtab, curveList[[curtabname]], as.numeric(input$savecurve), make.names(input$curvename, unique = TRUE))
+        processSaveCurve(curtab, curveList[[curtabname]], as.numeric(input[[paste0('savecurve', curtab)]]), make.names(input[[paste0('curvename', curtab)]], unique = TRUE))
       })
 
-      observeEvent(input$appendbtn, {
+      observeEvent(c(input$appendbtn1, input$appendbtn2, input$appendbtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
+        curvarname <- input[[paste0('loadcurve', curtab)]]
+        # Check whether the name is a valid R variable name
+        if (make.names(curvarname) != curvarname) return(NULL)
         clist <- reactiveValuesToList(curveList)
-        newlist <- processLoadCurve(session, clist, input$loadcurve, statenames, parmsnames, replace = FALSE)
+        newlist <- processLoadCurve(session, clist, curvarname, statenames, parmsnames, replace = FALSE)
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
         updateCurveMenu(session, curveList[[curveListNames[curtab]]])
@@ -562,11 +569,14 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         consoleLog(session$userData$alltext)
       })
 
-      observeEvent(input$replacebtn, {
+      observeEvent(c(input$replacebtn1, input$replacebtn2, input$replacebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
+        curvarname <- input[[paste0('loadcurve', curtab)]]
+        # Check whether the name is a valid R variable name
+        if (make.names(curvarname) != curvarname) return(NULL)
         clist <- reactiveValuesToList(curveList)
-        newlist <- processLoadCurve(session, clist, input$loadcurve, statenames, parmsnames, replace = TRUE)
+        newlist <- processLoadCurve(session, clist, curvarname, statenames, parmsnames, replace = TRUE)
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
         updateCurveMenu(session, curveList[[curveListNames[curtab]]])

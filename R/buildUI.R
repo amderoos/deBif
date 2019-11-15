@@ -23,13 +23,14 @@ buildUI <- function(state, parms, plotopts, numopts) {
       tags$style(type='text/css', "#computebwrd3 { font-size: 13px;}"),
       # conditionPanels inside sidebarMenu do not really work well, so the entire sidebarMenu should be wrapped inside a conditionaPanel
       sidebarMenu(
+        id = "pointmenu",
         h4("Initial values", align = "center"),
         selectizeInput('selectpoint', "", c("User specified" = 0), selected=0)
       ),
       conditionalPanel(
         condition = "input.plottab == 1",
         sidebarMenu(
-          id = "varsparsmenu",
+          id = "varsparscurvesmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -46,13 +47,32 @@ buildUI <- function(state, parms, plotopts, numopts) {
           ),
           br(),
           actionButton("computebtn", "Compute", icon("forward")),
-          br()
+          br(),
+          h4("Curve management", align = "center"),
+          menuItem(h4("Load curves"),
+                   textInput("loadcurve1", "Give a valid R variable name"),
+                   splitLayout(cellWidths = c("50%", "50%"),
+                               actionButton("appendbtn1", "Append"),
+                               actionButton("replacebtn1", "Replace")),
+                   tabName = "loadtab1"
+          ),
+          menuItem(h4("Save curves"),
+                   selectInput('savecurve1', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   textInput("curvename1", "Give a valid R variable name"),
+                   actionButton("savebtn1", "Save curve"),
+                   tabName = "savetab1"
+          ),
+          menuItem(h4("Delete curves"),
+                   selectInput('deletecurve1', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   actionButton("deletebtn1", "Delete curve"),
+                   tabName = "deletetab1"
+          )
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 2",
         sidebarMenu(
-          id = "varsparsmenu",
+          id = "varsparscurvesmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -72,13 +92,32 @@ buildUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("52%", "48%"),
                       actionButton("computebwrd2", "Compute", icon("backward")),
                       actionButton("computefwrd2", "Compute", icon("forward"))),
-          br()
+          br(),
+          h4("Curve management", align = "center"),
+          menuItem(h4("Load curves"),
+                   textInput("loadcurve2", "Give a valid R variable name"),
+                   splitLayout(cellWidths = c("50%", "50%"),
+                               actionButton("appendbtn2", "Append"),
+                               actionButton("replacebtn2", "Replace")),
+                   tabName = "loadtab2"
+          ),
+          menuItem(h4("Save curves"),
+                   selectInput('savecurve2', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   textInput("curvename2", "Give a valid R variable name"),
+                   actionButton("savebtn2", "Save curve"),
+                   tabName = "savetab2"
+          ),
+          menuItem(h4("Delete curves"),
+                   selectInput('deletecurve2', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   actionButton("deletebtn2", "Delete curve"),
+                   tabName = "deletetab2"
+          )
         )
       ),
       conditionalPanel(
         condition = "input.plottab == 3",
         sidebarMenu(
-          id = "varsparsmenu",
+          id = "varsparscurvesmenu",
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -98,30 +137,30 @@ buildUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("52%", "48%"),
                       actionButton("computebwrd3", "Compute", icon("backward")),
                       actionButton("computefwrd3", "Compute", icon("forward"))),
-          br()
+          br(),
+          h4("Curve management", align = "center"),
+          menuItem(h4("Load curves"),
+                   textInput("loadcurve3", "Give a valid R variable name"),
+                   splitLayout(cellWidths = c("50%", "50%"),
+                               actionButton("appendbtn3", "Append"),
+                               actionButton("replacebtn3", "Replace")),
+                   tabName = "loadtab3"
+          ),
+          menuItem(h4("Save curves"),
+                   selectInput('savecurve3', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   textInput("curvename3", "Give a valid R variable name"),
+                   actionButton("savebtn3", "Save curve"),
+                   tabName = "savetab3"
+          ),
+          menuItem(h4("Delete curves"),
+                   selectInput('deletecurve3', 'Select curve', c("None" = 0, "All" = -1), selected=0),
+                   actionButton("deletebtn3", "Delete curve"),
+                   tabName = "deletetab3"
+          )
         )
       ),
       sidebarMenu(
-        id = "curvesmenu",
-        h4("Curve management", align = "center"),
-        menuItem(h4("Load curves"),
-                 textInput("loadcurve", "Give a valid R variable name"),
-                 splitLayout(cellWidths = c("50%", "50%"),
-                             actionButton("appendbtn", "Append"),
-                             actionButton("replacebtn", "Replace")),
-                 tabName = "loadtab"
-        ),
-        menuItem(h4("Save curves"),
-                 selectInput('savecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
-                 textInput("curvename", "Give a valid R variable name"),
-                 actionButton("savebtn", "Save curve"),
-                 tabName = "savetab"
-        ),
-        menuItem(h4("Delete curves"),
-                 selectInput('deletecurve', 'Select curve', c("None" = 0, "All" = -1), selected=0),
-                 actionButton("deletebtn", "Delete curve"),
-                 tabName = "deletetab"
-        ),
+        id = "restmenu",
         radioButtons("reportlevel", "Console report level", choiceNames = c("None", "Normal", "Full"), choiceValues = (0:2), inline = TRUE),
         div(style="line-height: 18px !important", br()),
         conditionalPanel(
@@ -154,17 +193,6 @@ buildUI <- function(state, parms, plotopts, numopts) {
     ),
     ########## Main panels
     body = dashboardBody(
-      # tags$head(
-      #   tags$style("body { min-height: 611px; height: auto; min-width: 800px; margin: auto; }")
-      # ),
-      do.call(tabsetPanel, c(myTabs, id = "plottab")),
-      shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#saveplot { left: calc(100% - 120px); top: 70px; position: absolute;}"
-      ))),
-      downloadButton("saveplot", label = "Save png"),
-      shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
-      ))),
       tags$script(
         "
         Shiny.addCustomMessageHandler('scrollCallback',
@@ -177,13 +205,30 @@ buildUI <- function(state, parms, plotopts, numopts) {
         $('i.fa.fa-gears').on('click',function(){
           $(window).trigger('resize'); // Trigger resize event
         });
-          "
+        var dimension = [0, 0];
+        $(document).on('shiny:connected', function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange('dimension', dimension);
+        });
+        $(window).resize(function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange('dimension', dimension);
+        });
+        "
       ),
-      # $(document).on('mouseleave', '.sidebar-menu', function () {
-      #   $(this).removeClass('active');
-      #   $(this).find( 'ul' ).removeClass('menu-open');
-      #   $(this).find( 'ul' ).css('display', 'none');
-      # });
+      # tags$head(
+      #   tags$style("body { min-height: 611px; height: auto; min-width: 800px; margin: auto; }")
+      # ),
+      do.call(tabsetPanel, c(myTabs, id = "plottab")),
+      shiny::tags$head(shiny::tags$style(shiny::HTML(
+        "#saveplot { left: calc(100% - 120px); top: 70px; position: absolute;}"
+      ))),
+      downloadButton("saveplot", label = "Save png"),
+      shiny::tags$head(shiny::tags$style(shiny::HTML(
+        "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
+      ))),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(

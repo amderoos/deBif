@@ -8,8 +8,12 @@ updateCurveMenu <- function(session, clist) {
   lbls <- do.call("rbind", lapply(clist, "[[", "label"))
   ids <- c((0:length(clist)), -1)
   names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
-  updateSelectInput(session, "deletecurve", choices=ids, selected=0)
-  updateSelectInput(session, "savecurve", choices=ids, selected=0)
+  updateSelectInput(session, "deletecurve1", choices=ids, selected=0)
+  updateSelectInput(session, "deletecurve2", choices=ids, selected=0)
+  updateSelectInput(session, "deletecurve3", choices=ids, selected=0)
+  updateSelectInput(session, "savecurve1", choices=ids, selected=0)
+  updateSelectInput(session, "savecurve2", choices=ids, selected=0)
+  updateSelectInput(session, "savecurve3", choices=ids, selected=0)
 }
 
 updatePlotOptionEntries <- function(session, curtab, popts, snames, pnames) {
@@ -253,4 +257,16 @@ processLoadCurve <- function(session = NULL, clist, varname, snames, pnames, rep
   else outlist$TotalCurves <- clist$TotalCurves + nlist$TotalCurves
 
   return(outlist)
+}
+
+setPlotHeight <- function(session, input) {
+  curtab <- as.numeric(input$plottab)
+  if (is.null(input$dimension))
+    return(0.75*session$clientData[[paste0("output_plot", curtab, "_width")]])
+  else return(min((as.numeric(input$dimension[2]) - 110), 0.75*session$clientData[[paste0("output_plot", curtab, "_width")]]))
+}
+
+setPlotWidth <- function(session, input) {
+  curtab <- as.numeric(input$plottab)
+  return(0.99*session$clientData[[paste0("output_plot", curtab, "_width")]])
 }
