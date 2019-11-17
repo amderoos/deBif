@@ -247,7 +247,7 @@ processLoadCurve <- function(session = NULL, clist, varname, snames, pnames, rep
     return(NULL)
   }
 
-  nlist <- checkInputCurves(NULL, inlist, snames, pnames)
+  nlist <- bifCheckInputCurves(NULL, inlist, snames, pnames)
 
   if ((length(nlist$Orbits) == 0) && (length(nlist$BifurcationCurves) == 0) && (length(nlist$BifurcationBounds) == 0)) {
     msg <- paste0("Curves not loaded: variable '", varname, "' does not contain any valid curve data\n")

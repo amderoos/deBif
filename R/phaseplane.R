@@ -217,7 +217,8 @@ phaseplane <- function(model, state, parms, ...) {
             output[["console"]] <- renderText({msg})
 
             if (plottype == 0) {
-              nsol <- run(tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, dbopts=debifOpts, method=input$method)
+              times <- seq(0, tmax, by=tstep)
+              nsol <- as.data.frame(do.call('ode', c(list(times=times, func=model, y=state, parms=parms), method=input$method)))
               par(cex = as.numeric(debifOpts$plotopts["cex"]), mar = debifOpts$plotmar)
               plot(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), log=logxy, xlab="Time", ylab="State variables",
                    cex.lab=as.numeric(debifOpts$plotopts["cex.lab"]), cex.axis=as.numeric(debifOpts$plotopts["cex.axis"]))
@@ -231,28 +232,29 @@ phaseplane <- function(model, state, parms, ...) {
               msg <- paste("Ended in ", msg, "\n", sep=" ")
             }
             else if (plottype == 1) {
-              if (length(state) == 1) plane1D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
-              else plane2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
+              if (length(state) == 1) phasePlot1D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
+              else phasePlot2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
             }
             else if (plottype == 2) {
               if (length(state) == 1) {
-                plane1D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
+                phasePlot1D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
                 msg <- allequi(state=state, parms=parms, odes=model, x=1, xmin=xmin, xmax=xmax, log=logxy, grid=10, plot=TRUE)
               }
               else {
-                plane2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
+                phasePlot2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
                 msg <- allequi(state=state, parms=parms, odes=model, x=1, xmin=xmin, xmax=xmax, y=2, ymin=ymin, ymax=ymax, log=logxy, grid=10, plot=TRUE)
               }
             }
             else if (plottype == 3) {
-              plane2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, eps=-.001,
+              phasePlot2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, eps=-.001,
                       vector=TRUE, grid=8, dbopts=debifOpts)
               allequi(state=state, parms=parms, odes=model, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, grid=10, report=FALSE, eigenvalues=FALSE, plot=TRUE)
             }
             else if (plottype == 4) {
-              plane2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
+              phasePlot2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, odes=model, state=state, parms=parms, eps=-.001, dbopts=debifOpts)
               allequi(state=state, parms=parms, odes=model, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, grid=10, report=FALSE, eigenvalues=FALSE, plot=TRUE)
-              nsol <- run(tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, dbopts=debifOpts, method=input$method)
+              times <- seq(0, tmax, by=tstep)
+              nsol <- as.data.frame(do.call('ode', c(list(times=times, func=model, y=state, parms=parms), method=input$method)))
 
               points(nsol[1, 2], nsol[1, 3], pch=as.numeric(debifOpts$plotopts["pch"]))
               lines(nsol[, 2], nsol[, 3], lwd=debifOpts$plotopts["lwd"], col="black")
@@ -261,7 +263,7 @@ phaseplane <- function(model, state, parms, ...) {
               msg <- paste("Ended in ", msg, "\n", sep=" ")
             }
             else if (plottype == 5) {
-              plane2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, eps=-.001,
+              phasePlot2D(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, tmax=tmax, tstep=tstep, odes=model, state=state, parms=parms, eps=-.001,
                       portrait=TRUE, dbopts=debifOpts, method=input$method)
               allequi(state=state, parms=parms, odes=model, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, log=logxy, grid=10, report=FALSE, eigenvalues=FALSE, plot=TRUE)
             }

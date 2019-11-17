@@ -1,4 +1,4 @@
-plane1D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, parms, eps=0, grid=5, npixels=200, dbopts, ...) {
+phasePlot1D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, parms, eps=0, grid=5, npixels=200, dbopts, ...) {
   # Make a phase plane for a single ODE with nullclines and/or phase portrait
   dots <- list(...)
   if (!is.null(dots)) {

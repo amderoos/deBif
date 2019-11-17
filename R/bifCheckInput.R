@@ -1,4 +1,4 @@
-checkNumSettings <- function(oldopts, inlist) {
+bifCheckNumSettings <- function(oldopts, inlist) {
   initnopts <- oldopts
   if (is.list(inlist) && ("numopts" %in% names(inlist))) {
     nlist <- inlist$numopts
@@ -37,7 +37,7 @@ checkNumSettings <- function(oldopts, inlist) {
 }
 
 
-checkPlotSettings <- function(oldopts, inlist, state, parms) {
+bifCheckPlotSettings <- function(oldopts, inlist, state, parms) {
   initpopts <- oldopts
   if (is.list(inlist) && ("plotopts" %in% names(inlist)) &&
       all(names(inlist$plotopts) %in% c("Orbits", "BifurcationCurves", "BifurcationBounds"))) {
@@ -91,7 +91,7 @@ checkPlotSettings <- function(oldopts, inlist, state, parms) {
 }
 
 
-checkInputCurves <- function(oldcurves, inlist, snames, pnames) {
+bifCheckInputCurves <- function(oldcurves, inlist, snames, pnames) {
   if (is.null(oldcurves)) clist <- list(Orbits = list(), BifurcationCurves = list(), BifurcationBounds = list(), TotalCurves = 0)
   else clist <- oldcurves
 

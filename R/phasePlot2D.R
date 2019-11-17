@@ -1,5 +1,5 @@
-plane2D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, parms,
-                    x=1, y=2, time=0, grid=5, eps=0, npixels=500, portrait=FALSE, vector=FALSE, dbopts, ...) {
+phasePlot2D <- function(xmin=0, xmax=1.1, ymin=0, ymax=1.1, log="", odes, state, parms,
+                        x=1, y=2, time=0, grid=5, eps=0, npixels=500, portrait=FALSE, vector=FALSE, dbopts, ...) {
   # Make a phase plane with nullclines and/or phase portrait
   dots <- list(...)
   if (!is.null(dots)) {

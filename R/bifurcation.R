@@ -127,8 +127,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     # Read options from the environment
     if (resume && exists("deBifSettings", envir = .GlobalEnv)) {
       inlist    <- get("deBifSettings", envir = .GlobalEnv)
-      initnopts <- checkNumSettings(initnopts, inlist)
-      initpopts <- checkPlotSettings(initpopts, inlist, state, parms)
+      initnopts <- bifCheckNumSettings(initnopts, inlist)
+      initpopts <- bifCheckPlotSettings(initpopts, inlist, state, parms)
     }
 
     # Read options from the command line
@@ -156,7 +156,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     initCurves <- list(Orbits = list(), BifurcationCurves = list(), BifurcationBounds = list(), TotalCurves = 0)
     if (resume && exists("deBifCurves", envir = .GlobalEnv)) {
       inlist     <- get("deBifCurves", envir = .GlobalEnv)
-      initCurves <- checkInputCurves(NULL, inlist, statenames, parmsnames)
+      initCurves <- bifCheckInputCurves(NULL, inlist, statenames, parmsnames)
     }
 
     ui <- bifUI(state, parms, initpopts, initnopts)
@@ -204,7 +204,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         if (as.numeric(updatePlot()) == 0) return(NULL)
 
         output[[paste0("plot", curtab)]] <- renderPlot({
-          if (curtab == 1) biforbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
+          if (curtab == 1) bifOrbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
         },
@@ -227,7 +227,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           png(file,
               height = setPlotHeight(session, input),
               width = setPlotWidth(session, input))
-          if (curtab == 1) biforbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
+          if (curtab == 1) bifOrbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           dev.off()
