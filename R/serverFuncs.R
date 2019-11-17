@@ -61,15 +61,26 @@ updateSelectedPoint <- function(session, curtab, clist, pointid, snames, pnames)
     ind2 <- round((pointid-ind1*1000000)/1000)
     ind3 <- round(pointid-ind1*1000000-ind2*1000)
     cln1 <- (c('Orbits', 'BifurcationCurves', 'BifurcationBounds'))[ind1]
-    ii <- ifelse((ind1 == 3), 2, 1)   # 2 parameter bifurcation points have 2 columns before the state, otherwise 1 only
-    lapply(1:length(snames), function(i){updateNumericInput(session, paste0(snames[i], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,(i+ii)]]))})
-    lapply(1:length(pnames), function(i){updateNumericInput(session, paste0(pnames[i], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$parameters[[i]]))})
-    if (ind1 > 1) {
-      cnames <- colnames(clist[[cln1]][[ind2]]$special.points)
-      updateNumericInput(session, paste0(pnames[cnames[1]], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,1]]))
-      if (ind1 == 3) {
-        updateNumericInput(session, paste0(pnames[cnames[2]], "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,2]]))
-      }
+
+    lapply(snames,
+           function(x) {
+             updateNumericInput(session, paste0(x, "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,x]]))
+             })
+    lapply(pnames,
+           function(x) {
+             cnames <- colnames(clist[[cln1]][[ind2]]$special.points)
+             if (x %in% cnames)
+               updateNumericInput(session, paste0(x, "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$special.points[[ind3,x]]))
+             else
+               updateNumericInput(session, paste0(x, "_", curtab), value=as.numeric(clist[[cln1]][[ind2]]$parameters[[x]]))
+           })
+
+    inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
+    if ((cln1 == 'BifurcationBounds') && (inittype %in% c("BP", "HP", "LP"))) {
+      updateSelectInput(session, "curvetype3", selected = inittype)
+    } else if (cln1 == 'BifurcationCurves') {
+      if (inittype == "HP") updateSelectInput(session, "curvetype2", selected = "LC")
+      else updateSelectInput(session, "curvetype2", selected = "EQ")
     }
   }
 }
@@ -90,9 +101,13 @@ updateSpecialPointsList <- function(session, clist, selected) {
   }
   if (length(splist) > 0) {
     names(splist) <- listlbls
-    updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0), splist), selected=selected)
+    updateSelectInput(session, "selectpoint1", choices=c(list("User specified" = 0), splist), selected=selected[1])
+    updateSelectInput(session, "selectpoint2", choices=c(list("User specified" = 0), splist), selected=selected[2])
+    updateSelectInput(session, "selectpoint3", choices=c(list("User specified" = 0), splist), selected=selected[3])
   } else {
-    updateSelectInput(session, "selectpoint", choices=c(list("User specified" = 0)), selected=0)
+    updateSelectInput(session, "selectpoint1", choices=c(list("User specified" = 0)), selected=0)
+    updateSelectInput(session, "selectpoint2", choices=c(list("User specified" = 0)), selected=0)
+    updateSelectInput(session, "selectpoint3", choices=c(list("User specified" = 0)), selected=0)
   }
 }
 
@@ -146,7 +161,7 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
 
   if (curtab == 1) {
     nopts$tmax <- as.numeric(input[["tmax"]])
-    nopts$tstep <- as.numeric(input[["tstep"]])
+    nopts$tstep <- abs(as.numeric(input[["tstep"]]))
     nopts$odemethod <- input[["method"]]
   }
   else {

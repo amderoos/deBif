@@ -1,4 +1,4 @@
-buildUI <- function(state, parms, plotopts, numopts) {
+bifUI <- function(state, parms, plotopts, numopts) {
   choices <- c("Time series" = 1, "1 parameter bifurcation" = 2, "2 parameter bifurcation" = 3)
   myTabs <- lapply(1:length(choices), function(i) {tabPanel(title = names(choices)[i], plotOutput(outputId=paste0("plot", choices[i]), height = "100%"), value = choices[i])})
 
@@ -17,18 +17,17 @@ buildUI <- function(state, parms, plotopts, numopts) {
     sidebar = dashboardSidebar(
       width = 220,
       tags$style(type='text/css', "#computebtn { font-size: 13px;}"),
+      tags$style(type='text/css', "#computefwrd1 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computefwrd2 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computefwrd3 { font-size: 13px; margin-left: 2px; }"),
+      tags$style(type='text/css', "#computebwrd1 { font-size: 13px;}"),
       tags$style(type='text/css', "#computebwrd2 { font-size: 13px;}"),
       tags$style(type='text/css', "#computebwrd3 { font-size: 13px;}"),
       # conditionPanels inside sidebarMenu do not really work well, so the entire sidebarMenu should be wrapped inside a conditionaPanel
-      sidebarMenu(
-        id = "pointmenu",
-        h4("Initial values", align = "center"),
-        selectizeInput('selectpoint', "", c("User specified" = 0), selected=0)
-      ),
       conditionalPanel(
         condition = "input.plottab == 1",
+        h4("Initial values", align = "center"),
+        selectizeInput('selectpoint1', "", c("User specified" = 0), selected=0),
         sidebarMenu(
           id = "varsparscurvesmenu",
           menuItem(
@@ -46,7 +45,9 @@ buildUI <- function(state, parms, plotopts, numopts) {
             tabName = "pars1tab"
           ),
           br(),
-          actionButton("computebtn", "Compute", icon("forward")),
+          splitLayout(cellWidths = c("52%", "48%"),
+                      actionButton("computebwrd1", "Compute", icon("backward")),
+                      actionButton("computefwrd1", "Compute", icon("forward"))),
           br(),
           h4("Curve management", align = "center"),
           menuItem(h4("Load curves"),
@@ -73,6 +74,8 @@ buildUI <- function(state, parms, plotopts, numopts) {
         condition = "input.plottab == 2",
         sidebarMenu(
           id = "varsparscurvesmenu",
+          h4("Initial values", align = "center"),
+          selectizeInput('selectpoint2', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -118,6 +121,8 @@ buildUI <- function(state, parms, plotopts, numopts) {
         condition = "input.plottab == 3",
         sidebarMenu(
           id = "varsparscurvesmenu",
+          h4("Initial values", align = "center"),
+          selectizeInput('selectpoint3', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -331,7 +336,7 @@ buildUI <- function(state, parms, plotopts, numopts) {
           h4("Time integration"),
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
-                      numericInput(inputId="tstep", label="Time step", value=numopts$tstep,step=0.1)),
+                      numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
           selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod)
           ),
         conditionalPanel(

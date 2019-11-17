@@ -1,4 +1,4 @@
-processComputeButton <- function(session, model, state, parms, clist, pointid, nopts) {
+computeTimeseries <- function(session, model, state, parms, clist, pointid, nopts) {
 
   curvescomputed <- as.numeric(clist[['TotalCurves']])
 
@@ -24,19 +24,21 @@ processComputeButton <- function(session, model, state, parms, clist, pointid, n
 
   newcurvenr <- length((clist[['Orbits']]))+1
 
-  nsol <- run(tmax=nopts$tmax, tstep=nopts$tstep, odes=model, state=initstate, parms=initparms,
-              dbopts=nopts, method=nopts$odemethod)
+  times <- seq(0, nopts$tmax, by=abs(nopts$tstep))
+  if (nopts$tstep < 0.0) times <- nopts$tmax - times
+  nsol <- as.data.frame(do.call('ode', c(list(times=times, func=model, y=initstate, parms=initparms), method=nopts$odemethod)))
+
   names(nsol) <- c("Time", names(state))
 
   startPnt <- c("Type" = "TS",
-                "Description" = paste(unlist(lapply(1:length(state),
-                                                    function(i) {paste0(names(state[i]), "=",
-                                                                        round(nsol[1, (1+i)], 3))})),
+                "Description" = paste(paste0('T=', times[1]),
+                                      unlist(lapply(1:length(state),
+                                                    function(i) {paste0(names(state[i]), "=", round(nsol[1, (1+i)], 3))})),
                                       collapse=', '))
   endPnt <- c("Type" = "TS",
-              "Description" = paste(unlist(lapply(1:length(state),
-                                                  function(i) {paste0(names(state[i]), "=",
-                                                                      round(nsol[nrow(nsol), (1+i)], 3))})),
+              "Description" = paste(paste0('T=', times[length(times)]),
+                                    unlist(lapply(1:length(state),
+                                                  function(i) {paste0(names(state[i]), "=", round(nsol[nrow(nsol), (1+i)], 3))})),
                                     collapse=', '))
 
   updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))

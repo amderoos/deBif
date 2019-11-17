@@ -159,7 +159,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
       initCurves <- checkInputCurves(NULL, inlist, statenames, parmsnames)
     }
 
-    ui <- buildUI(state, parms, initpopts, initnopts)
+    ui <- bifUI(state, parms, initpopts, initnopts)
+
+    # server <- function(input, output, session) {bifServer(input, output, session)}
 
     ############################################# BEGIN SERVER FUNCTION ####################################################
     server <- function(input, output, session) {
@@ -175,7 +177,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
       curveList$TotalCurves <- initCurves$TotalCurves
       curveListNames <- c('Orbits', 'BifurcationCurves', 'BifurcationBounds', 'TotalCurves')
 
-      updateSpecialPointsList(session, initCurves, 0)
+      updateSpecialPointsList(session, initCurves, c(0, 0, 0))
 
       # Create the variable plotopts as a reactive value, such that the plots will be updated when plotopts changes
       plotopts <- reactiveValues()
@@ -214,6 +216,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         consoleLog(session$userData$alltext)
       })
 
+      # Handle requests to save the plot as an image file
       output$saveplot <- downloadHandler(
         filename = function() {
           tempfile(pattern = "Rplot", tmpdir = '', fileext = ".png")
@@ -237,9 +240,10 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
         if (as.numeric(changeCurveMenu()) == 0) return(NULL)
         else if (as.numeric(changeCurveMenu()) == 1)
-          updateSpecialPointsList(session, reactiveValuesToList(curveList), as.numeric(isolate(input$selectpoint)))
+          updateSpecialPointsList(session, reactiveValuesToList(curveList),
+                                  c(as.numeric(isolate(input$selectpoint1)), as.numeric(isolate(input$selectpoint2)), as.numeric(isolate(input$selectpoint3))))
         else
-          updateSpecialPointsList(session, reactiveValuesToList(curveList), 0)
+          updateSpecialPointsList(session, reactiveValuesToList(curveList), c(0, 0, 0))
 
         # Updating the save and delete curve menu
         curtabname <- curveListNames[as.numeric(isolate(input$plottab))]
@@ -253,28 +257,15 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         session$sendCustomMessage(type = "scrollCallback", 1)
       })
 
-      observe({
-        pointid <- as.numeric(input$selectpoint)
-        if (pointid > 0) {
-          isolate({
-            curtab <- as.numeric(isolate(input$plottab))
-            curtabname <- curveListNames[curtab]
-            clist <- reactiveValuesToList(curveList)
-            ind1 <- round(pointid/1000000)
-            ind2 <- round((pointid-ind1*1000000)/1000)
-            ind3 <- round(pointid-ind1*1000000-ind2*1000)
-            cln1 <- curveListNames[ind1]
-            inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
-            if ((curtabname == 'BifurcationBounds') && (inittype %in% c("BP", "HP", "LP"))) {
-              updateSelectInput(session, "curvetype3", selected = inittype)
-            } else if (curtabname == 'BifurcationCurves') {
-              if (inittype == "HP") updateSelectInput(session, "curvetype2", selected = "LC")
-              else updateSelectInput(session, "curvetype2", selected = "EQ")
-            }
-          })
-        }
+      # React to selection of an initial point
+      observeEvent(c(input$selectpoint1, input$selectpoint2, input$selectpoint3), {
+        curtab <- as.numeric(input$plottab)
+        curtabname <- curveListNames[curtab]
+        clist <- reactiveValuesToList(curveList)
+        updateSelectedPoint(session, curtab, clist, as.numeric(input[[paste0('selectpoint', curtab)]]), statenames, parmsnames)
       })
 
+      # Initialise a computation. Triggered by a change in the reactive value curveDirection()
       observe({
         if (as.numeric(curveDirection()) == 0) return(NULL)
 
@@ -290,49 +281,64 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
           curtab <- as.numeric(input$plottab)
           curtabname <- curveListNames[curtab]
-          pointid <- as.numeric(input$selectpoint)
-          if (curtabname == 'BifurcationCurves') curvetype <- input$curvetype2
-          else if (curtabname == 'BifurcationBounds') curvetype <- input$curvetype3
           clist <- reactiveValuesToList(curveList)
           popts <- reactiveValuesToList(plotopts)
-          numopts$stepsize <- as.numeric(curveDirection())*abs(numopts$stepsize)
+          pointid <- as.numeric(input[[paste0('selectpoint', curtab)]])
 
-          # Get the starting point
-          if (pointid > 0) {
-            ind1 <- round(pointid/1000000)
-            ind2 <- round((pointid-ind1*1000000)/1000)
-            ind3 <- round(pointid-ind1*1000000-ind2*1000)
-            cln1 <- curveListNames[ind1]
-            ii <- ifelse((ind1 == 3), 2, 1) # 2 parameter bifurcation points have 2 columns before state, otherwise only 1
-
-            initstate <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (ii + (1:length(state)))])
-            initparms <- as.numeric(clist[[cln1]][[ind2]]$parameters)
-            inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
-            if (inittype != "TS")
-              initparms[as.numeric(clist[[cln1]][[ind2]]$bifpars)] <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (1:ii)])
-            inittanvec <- clist[[cln1]][[ind2]]$tangent[ind3,]
-          } else {
+          if (curtab == 1) {
             initstate <- state
             initparms <- parms
-            for (i in statenames) initstate[i] <- input[[paste0(i, "_", curtab)]]
-            for (i in parmsnames) initparms[i] <- input[[paste0(i, "_", curtab)]]
-            inittype <- "US"
-            inittanvec <- NULL
-          }
-          names(initstate) <- names(state)
-          names(initparms) <- names(parms)
+            for (i in statenames) initstate[i] <- input[[paste0(i, "_1")]]
+            for (i in parmsnames) initparms[i] <- input[[paste0(i, "_1")]]
+            numopts$tstep <- as.numeric(curveDirection())*abs(numopts$tstep)
 
-          newlist <- initCurveContinuation(session, model, initstate, initparms, inittanvec, curtabname, clist,
-                                           curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel))
-          if (!is.null(newlist)) {
-            lapply((1:length(newlist)), function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
-            updatePlot(1)
-            busyComputing(1)
-            updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
-            shinyjs::show("pausebtn")
-            shinyjs::show("stopbtn")
-          } else {
+            newlist <- computeTimeseries(session, model, initstate, initparms, clist, pointid, numopts)
+            if (!is.null(newlist)) lapply((1:length(newlist)),
+                                          function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
+            changeCurveMenu(1)
             curveDirection(0)
+          } else {
+            if (curtabname == 'BifurcationCurves') curvetype <- input$curvetype2
+            else if (curtabname == 'BifurcationBounds') curvetype <- input$curvetype3
+            numopts$stepsize <- as.numeric(curveDirection())*abs(numopts$stepsize)
+
+            # Get the starting point
+            if (pointid > 0) {
+              ind1 <- round(pointid/1000000)
+              ind2 <- round((pointid-ind1*1000000)/1000)
+              ind3 <- round(pointid-ind1*1000000-ind2*1000)
+              cln1 <- curveListNames[ind1]
+              ii <- ifelse((ind1 == 3), 2, 1) # 2 parameter bifurcation points have 2 columns before state, otherwise only 1
+
+              initstate <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (ii + (1:length(state)))])
+              initparms <- as.numeric(clist[[cln1]][[ind2]]$parameters)
+              inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
+              if (inittype != "TS")
+                initparms[as.numeric(clist[[cln1]][[ind2]]$bifpars)] <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (1:ii)])
+              inittanvec <- clist[[cln1]][[ind2]]$tangent[ind3,]
+            } else {
+              initstate <- state
+              initparms <- parms
+              for (i in statenames) initstate[i] <- input[[paste0(i, "_", curtab)]]
+              for (i in parmsnames) initparms[i] <- input[[paste0(i, "_", curtab)]]
+              inittype <- "US"
+              inittanvec <- NULL
+            }
+            names(initstate) <- names(state)
+            names(initparms) <- names(parms)
+
+            newlist <- initCurveContinuation(session, model, initstate, initparms, inittanvec, curtabname, clist,
+                                             curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel))
+            if (!is.null(newlist)) {
+              lapply((1:length(newlist)), function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
+              updatePlot(1)
+              busyComputing(1)
+              updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
+              shinyjs::show("pausebtn")
+              shinyjs::show("stopbtn")
+            } else {
+              curveDirection(0)
+            }
           }
 
           # Update the console log
@@ -340,6 +346,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         })
       })
 
+      # Compute the next batch batch of solution points along a 1- or 2-parameter bifurcaiton curve
       observe({
         if ((as.numeric(busyComputing()) != 1) || is.null(session$userData$curveData)) return(NULL)
 
@@ -380,7 +387,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         # Update the console log
         consoleLog(session$userData$alltext)
 
-        # Invalidate this for later if computation has not ended
+        # Scheduling the computation of the subsequent batch of points: Invalidate this for later if computation has not ended
         if (!is.null(session$userData$curveData)) {
           updatePlot(1)
           invalidateLater(10, session)
@@ -394,7 +401,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         }
       })
 
-      # observeEvent is non-reactive, it only reacts to invalidation of the specified event
+      # Respond to the Pause button: observeEvent is non-reactive, it only reacts to invalidation of the specified event
       observeEvent(input$pausebtn, {
         busycomp <- as.numeric(isolate(busyComputing()))
         if (busycomp == 0) return(NULL)
@@ -410,6 +417,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         }
       })
 
+      # Respond to the Stop button: observeEvent is non-reactive, it only reacts to invalidation of the specified event
       observeEvent(input$stopbtn, {
         if (as.numeric(isolate(busyComputing())) == 0) return(NULL)
         updateConsoleLog(session, "Computation interrupted by the user\n")
@@ -468,6 +476,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         consoleLog(session$userData$alltext)
       }, ignoreInit = TRUE)
 
+      # Respond to a change in plot tabs
       observeEvent(input$plottab, {
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
@@ -478,13 +487,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         updateCurveMenu(session, curveList[[curtabname]])
       })
 
-      observeEvent(input$selectpoint, {
-        curtab <- as.numeric(input$plottab)
-        curtabname <- curveListNames[curtab]
-        clist <- reactiveValuesToList(curveList)
-        updateSelectedPoint(session, curtab, clist, as.numeric(input$selectpoint), statenames, parmsnames)
-      })
-
+      # Apply newly entered plot or numerical settings
       observeEvent(c(input$plotoptsapply, input$numoptsapply), {
         # Close the rightSidebar
         # shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
@@ -500,43 +503,19 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         consoleLog(session$userData$alltext)
       })
 
-      observeEvent(input$computebtn, {
-        if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
-        # Close the rightSidebar
-        shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
-        # Collapse the State variables and Parameters stacks
-        shinyjs::removeClass(selector = "li.treeview", class = "active")
-        shinyjs::hide(selector = "ul.menu-open");
-        updateSelectInput(session, "deletecurve1", selected = 0)
-        updateSelectInput(session, "deletecurve2", selected = 0)
-        updateSelectInput(session, "deletecurve3", selected = 0)
-
-        clist <- reactiveValuesToList(curveList)
-
-        initstate <- state
-        initparms <- parms
-        for (i in statenames) initstate[i] <- input[[paste0(i, "_1")]]
-        for (i in parmsnames) initparms[i] <- input[[paste0(i, "_1")]]
-
-        newlist <- processComputeButton(session, model, initstate, initparms, clist, as.numeric(input$selectpoint), numopts)
-        if (!is.null(newlist)) lapply((1:length(newlist)),
-                                      function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
-        changeCurveMenu(1)
-
-        # Update the console log
-        consoleLog(session$userData$alltext)
-      }, ignoreInit = TRUE)
-
-      observeEvent(c(input$computefwrd2,input$computefwrd3), {
+      # Initiate a forward computation
+      observeEvent(c(input$computefwrd1,input$computefwrd2,input$computefwrd3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curveDirection(1)
       }, ignoreInit = TRUE)
 
-      observeEvent(c(input$computebwrd2,input$computebwrd3), {
+      # Initiate a backward computation
+      observeEvent(c(input$computebwrd1,input$computebwrd2,input$computebwrd3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curveDirection(-1)
       }, ignoreInit = TRUE)
 
+      # Delete one or more curves
       observeEvent(c(input$deletebtn1, input$deletebtn2, input$deletebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
@@ -545,6 +524,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         changeCurveMenu(-1)
       })
 
+      # Save one or more curves
       observeEvent(c(input$savebtn1, input$savebtn2, input$savebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
@@ -552,6 +532,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         processSaveCurve(curtab, curveList[[curtabname]], as.numeric(input[[paste0('savecurve', curtab)]]), make.names(input[[paste0('curvename', curtab)]], unique = TRUE))
       })
 
+      # Append one or more curves to the current curve list
       observeEvent(c(input$appendbtn1, input$appendbtn2, input$appendbtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
@@ -563,12 +544,13 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
         updateCurveMenu(session, curveList[[curveListNames[curtab]]])
-        updateSpecialPointsList(session, reactiveValuesToList(curveList), 0)
+        updateSpecialPointsList(session, reactiveValuesToList(curveList), c(0, 0, 0))
 
         # Update the console log
         consoleLog(session$userData$alltext)
       })
 
+      # Replace the current curve list with a stored list
       observeEvent(c(input$replacebtn1, input$replacebtn2, input$replacebtn3), {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
@@ -580,12 +562,13 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
         updateCurveMenu(session, curveList[[curveListNames[curtab]]])
-        updateSpecialPointsList(session, reactiveValuesToList(curveList), 0)
+        updateSpecialPointsList(session, reactiveValuesToList(curveList), c(0, 0, 0))
 
         # Update the console log
         consoleLog(session$userData$alltext)
       })
 
+      # Actions to be carried out when the app is stopped
       onStop(fun = function() {
         isolate({
           cat("Saving curves and programs settings")
@@ -609,7 +592,6 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
       })
     }
     ############################################## END SERVER FUNCTION #####################################################
-
     # output[["console"]] <- renderText({
     #   cnames <- names(cdata)
     #
