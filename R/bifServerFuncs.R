@@ -3,17 +3,16 @@ updateConsoleLog <- function(session, addtext) {
   else session$userData$alltext <- addtext
 }
 
-updateCurveMenu <- function(session, clist) {
+updateCurveMenu <- function(session, clist, ntabs) {
   # Update the save and delete curve menu
   lbls <- do.call("rbind", lapply(clist, "[[", "label"))
   ids <- c((0:length(clist)), -1)
   names(ids) <- c("None", lbls[,1], "All")[1:length(ids)]
-  updateSelectInput(session, "deletecurve1", choices=ids, selected=0)
-  updateSelectInput(session, "deletecurve2", choices=ids, selected=0)
-  updateSelectInput(session, "deletecurve3", choices=ids, selected=0)
-  updateSelectInput(session, "savecurve1", choices=ids, selected=0)
-  updateSelectInput(session, "savecurve2", choices=ids, selected=0)
-  updateSelectInput(session, "savecurve3", choices=ids, selected=0)
+
+  for (i in (1:ntabs)) {
+    updateSelectInput(session, paste0("deletecurve", i), choices=ids, selected=0)
+    updateSelectInput(session, paste0("savecurve", i), choices=ids, selected=0)
+  }
 }
 
 updatePlotOptionEntries <- function(session, curtab, popts, snames, pnames) {
@@ -88,7 +87,8 @@ updateSelectedPoint <- function(session, curtab, clist, pointid, snames, pnames)
 updateSpecialPointsList <- function(session, clist, selected) {
   splist <- list()
   listlbls <- NULL
-  for (i in (1:3)) {
+  ntabs <- length(selected)
+  for (i in (1:ntabs)) {
     cln <- (c('Orbits', 'BifurcationCurves', 'BifurcationBounds'))[i]
     if (length(clist[[cln]]) > 0) {
       listlbls <- c(listlbls, unlist(lapply((1:length(clist[[cln]])), function(j){return(clist[[cln]][[j]]$label)})))
@@ -101,27 +101,25 @@ updateSpecialPointsList <- function(session, clist, selected) {
   }
   if (length(splist) > 0) {
     names(splist) <- listlbls
-    updateSelectInput(session, "selectpoint1", choices=c(list("User specified" = 0), splist), selected=selected[1])
-    updateSelectInput(session, "selectpoint2", choices=c(list("User specified" = 0), splist), selected=selected[2])
-    updateSelectInput(session, "selectpoint3", choices=c(list("User specified" = 0), splist), selected=selected[3])
+    for (i in (1:ntabs)) {
+      updateSelectInput(session, paste0("selectpoint", i), choices=c(list("User specified" = 0), splist), selected=selected[i])
+    }
   } else {
-    updateSelectInput(session, "selectpoint1", choices=c(list("User specified" = 0)), selected=0)
-    updateSelectInput(session, "selectpoint2", choices=c(list("User specified" = 0)), selected=0)
-    updateSelectInput(session, "selectpoint3", choices=c(list("User specified" = 0)), selected=0)
+    for (i in (1:ntabs)) {
+      updateSelectInput(session, paste0("selectpoint", i), choices=c(list("User specified" = 0), splist), selected=0)
+    }
   }
 }
 
-processPlotOptionsApply <- function(session, input, curtab, popts, snames, pnames) {
+processPlotOptionsApply <- function(session, input, curtab, popts) {
   popts$xcol <- as.numeric(input[["xcol"]])
   popts$logx <- as.numeric(input[["logx"]])
   popts$xmin <- ifelse(input[["logx"]] == 1, max(as.numeric(input[["xmin"]]), 1.0E-10), as.numeric(input[["xmin"]]))
   popts$xmax <- as.numeric(input[["xmax"]])
-  popts$xlab <- ifelse(curtab == 1, (c("Time", snames))[popts$xcol], pnames[popts$xcol])
   popts$ycol <- as.numeric(input[["ycol"]])
   popts$logy <- as.numeric(input[["logy"]])
   popts$ymin <- ifelse(input[["logy"]] == 1, max(as.numeric(input[["ymin"]]), 1.0E-10), as.numeric(input[["ymin"]]))
   popts$ymax <- as.numeric(input[["ymax"]])
-  popts$ylab <- ifelse(curtab < 3, (c("State variables", snames))[popts$ycol], pnames[popts$ycol])
 
   if (popts$xmax < 1.0001*popts$xmin) {
     updateConsoleLog(session, "Maximum of x-axis not significantly different from its minimum\n")
@@ -138,7 +136,6 @@ processPlotOptionsApply <- function(session, input, curtab, popts, snames, pname
     popts$logy2 <- as.numeric(input[["logy2"]])
     popts$y2min <- ifelse(input[["logy2"]] == 1, max(as.numeric(input[["y2min"]]), 1.0E-10), as.numeric(input[["y2min"]]))
     popts$y2max <- as.numeric(input[["y2max"]])
-    popts$y2lab <- (c("None", snames))[popts$y2col]
     popts$plot3d <- ifelse((popts$y2col > 1), as.numeric(input[["plot3d"]]), 0)
     popts$theta <- as.numeric(input[["theta"]])
     popts$theta <- max(popts$theta, -90)

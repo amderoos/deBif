@@ -16,7 +16,6 @@ bifUI <- function(state, parms, plotopts, numopts) {
     ########## Left side-bar
     sidebar = dashboardSidebar(
       width = 220,
-      tags$style(type='text/css', "#computebtn { font-size: 13px;}"),
       tags$style(type='text/css', "#computefwrd1 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computefwrd2 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computefwrd3 { font-size: 13px; margin-left: 2px; }"),
@@ -228,7 +227,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
       # ),
       do.call(tabsetPanel, c(myTabs, id = "plottab")),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#saveplot { left: calc(100% - 120px); top: 70px; position: absolute;}"
+        "#saveplot { left: calc(100% - 125px); top: 108px; position: absolute;}"
       ))),
       downloadButton("saveplot", label = "Save png"),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
@@ -267,7 +266,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #y2min{height: 30px}
               #y2max{height: 30px}
               #tmax{height: 30px}
-              #tsep{height: 30px}
+              #tstep{height: 30px}
               #rtol{height: 30px}
               #atol{height: 30px}
               #iszero{height: 30px}

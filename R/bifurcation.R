@@ -247,7 +247,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
         # Updating the save and delete curve menu
         curtabname <- curveListNames[as.numeric(isolate(input$plottab))]
-        updateCurveMenu(session, curveList[[curtabname]])
+        updateCurveMenu(session, curveList[[curtabname]], 3)
         changeCurveMenu(0)
       })
 
@@ -484,7 +484,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         popts <- reactiveValuesToList(plotopts)
         plotopts[[curtabname]] <- updatePlotOptionEntries(session, curtab, popts[[curtabname]], statenames, parmsnames)
         updatePlot(1)
-        updateCurveMenu(session, curveList[[curtabname]])
+        updateCurveMenu(session, curveList[[curtabname]], 3)
       })
 
       # Apply newly entered plot or numerical settings
@@ -495,7 +495,12 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
         popts <- reactiveValuesToList(plotopts)
-        plotopts[[curtabname]] <- processPlotOptionsApply(session, input, curtab, popts[[curtabname]], statenames, parmsnames)
+        plotopts[[curtabname]] <- processPlotOptionsApply(session, input, curtab, popts[[curtabname]])
+
+        plotopts[[curtabname]]$xlab <- ifelse(curtab == 1, (c("Time", statenames))[plotopts[[curtabname]]$xcol], parmsnames[plotopts[[curtabname]]$xcol])
+        plotopts[[curtabname]]$ylab <- ifelse(curtab  < 3, (c("State variables", statenames))[plotopts[[curtabname]]$ycol], parmsnames[plotopts[[curtabname]]$ycol])
+        plotopts[[curtabname]]$y2lab <- (c("None", statenames))[plotopts[[curtabname]]$y2col]
+
         processNumOptionsApply(session, input, curtab, numopts)
         updatePlot(1)
 
@@ -543,7 +548,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         newlist <- processLoadCurve(session, clist, curvarname, statenames, parmsnames, replace = FALSE)
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
-        updateCurveMenu(session, curveList[[curveListNames[curtab]]])
+        updateCurveMenu(session, curveList[[curveListNames[curtab]]], 3)
         updateSpecialPointsList(session, reactiveValuesToList(curveList), c(0, 0, 0))
 
         # Update the console log
@@ -561,7 +566,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         newlist <- processLoadCurve(session, clist, curvarname, statenames, parmsnames, replace = TRUE)
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
 
-        updateCurveMenu(session, curveList[[curveListNames[curtab]]])
+        updateCurveMenu(session, curveList[[curveListNames[curtab]]], 3)
         updateSpecialPointsList(session, reactiveValuesToList(curveList), c(0, 0, 0))
 
         # Update the console log
@@ -576,33 +581,24 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           if (exists("deBifCurves", envir = .GlobalEnv)) {
             rm("deBifCurves", envir = .GlobalEnv)
           }
-          # assign("deBifCurves", list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
-          #                            BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), envir = .GlobalEnv)
+
           # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
-          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifCurves", list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
-                                                                                                   BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), 1L)
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifCurves",
+                                                                               list(Orbits = curveList$Orbits, BifurcationCurves = curveList$BifurcationCurves,
+                                                                                    BifurcationBounds = curveList$BifurcationBounds, TotalCurves = curveList$TotalCurves), 1L)
           # Save the plot and numerical settings in the global environment
           if (exists("deBifSettings", envir = .GlobalEnv)) {
             rm("deBifSettings", envir = .GlobalEnv)
           }
-          # assign("deBifSettings", list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), envir = .GlobalEnv)
+
           # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
-          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifSettings", list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), 1L)
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("deBifSettings",
+                                                                               list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), 1L)
         })
       })
     }
     ############################################## END SERVER FUNCTION #####################################################
-    # output[["console"]] <- renderText({
-    #   cnames <- names(cdata)
-    #
-    #   allvalues <- lapply(cnames, function(name) {
-    #     paste(name, cdata[[name]], sep = " = ")
-    #   })
-    #   paste(allvalues, collapse = "\n")
-    # })
 
     shinyApp(ui = ui, server = server)
   }
 }
-
-# global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
