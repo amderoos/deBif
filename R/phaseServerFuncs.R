@@ -1,10 +1,15 @@
-allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0, ymax=1.1, log="", grid=10,
-                    positive=FALSE, report=TRUE, eigenvalues=TRUE, jacobian=FALSE, vector=FALSE, plot=FALSE, ...) {
+allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
+  xcol <- as.numeric(plotopts$xcol)
+  ycol <- as.numeric(plotopts$ycol)
+  xmin <- as.numeric(plotopts$xmin)
+  xmax <- as.numeric(plotopts$xmax)
+  ymin <- as.numeric(plotopts$ymin)
+  ymax <- as.numeric(plotopts$ymax)
+  logx <- (as.numeric(plotopts$logx) == 1)
+  logy <- (as.numeric(plotopts$logy) == 1)
+  grid <- numopts$grid
+
   # find a steady state
-  if (!is.numeric(x)) x <- index(x, names(state))
-  if ((length(state) > 1) & !is.numeric(y)) y <- index(y, names(state))
-  logx <- ifelse(grepl('x', log), TRUE, FALSE)
-  logy <- ifelse(grepl('y', log), TRUE, FALSE)
   gridy <- ifelse((length(state) > 1), grid, 1)
   msg <- ""
   if (logx) dx <- (log10(xmax)-log10(xmin))/grid
@@ -13,12 +18,12 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
   else dy <- (ymax-ymin)/gridy
   eqlst <- matrix(nrow = grid*gridy, ncol = length(state)); eqnr <- 0
   for (i in seq(1, grid)) {
-    if (logx) state[x] <- 10^((i-1)*dx + dx/2 + log10(xmin))
-    else state[x] <- (i-1)*dx + dx/2 + xmin
+    if (logx) state[xcol] <- 10^((i-1)*dx + dx/2 + log10(xmin))
+    else state[xcol] <- (i-1)*dx + dx/2 + xmin
     for (j in seq(1,gridy,1)) {
       if (length(state) > 1) {
-        if (logy) state[y] <- 10^((j-1)*dy + dy/2 + log10(ymin))
-        else state[y] <- (j-1)*dy + dy/2 + ymin
+        if (logy) state[ycol] <- 10^((j-1)*dy + dy/2 + log10(ymin))
+        else state[ycol] <- (j-1)*dy + dy/2 + ymin
       }
       q <- steady(y=state, func=odes, parms=parms)
       if (attr(q,"steady")) {
@@ -28,20 +33,18 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
         else neweq <- (!any(sapply(1:eqnr, function(i) {any(c(all(abs(eqlst[i,] - equ) < 1e-4),all(abs(eqlst[i,] - equ) < 0.5e-4*(eqlst[i,] + equ))))})))
         if (neweq)
         {
-          if (report) msg <- paste0(msg, paste(unlist(lapply(1:length(equ), function(i) {paste(names(equ[i]), "=", round(equ[i],6), sep=" ")})), collapse=', '), "\n")
+          if (curtab == 3) msg <- paste0(msg, paste(unlist(lapply(1:length(equ), function(i) {paste(names(equ[i]), "=", round(equ[i],6), sep=" ")})), collapse=', '), "\n")
           jac <- jacobian.full(y=equ,func=odes,parms=parms)
           eig <- eigen(jac)
           dom <- max(sort(Re(eig$values)))
-          if (eigenvalues) {
+          if (curtab == 3) {
             if (dom < 0) msg <- paste0(msg, "Stable point\n")
             else msg <- paste0(msg, "Unstable point\n")
             msg <- paste0(msg, "Eigenvalues: ", paste(round(eig$values,5), collapse=', '), "\n")
-            if (vector) {cat("Eigenvectors:\n"); print(eig$vectors)}
-            if (jacobian) {cat("Jacobian:\n"); print(jac)}
           }
-          if (report || eigenvalues) msg <- paste0(msg, "\n")
-          if (dom < 0) points(equ[x],ifelse((length(state) > 1),equ[y],0),pch=19,cex=2)
-          else points(equ[x],ifelse((length(state) > 1),equ[y],0),pch=1,cex=2)
+          if (curtab == 3) msg <- paste0(msg, "\n")
+          if (dom < 0) points(equ[xcol],ifelse((length(state) > 1),equ[ycol],0),pch=19,cex=2)
+          else points(equ[xcol],ifelse((length(state) > 1),equ[ycol],0),pch=1,cex=2)
           eqnr <- eqnr + 1
           eqlst[eqnr,] <- equ
         }
@@ -49,14 +52,5 @@ allequi <- function(odes, state, parms, time=0, x=1, xmin=0, xmax=1, y=2, ymin=0
     }
   }
   return(msg)
-}
-
-
-index <- function(strings, names, error=TRUE) {   # Return indices of strings in names
-  hit <- strings %in% names
-  if (error & length(strings[!hit] > 0)) stop("Unknown: ", paste(strings[!hit], collapse=", "))
-  m <- match(strings[hit], names)
-  if (length(m) > 0) return(m)
-  return(NULL)
 }
 

@@ -97,6 +97,9 @@
 bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
   if (interactive()) {
+    if (length(unlist(model(0, state, parms))) != length(state))
+      stop("The number of derivatives returned by the model function must equal the length of the state vector")
+
     # Get the names of the state variables and the parameters
     statenames <- names(state)
     parmsnames <- names(parms)
