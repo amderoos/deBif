@@ -32,15 +32,15 @@ computeTimeseries <- function(session, model, state, parms, clist, pointid, nopt
   names(nsol) <- c("Time", names(state))
 
   startPnt <- c("Type" = "TS",
-                "Description" = paste(paste0('T=', times[1]),
-                                      unlist(lapply(1:length(state),
-                                                    function(i) {paste0(names(state[i]), "=", round(nsol[1, (1+i)], 3))})),
-                                      collapse=', '))
+                "Description" = paste0('T=', times[1], ' ',
+                                       paste(unlist(lapply(1:length(state),
+                                                           function(i) {paste0(names(state[i]), "=", round(nsol[1, (1+i)], 3))})),
+                                             collapse=' ')))
   endPnt <- c("Type" = "TS",
-              "Description" = paste(paste0('T=', times[length(times)]),
-                                    unlist(lapply(1:length(state),
-                                                  function(i) {paste0(names(state[i]), "=", round(nsol[nrow(nsol), (1+i)], 3))})),
-                                    collapse=', '))
+              "Description" = paste0('T=', times[length(times)], ' ',
+                                     paste(unlist(lapply(1:length(state),
+                                                         function(i) {paste0(names(state[i]), "=", round(nsol[nrow(nsol), (1+i)], 3))})),
+                                           collapse=' ')))
 
   updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))
   curvescomputed <- curvescomputed + 1
@@ -185,16 +185,16 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
         paste0("Min.", yname, "=", round(min(y), 3), ", Max.", yname, "=", round(max(y), 3))
       })
       startPnt <- c("Type" = curvetype,
-                    "Description" = paste0(names(nsol$points[1, 1]), "=", round(nsol$points[1, 1], 3), ", ",
+                    "Description" = paste0(names(nsol$points[1, 1]), "=", round(nsol$points[1, 1], 3), " ",
                                            names(nsol$points[1, ncol(nsol$points)]), "=",
-                                           round(nsol$points[1, ncol(nsol$points)], 3), ", ",
+                                           round(nsol$points[1, ncol(nsol$points)], 3), " ",
                                            paste(unlist(vals), collapse = ', ')))
     } else {
       startPnt <- c("Type" = curvetype,
                     "Description" = paste(unlist(lapply(1:length(nsol$points[1,]),
                                                         function(i) {paste0(names(nsol$points[1,i]), "=",
                                                                             round(nsol$points[1, i], 3))})),
-                                          collapse=', '))
+                                          collapse=' '))
     }
     lbl <- paste0(curvetype, sprintf("%02d", (clist$TotalCurves + 1)),": ", startPnt["Description"])
     startPnt["Description"] <- paste0(sprintf("%04d: ", 1), startPnt["Description"])
@@ -543,16 +543,16 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           paste0("Min.", yname, "=", round(min(y), 3), ", Max.", yname, "=", round(max(y), 3))
         })
         endPnt <- c("Type" = curvetype,
-                    "Description" = paste0(names(allsols[1, 1]), "=", round(allsols[nrow(allsols), 1], 3), ', ',
+                    "Description" = paste0(names(allsols[1, 1]), "=", round(allsols[nrow(allsols), 1], 3), ' ',
                                            names(allsols[1, ncol(allsols)]), "=",
-                                           round(allsols[nrow(allsols), ncol(allsols)], 3), ', ',
-                                           paste(unlist(vals), collapse = ', ')))
+                                           round(allsols[nrow(allsols), ncol(allsols)], 3), ' ',
+                                           paste(unlist(vals), collapse = ' ')))
       } else {
         endPnt <- c("Type" = curvetype,
                     "Description" = paste(unlist(lapply(1:length(allsols[1,]),
                                                         function(i) {paste0(names(allsols[1,i]), "=",
                                                                             round(allsols[nrow(allsols), i], 3))})),
-                                          collapse=', '))
+                                          collapse=' '))
       }
       updateConsoleLog(session, paste("Ended in", endPnt["Description"], "\n", sep=" "))
       endPnt["Description"] <- paste0(sprintf("%04d: ", pntnr-1), endPnt["Description"])

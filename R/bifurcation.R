@@ -442,10 +442,10 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
             })
             endPnt <- c("Type" = curveData$curvetype,
                         "Description" = paste0(names(newcurve$points[1, 1]), "=",
-                                               round(newcurve$points[nrow(newcurve$points), 1], 3), ", ",
+                                               round(newcurve$points[nrow(newcurve$points), 1], 3), " ",
                                                names(newcurve$points[1, ncol(newcurve$points)]), "=",
-                                               round(newcurve$points[nrow(newcurve$points), ncol(newcurve$points)], 3), ", ",
-                                               paste(unlist(vals), collapse = ', ')))
+                                               round(newcurve$points[nrow(newcurve$points), ncol(newcurve$points)], 3), " ",
+                                               paste(unlist(vals), collapse = ' ')))
           } else {
             endPnt <- c("Type" = curveData$curvetype,
                         "Description" = paste(unlist(lapply(1:length(newcurve$points[1,]),
@@ -530,6 +530,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         curtabname <- curveListNames[curtab]
         curveList[[curtabname]] <- processDeleteCurve(session, curtab, curveList[[curtabname]], as.numeric(input[[paste0('deletecurve', curtab)]]))
         changeCurveMenu(-1)
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
       })
 
       # Save one or more curves
@@ -537,7 +540,11 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         if (as.numeric(isolate(busyComputing())) != 0) return(NULL)
         curtab <- as.numeric(input$plottab)
         curtabname <- curveListNames[curtab]
-        processSaveCurve(curtab, curveList[[curtabname]], as.numeric(input[[paste0('savecurve', curtab)]]), make.names(input[[paste0('curvename', curtab)]], unique = TRUE))
+        processSaveCurve(session, curtab, curveList[[curtabname]], as.numeric(input[[paste0('savecurve', curtab)]]),
+                         make.names(input[[paste0('curvename', curtab)]], unique = TRUE))
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
       })
 
       # Append one or more curves to the current curve list

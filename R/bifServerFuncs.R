@@ -192,14 +192,22 @@ processDeleteCurve <- function(session, curtab, clist, deletenr) {
 
   if ((totalcurves > 0) && ((deletenr > 0) || (deletenr == -1)) && (deletenr < (totalcurves + 1))) {
 
-    if (deletenr == -1) clist <- list()
-    else clist[[deletenr]] <- NULL
+    if (deletenr == -1) {
+      msg <- paste0("All curves deleted\n")
+      clist <- list()
+    }
+    else {
+      msg <- paste0("Curve '", clist[[deletenr]]$label, "' deleted\n")
+      clist[[deletenr]] <- NULL
+    }
+    if (!is.null(session)) updateConsoleLog(session, msg)
+    else cat(msg)
   }
 
   return(clist)
 }
 
-processSaveCurve <- function(curtab, clist, savenr, varname) {
+processSaveCurve <- function(session = NULL, curtab, clist, savenr, varname) {
   totalcurves <- as.numeric(length((clist)))
 
   if ((totalcurves > 0) && ((savenr > 0) || (savenr == -1)) && (savenr < (totalcurves + 1))) {
@@ -209,8 +217,16 @@ processSaveCurve <- function(curtab, clist, savenr, varname) {
     # if (savenr == -1) assign(varname, clist, envir = .GlobalEnv)
     # else assign(varname, clist[[savenr]], envir = .GlobalEnv)
     # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
-    if (savenr == -1) (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist, 1L)
-    else (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist[[savenr]], 1L)
+    if (savenr == -1) {
+      msg <- paste0("All curves saved to '", varname, "'\n")
+      (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist, 1L)
+    }
+    else {
+      msg <- paste0("Curve '", clist[[savenr]]$label, "' saved to '", varname, "'\n")
+      (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, clist[[savenr]], 1L)
+    }
+    if (!is.null(session)) updateConsoleLog(session, msg)
+    else cat(msg)
   }
 }
 
@@ -267,6 +283,10 @@ processLoadCurve <- function(session = NULL, clist, varname, snames, pnames, rep
   }
   if (replace) outlist$TotalCurves <- nlist$TotalCurves
   else outlist$TotalCurves <- clist$TotalCurves + nlist$TotalCurves
+
+  msg <- paste0(nlist$TotalCurves, " curves loaded from variable '", varname, "'\n")
+  if (!is.null(session)) updateConsoleLog(session, msg)
+  else cat(msg)
 
   return(outlist)
 }
