@@ -32,8 +32,9 @@ phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
   } else yc <- seq(ymin+eps, ymax, length.out=npixels)
 
   par(cex = as.numeric(plotopts["cex"]), mar = plotopts$plotmar)
-  plot(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xlab, ylab=ylab, log=logxy, cex.lab=as.numeric(plotopts["cex.lab"]), cex.axis=as.numeric(plotopts["cex.axis"]))
-  # legend("topright", legend=names(state)[ishows], col=plotopts$colors[ishows], lty=1, lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]))
+  plot(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xlab, ylab=ylab, log=logxy,
+       cex.lab=as.numeric(plotopts["cex.lab"]), cex.axis=as.numeric(plotopts["cex.axis"]))
+  legend("topright", legend=paste0('d', names(state)[ishows], '/dt'), col=plotopts$colors[ishows], lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]))
 
   vstate <- as.list(state)
   npixels2 <- npixels^2
@@ -61,7 +62,7 @@ phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
         else state[ycol] <- (j-1)*dy + dy/2 + ymin
         # Draw vectorfield
         if (curtab == 4) {
-          dt <- sign(unlist(odes(time, state, parms)))
+          dt <- sign(unlist(odes(0, state, parms)))
           if (logx) lines(c(state[xcol], state[xcol]*vx^dt[xcol]), c(state[ycol], state[ycol]))
           else lines(c(state[xcol], state[xcol]+vx*dt[xcol]), c(state[ycol], state[ycol]))
           if (logy) lines(c(state[xcol], state[xcol]), c(state[ycol], state[ycol]*vy^dt[ycol]))

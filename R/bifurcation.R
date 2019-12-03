@@ -583,6 +583,15 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         consoleLog(session$userData$alltext)
       })
 
+      # Show the manual
+      observeEvent(input$helpClicked, {
+#        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
+        tempDir <- tempdir()
+        file.copy(system.file("manual", package = "deBif"), tempDir, recursive=TRUE)
+        htmlFile <- file.path(tempDir, "manual/index.html")
+        rstudioapi::viewer(htmlFile, height="maximize")
+      })
+
       # Actions to be carried out when the app is stopped
       onStop(fun = function() {
         isolate({

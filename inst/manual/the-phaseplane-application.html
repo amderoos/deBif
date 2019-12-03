@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 2 The phaseplane() application | deBif</title>
+  <meta name="description" content="Manual for the use of the deBif package" />
+  <meta name="generator" content="bookdown 0.16 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 2 The phaseplane() application | deBif" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="Manual for the use of the deBif package" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 2 The phaseplane() application | deBif" />
+  
+  <meta name="twitter:description" content="Manual for the use of the deBif package" />
+  
+
+<meta name="author" content="André M. de Roos" />
+
+
+<meta name="date" content="2019-12-03" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="model-implementation.html"/>
+<link rel="next" href="the-bifurcation-application.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="css/style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">deBif package manual</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="model-implementation.html"><a href="model-implementation.html"><i class="fa fa-check"></i><b>1</b> Model implementation</a><ul>
+<li class="chapter" data-level="1.1" data-path="model-implementation.html"><a href="model-implementation.html#model-example"><i class="fa fa-check"></i><b>1.1</b> Model implementation example</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html"><i class="fa fa-check"></i><b>2</b> The <code>phaseplane()</code> application</a><ul>
+<li class="chapter" data-level="2.1" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#time-series"><i class="fa fa-check"></i><b>2.1</b> Time series</a><ul>
+<li class="chapter" data-level="2.1.1" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#changing-state-variables-and-parameters"><i class="fa fa-check"></i><b>2.1.1</b> Changing state variables and parameters</a></li>
+<li class="chapter" data-level="2.1.2" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#phase-ts-plot-custom"><i class="fa fa-check"></i><b>2.1.2</b> Customizing the plot</a></li>
+<li class="chapter" data-level="2.1.3" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#phase-ts-num-options"><i class="fa fa-check"></i><b>2.1.3</b> Numerical settings</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#phaseplane-analysis"><i class="fa fa-check"></i><b>2.2</b> Phaseplane analysis</a></li>
+<li class="chapter" data-level="2.3" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#saving-graphs"><i class="fa fa-check"></i><b>2.3</b> Saving graphs</a></li>
+<li class="chapter" data-level="2.4" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#curve-management"><i class="fa fa-check"></i><b>2.4</b> Curve management</a><ul>
+<li class="chapter" data-level="2.4.1" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#load-curves"><i class="fa fa-check"></i><b>2.4.1</b> Load curves</a></li>
+<li class="chapter" data-level="2.4.2" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#save-curves"><i class="fa fa-check"></i><b>2.4.2</b> Save curves</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#saving-program-settings-on-exit"><i class="fa fa-check"></i><b>2.5</b> Saving program settings on exit</a></li>
+<li class="chapter" data-level="2.6" data-path="the-phaseplane-application.html"><a href="the-phaseplane-application.html#optional-command-line-arguments"><i class="fa fa-check"></i><b>2.6</b> Optional command-line arguments</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html"><i class="fa fa-check"></i><b>3</b> The <code>bifurcation()</code> application</a><ul>
+<li class="chapter" data-level="3.1" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-ts-compute"><i class="fa fa-check"></i><b>3.1</b> Time series</a><ul>
+<li class="chapter" data-level="3.1.1" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-ts-change-vals"><i class="fa fa-check"></i><b>3.1.1</b> Changing state variables and parameters</a></li>
+<li class="chapter" data-level="3.1.2" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-ts-plot-custom"><i class="fa fa-check"></i><b>3.1.2</b> Customizing the plot</a></li>
+<li class="chapter" data-level="3.1.3" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-ts-num-options"><i class="fa fa-check"></i><b>3.1.3</b> Numerical settings</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#equilibrium-curves-with-1-free-parameter"><i class="fa fa-check"></i><b>3.2</b> Equilibrium curves with 1 free parameter</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-pp-change-vals"><i class="fa fa-check"></i><b>3.2.1</b> Changing state variables and parameters</a></li>
+<li class="chapter" data-level="3.2.2" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-1b-plot-custom"><i class="fa fa-check"></i><b>3.2.2</b> Customizing the plot</a></li>
+<li class="chapter" data-level="3.2.3" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-1b-num-options"><i class="fa fa-check"></i><b>3.2.3</b> Numerical settings</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bifurcation-curves-with-2-free-parameters"><i class="fa fa-check"></i><b>3.3</b> Bifurcation curves with 2 free parameters</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-2b-plot-custom"><i class="fa fa-check"></i><b>3.3.1</b> Customizing the plot</a></li>
+<li class="chapter" data-level="3.3.2" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#bif-2b-num-options"><i class="fa fa-check"></i><b>3.3.2</b> Numerical settings</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#saving-graphs-1"><i class="fa fa-check"></i><b>3.4</b> Saving graphs</a></li>
+<li class="chapter" data-level="3.5" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#curve-management-1"><i class="fa fa-check"></i><b>3.5</b> Curve management</a><ul>
+<li class="chapter" data-level="3.5.1" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#load-curves-1"><i class="fa fa-check"></i><b>3.5.1</b> Load curves</a></li>
+<li class="chapter" data-level="3.5.2" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#save-curves-1"><i class="fa fa-check"></i><b>3.5.2</b> Save curves</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#saving-program-settings-on-exit-1"><i class="fa fa-check"></i><b>3.6</b> Saving program settings on exit</a></li>
+<li class="chapter" data-level="3.7" data-path="the-bifurcation-application.html"><a href="the-bifurcation-application.html#optional-command-line-arguments-1"><i class="fa fa-check"></i><b>3.7</b> Optional command-line arguments</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://bookdown.org" target="_blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">deBif</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="the-phaseplane-application" class="section level1">
+<h1><span class="header-section-number">Chapter 2</span> The <code>phaseplane()</code> application</h1>
+<p>After starting the <code>phaseplane()</code> application a new window opens up, which is shown in Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>. The application contains a sidebar at the left, which is used for:</p>
+<ul>
+<li><p>specifying initial values for the state variables</p></li>
+<li><p>specifying initial values for the parameters</p></li>
+<li><p>Starting computations from the chosen initial state with the selected parameters</p></li>
+<li><p>loading, saving and deleting curves that are computed with the <code>phaseplane()</code> application.</p></li>
+</ul>
+<p>The remainder of the application window consists of an area with up to 6 tab sheets, called <code>Time series</code>, <code>Nullclines</code>, <code>Steady states</code>, <code>Vector field</code>, <code>Trajectories</code> and <code>Portrait</code>. Only the first 3 tab sheets (<code>Time series</code>, <code>Nullclines</code> and <code>Steady states</code>) are shown if the system of ODEs consists of a single ODE. Switching between these tabs is achieved by clicking on the appropriate tab name. Each tab sheet includes a plot frame and a frame in which progress messages as well as errors will be reported. Notice that the plot frame differs between the different tab sheets.</p>
+<div class="figure"><span id="fig:phasestart"></span>
+<img src="imagesLD/phaseplane-Startup.png" alt="Starting view of the `phaseplane()` application. The red arrow indicates the gears icon that opens up the right sidebar." width="100%" />
+<p class="caption">
+Figure 2.1: Starting view of the <code>phaseplane()</code> application. The red arrow indicates the gears icon that opens up the right sidebar.
+</p>
+</div>
+<p>In the following the Rosenzweig-MacArthur model presented in section <a href="model-implementation.html#model-example">1.1</a> will be used to illustrate the different types of curves that can be computed and the different menus to adjust the computations and the graphical presentation of their results.</p>
+<div id="time-series" class="section level2">
+<h2><span class="header-section-number">2.1</span> Time series</h2>
+<p>The first tab shows curves of the time dynamics as predicted by the system of ODEs that is being investigated. The dynamics are computed numerically through integration after pressing either the <code>&lt;&lt;Compute</code> button or the <code>&gt;&gt;Compute</code> in the left sidebar (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>). The program will integrate the dynamics from <span class="math inline">\(t=0\)</span> till the maximum integration time when the <code>&gt;&gt;Compute</code> button is pressed. See section <a href="the-phaseplane-application.html#phase-ts-num-options">2.1.3</a> for how to change the value of the maximum integration time. When the <code>&lt;&lt;Compute</code> button is pressed the integration will start at the maximum integration time and attempt to integrate backward in time till <span class="math inline">\(t=0\)</span>.</p>
+<p>Numerical integration of the system of ODEs forward in time should always proceed without problems (if at least you specified the system of ODEs correctly), but numerical integration of the dynamics backward in time may cause problems as the values of the state variables in the ODEs may approach infinite values. Therefore, be careful with numerical integration backward in time, it is advisable to compute over a small time interval only. Hence, choose the value of the maximum integration time (see section <a href="the-phaseplane-application.html#phase-ts-num-options">2.1.3</a>) not too large.</p>
+<p>Every time the <code>&lt;&lt;Compute</code> or the <code>&gt;&gt;Compute</code> button is pressed a new time series curve is computed from the current initial state with the current parameters. All computed curves are shown in the graph. Each curve furthermore gets a label and the first and last point of the curve are labeled as special points. These special points are added to the drop-down menu at the top of the left sidebar. Figure <a href="the-phaseplane-application.html#fig:phasetsspecpnts">2.2</a> shows the application window with two time series that have been computed from different initial states, while the special points drop-down menu is expanded. The drop-down menu shows the first and last point of the two computed time series (started from <span class="math inline">\(R=0.05, C=0.1\)</span> and <span class="math inline">\(R=0.05, C=0.5\)</span>, respectively). These special points can be selected using the special points drop-down menu, in which case the values of the state variables and parameters of the special point are used as starting point for the next time series computation.</p>
+<div class="figure"><span id="fig:phasetsspecpnts"></span>
+<img src="imagesLD/phaseplane-TSspecialpoints.png" alt="Two computed time series are shown in the `phaseplane()` application and the special points menu is expanded, listing the first and last points of the two curves." width="100%" />
+<p class="caption">
+Figure 2.2: Two computed time series are shown in the <code>phaseplane()</code> application and the special points menu is expanded, listing the first and last points of the two curves.
+</p>
+</div>
+<p>By default the plot in this tab shows the time variable on the <em>x</em>-axis and the values of all state variables defined in the model on the <em>y</em>-axis. Which state variables are used as <em>y</em>-coordinates in the plot can be customized as discussed in section <a href="the-phaseplane-application.html#phase-ts-plot-custom">2.1.2</a>.</p>
+<div id="changing-state-variables-and-parameters" class="section level3">
+<h3><span class="header-section-number">2.1.1</span> Changing state variables and parameters</h3>
+<p>Clicking on the <code>State variables</code> menu title in the left sidebar (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>) expands a submenu with a list of names of all state variables in the system of ODEs and input boxes that contain current values of these state variables. New values for the various state variables can be specified by editing the values in the input boxes. These new values take effect as soon as the <code>Apply</code> button is pressed.</p>
+<p>Similarly, clicking on the <code>Parameters</code> menu title expands a submenu showing a list of names of all parameters and input boxes that contain the current values of the system parameters. New values of the parameters can be specified by editing the values in the input boxes. Also these new values only take effect once the the <code>Apply</code> button is pressed.</p>
+</div>
+<div id="phase-ts-plot-custom" class="section level3">
+<h3><span class="header-section-number">2.1.2</span> Customizing the plot</h3>
+<p>Curves of the model dynamics that will be shown in the time series plot include as variables the time and the values of all state variables at each time. The plot frame on the <code>Time series</code> tab sheet always shows the independent time variable on the <em>x</em>-axis with the <em>x</em>-axis ranging from 0 to 100. On the <em>y</em>-axis this plot frame shows by default the values of all state variables with the <em>y</em>-axis from 0 to 1. These default settings can be customized using the right sidebar, which can be shown by pressing the gears icon in the right-top corner of the application window (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>).</p>
+<div class="figure"><span id="fig:phasetsplotopts"></span>
+<img src="imagesLD/phaseplane-TSplotopts.png" alt="The `phaseplane()` application window with right sidebar expanded allowing for customizing the time series plot." width="100%" />
+<p class="caption">
+Figure 2.3: The <code>phaseplane()</code> application window with right sidebar expanded allowing for customizing the time series plot.
+</p>
+</div>
+<p>Figure <a href="the-phaseplane-application.html#fig:phasetsplotopts">2.3</a> shows the <code>phaseplane()</code> application window with the right sidebar visible. The drop-down menus allow for selecting which variables are used as <em>x</em>- and <em>y</em>-coordinates in the time series plots. As <em>x</em>-coordinate only the time variable can be selected. As <em>y</em>-coordinate it is possible to select all state variables, in which case as many curves will be plotted as there are state variables defined in the model. All state variables will then be plotted using the same <em>y</em>-axis at the left of the plot. The boxes and drop-down menus in the right sidebar allow for customization of the minimum and maximum values on the <em>x</em>- and <em>y</em>-axis as well as whether a linear of logarithmic axis scale should be used.</p>
+<p>Alternatively, when a single state variable is selected as <em>y</em>-coordinate the right sidebar extends and offers the possibility to add a second <em>y</em>-axis on the right-hand side of the plot, on which the value of another state variable can be plotted. If a second state variable is selected to be plotted on the second <em>y</em>-axis at the right-hand side of the plot the right sidebar panel extends even further to allow for specification of the minimum and maximum value and the scale type to use on this second <em>y</em>-axis.</p>
+<p>If state variables are selected to be plotted on both the primary and the secondary <em>y</em>-axis, the right sidebar also provides the option to plot the time series curve in a 3-dimensional perspective plot. If a 3-dimensional perspective plot is selected instead of a 2-dimensional plot, the right sidebar extends even further with a slider to adjust the viewing angle of the 3-dimensional graph.</p>
+<p>Figure <a href="the-phaseplane-application.html#fig:phasets4plotopts">2.4</a> shows the 4 different configurations of the right sidebar discussed above. Which one is shown depends on whether a single or all state variables are plotted on the primary, left <em>y</em>-axis, whether or not a second state variable is selected to be shown on the secondary, right <em>y</em>-axis and whether or not a 2-dimensional or 3-dimensional plot is selected.</p>
+<div class="figure"><span id="fig:phasets4plotopts"></span>
+<img src="imagesLD/bifurcation-TS4plotopts.png" alt="The 4 different configurations of the right sidebar of the `phaseplane()` application window depending on which state variables are selected to be shown on the primary and secondary *y*-axis." width="100%" />
+<p class="caption">
+Figure 2.4: The 4 different configurations of the right sidebar of the <code>phaseplane()</code> application window depending on which state variables are selected to be shown on the primary and secondary <em>y</em>-axis.
+</p>
+</div>
+
+<div class="rmdimportant">
+After adjusting the plot parameters in the right sidebar the <code>Apply</code> button has to be pressed to finalize the changes made. Subsequently, the gears icon at the right-top corner of the application window can be pressed to hide the right sidebar again.
+</div>
+
+</div>
+<div id="phase-ts-num-options" class="section level3">
+<h3><span class="header-section-number">2.1.3</span> Numerical settings</h3>
+<p>In addition to the tab sheet for customizing the plot settings, the right sidebar contains a second tab sheet to customize numerical settings. This numerical options tab can be shown by pressing on the dial icon in the top-right corner of the right sidebar, whenever the latter is not hidden. Figure <a href="the-phaseplane-application.html#fig:phasetsnumopts">2.5</a> shows the <code>phaseplane()</code> application window with the right sidebar showing the numerical options tab.</p>
+<div class="figure"><span id="fig:phasetsnumopts"></span>
+<img src="imagesLD/phaseplane-TSnumopts.png" alt="The `phaseplane()` application window with extended right sidebar showing the numerical options tab sheet. Here numerical settings for the time series calculations can be customized." width="100%" />
+<p class="caption">
+Figure 2.5: The <code>phaseplane()</code> application window with extended right sidebar showing the numerical options tab sheet. Here numerical settings for the time series calculations can be customized.
+</p>
+</div>
+<p>For the calculation of time series of the model dynamics the maximum integration time, the time step of the integration and the integration method can be adjusted. The numerical methods available for integration of the dynamics are <code>lsoda</code>, <code>ode23</code>, <code>ode45</code> and <code>rk4</code>, as provided by the <code>deSolve</code> package <span class="citation">(Soetaert, Petzoldt, and Setzer <a href="#ref-deSolve">2010</a>)</span>.</p>
+
+<div class="rmdimportant">
+After adjusting the numerical settings the <code>Apply</code> button has to be pressed to let them take effect. Subsequently, the gears icon at the right-top corner of the application window can be pressed to hide the right sidebar again.
+</div>
+
+</div>
+</div>
+<div id="phaseplane-analysis" class="section level2">
+<h2><span class="header-section-number">2.2</span> Phaseplane analysis</h2>
+<p>The remaining tab sheets of the <code>phaseplane()</code> application all plot a phaseplane of the systems of ODEs. The dimension of the system of ODEs that is being analyzed determines what this phaseplane looks like:</p>
+<ul>
+<li><p>If only a single ODE is being analysed only 2 additional tab sheets are shown by the <code>phaseplane()</code> application, the <code>Nullclines</code> tab sheet and the <code>Steady States</code> tab sheet. Both tab sheet show a plot where the value of the dependent variable of the ODE is plotted on the <em>x</em>-axis, while the value of the time derivative of this dependent variable is plotted on the <em>y</em>-axis. Taking the symbol <span class="math inline">\(N\)</span> to refer to this dependent variable, the phaseplane plot hence is equivalent to a <span class="math inline">\((N, dN/dt)\)</span>-plot.</p></li>
+<li><p>If the system of ODEs includes exactly 2 ODEs, the two dependent variables in the ODEs are plotted on the <em>x</em>- and the <em>y</em>-axis. Which dependent variable is plotted on which axis can be customized, but by default the first dependent variable is plotted on the <span class="math inline">\(x\)</span>-axis, while the second dependent variable is plotted on the <span class="math inline">\(y\)</span>-axis.</p></li>
+<li><p>If the system of ODEs includes more than 2 ODEs, by default the first dependent variable is plotted on the <span class="math inline">\(x\)</span>-axis, while the second dependent variable is plotted on the <span class="math inline">\(y\)</span>-axis. The remaining dependent variables in the systems of ODEs are assigned constant values equal to the values that are currently given in the <code>State variables</code> submenu. Which dependent variable is plotted on which axis can be customized.</p></li>
+</ul>
+<p>The phaseplane plot can be customized using the right sidebar, which can be shown by clicking the gears icon in the right-top corner of the application window (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>). Figure <a href="the-phaseplane-application.html#fig:phaseppplotopts">2.6</a> shows the <code>phaseplane()</code> application window with the <code>Nullclines</code> tab sheet selected and the right sidebar visible. The drop-down menus allow for selecting which state variables are used as <em>x</em>- and <em>y</em>-coordinates in the phaseplane plot. The boxes and drop-down menus in the right sidebar also allow for customization of the minimum and maximum values on the <em>x</em>- and <em>y</em>-axis as well as whether a linear of logarithmic axis scale should be used.</p>
+<div class="figure"><span id="fig:phaseppplotopts"></span>
+<img src="imagesLD/phaseplane-PPplotopts.png" alt="The `phaseplane()` application window showing a phaseplane diagram with the right sidebar expanded allowing for customizing the phaseplane plot." width="100%" />
+<p class="caption">
+Figure 2.6: The <code>phaseplane()</code> application window showing a phaseplane diagram with the right sidebar expanded allowing for customizing the phaseplane plot.
+</p>
+</div>
+<p>The different phaseplane tab sheets provide different types of information about the dynamics of the system of ODEs:</p>
+<ul>
+<li><p>The <code>Nullclines</code> tab sheet plots the nullclines (also called isoclines) of the ODEs, which represent those combinations of state variable values for which one of the right-hand sides of the ODEs equals 0. If only a single ODE is analyzed this tab sheet shows the value of the dependent variable in the ODE on the <em>x</em>-axis, while the value of the time derivative of this dependent variable is plotted on the <em>y</em>-axis. Taking the symbol <span class="math inline">\(N\)</span> to refer to this dependent variable, the phaseplane plot hence is equivalent to a <span class="math inline">\((N, dN/dt)\)</span>-plot.</p></li>
+<li><p>The <code>Steady states</code> tab sheet shows in addition to the nullclines (or isoclines) the location of all equilibrium points of the system of ODEs that have been detected in the range of the state variables that is being shown in the plot. If only a single ODE is analyzed these equilibrium points correspond to the points where the curve of <span class="math inline">\(dN/dt\)</span> as a function of <span class="math inline">\(N\)</span> crosses the <em>x</em>-axis, while for systems of ODEs the equilibrium points are the intersections of the nullclines. Stable and unstable equilibrium points are labeled differently and the eigenvalues characterizing the dynamics in the neighborhood of the equilibrium point are reported in the console window below the plot.</p></li>
+<li><p>The <code>Vector field</code> tab sheet, which is only shown for systems of ODEs, plots in addition to the nullclines and the steady states the vector or flow field, which indicates the direction of the dynamics from the various positions in the phaseplane.</p></li>
+<li><p>The <code>Trajectores</code> tab sheet, which is only shown for systems of ODEs, plots in addition to the nullclines and the steady states the time series of the system dynamics that are also shown in the <code>Time plot</code> tab sheet. In this tab sheet these time dynamics are plotted in the phaseplane. Only those time series will be shown that have the identical parameter values as is currently used for the phaseplane plot in the <code>Trajectores</code> tab sheet. From this tab sheet it is also possible to initiate the computation of a time series of the systems dynamics by pressing the <code>&lt;&lt;Compute</code> or <code>&gt;&gt;Compute</code> button for backward and forward integration in time, respectively.</p></li>
+<li><p>The <code>Portrait</code> tab sheet, which is only shown for systems of ODEs, plots in addition to the nullclines and the steady states a phase portrait characterizing the model dynamics, which is visualized by plotting a number of trajectories or orbits from a regularly spaced set of initial points in the phaseplane.</p></li>
+</ul>
+<p>Clicking on the <code>State variables</code> menu title in the left sidebar (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>) expands a submenu with a list of names of all state variables in the system of ODEs and input boxes that contain current values of these state variables. New values for the various state variables can be specified by editing the values in the input boxes. Similarly, clicking on the <code>Parameters</code> menu title expands a submenu showing a list of names of all parameters and input boxes that contain the current values of the system parameters. New values of the state variables and the parameters can be specified by editing the values in the input boxes. Also these new values only take effect once the the <code>Apply</code> button is pressed. Once, the <code>Apply</code> button is pressed the phaseplane plot is redrawn with the new values of the state variables and parameters.</p>
+
+<div class="rmdwarning">
+Notice that the success of finding all equilibrium points of the model is dependent on the range of the state variables shown on the <em>x</em>- and <em>y</em>-axis. If this range is taken large, the application might not find all equilibrium points.
+</div>
+
+</div>
+<div id="saving-graphs" class="section level2">
+<h2><span class="header-section-number">2.3</span> Saving graphs</h2>
+<p>All tab sheets of the <code>phaseplane()</code> program show at the top-right corner of the plot frame a button that allows you to download an image of the current graph. Clicking this download icon will open up a file dialog box in which you can specify the name of the PNG file, in which to save the image of the plot. More elaborate graphs can of course be constructed by exporting the computed curves as explained below and using other packages in R to visualize the results.</p>
+</div>
+<div id="curve-management" class="section level2">
+<h2><span class="header-section-number">2.4</span> Curve management</h2>
+<p>The bottom part of the left sidebar of the <code>phaseplane()</code> application shows 3 submenus that allow for manipulation of the computed curves. Curves can be read into the <code>phaseplane()</code> application from variables that are present in the global R environment from which the application was started, computed curves can be saved to variables in this global R environment and curves can be deleted. Figure <a href="the-phaseplane-application.html#fig:phasecurvemenus">2.7</a> shows 4 snapshots of the left sidebar with the different submenus expanded and in different states.</p>
+<div class="figure"><span id="fig:phasecurvemenus"></span>
+<img src="imagesLD/bifurcation-CurveMenus.png" alt="The `phaseplane()` application window with the left sidebar showing the `Load curves` submenu, the `Save curves` submenu, the `Delete curves` submenu with the curve choice drop-down menu expanded and the `Delete curves` submenu with the `All` option selected. The action buttons in each submenu allow to load, save or delete the selected curves." width="100%" />
+<p class="caption">
+Figure 2.7: The <code>phaseplane()</code> application window with the left sidebar showing the <code>Load curves</code> submenu, the <code>Save curves</code> submenu, the <code>Delete curves</code> submenu with the curve choice drop-down menu expanded and the <code>Delete curves</code> submenu with the <code>All</code> option selected. The action buttons in each submenu allow to load, save or delete the selected curves.
+</p>
+</div>
+<div id="load-curves" class="section level3">
+<h3><span class="header-section-number">2.4.1</span> Load curves</h3>
+<p>By expanding the <code>Load curves</code> submenu an input box shows up in which you can enter the name of a variable (<em>do not use any quotes!</em>) that is present in your global R environment (see Figure <a href="the-phaseplane-application.html#fig:phasecurvemenus">2.7</a>). This variable should contain time series curves. As long as the global variable you want to load has been saved by the <code>phaseplane()</code> application, it should be possible to be read in. But this is of course only taking effect if the curves stored in the global variable pass some tests. For example, the curves in the global variable should contain all the same state variables and parameters as the state variables and parameters in the system of ODEs that is currently being analysed with the <code>phaseplane()</code> application.</p>
+<p>Independent of which of the application tabs is active when you load curves from a global variable, all the valid curves in this global variables will be read in.</p>
+<p>The two action buttons in the <code>Load curves</code> submenu allow you to either append the curves in the global variable that you are loading to the current set of curves stored by the application or replace the entire set of curves that is currently stored by the <code>phaseplane()</code> application. The console box below the plot frame will report on the success or failure of the load operation.</p>
+</div>
+<div id="save-curves" class="section level3">
+<h3><span class="header-section-number">2.4.2</span> Save curves</h3>
+<p>Expanding the <code>Save curves</code> submenu reveals a curve selection drop-down menu, an input box in which you can enter your name of choice for the variable in your global R environment, in which to store curves, and an action button to execute the save action (see Figure <a href="the-phaseplane-application.html#fig:phasecurvemenus">2.7</a>). The curve to save can be selected via the curve selection drop-down menu. This drop-down menu lists in addition to the options <code>None</code> (the default choice) and <code>All</code> (the last choice) the labels of all the time series that have been computed. Either one specific curve can be selected for saving or all curves. It is not possible to save 2 out of 3 curves at the same time. In the input box you have to enter a valid name (<em>do not use any quotes!</em>) for a variable in the global R environment from which the <code>phaseplane()</code> application was started. Take care with specifying this variable name, the application will overwrite an already existing variable.</p>
+<p>Pressing the <code>Save</code> button will save the selected curve or all curves to the variable with the specified name.The console box below the plot frame will report on the success or failure of the save operation. The variable will, however, only show up in your Rstudio Environment panel that shows the list of variables in your global R environment after the <code>phaseplane()</code> application has exited. I have not found a way to update the contents of this Rstudio Environment panel while the <code>phaseplane()</code> application is still active.</p>
+<div id="delete-curves" class="section level4">
+<h4><span class="header-section-number">2.4.2.1</span> Delete curves</h4>
+<p>Expanding the <code>Delete curves</code> submenu reveals a curve selection drop-down menu and an action button to execute the delete action (see Figure <a href="the-phaseplane-application.html#fig:phasecurvemenus">2.7</a>). The curve to delete can be selected via the curve selection drop-down menu. This drop-down menu lists in addition to the options <code>None</code> (the default choice) and <code>All</code> (the last choice) the labels of all the computed time series. Either one specific curve can be selected for deleting or all curves. It is not possible to delete 2 out of 3 curves at the same time.</p>
+<p>Pressing the <code>Delete</code> button will delete the selected curve or all curves currently stored by the program.The console box below the plot frame will report on the success or failure of the operation.</p>
+</div>
+</div>
+</div>
+<div id="saving-program-settings-on-exit" class="section level2">
+<h2><span class="header-section-number">2.5</span> Saving program settings on exit</h2>
+<p>Whenever the program exits all the curves that the <code>phaseplane()</code> application has computed and has currently stored in memory are saved in a global variable <code>dePhaseCurves</code>. Similarly, all programs settings, such as the plot settings on the different tabs and the numerical settings for the time integration are saved in the global variable <code>dePhaseSettings</code>. These two global variables will show up on return to your R environment after the programs has ended. When present, the global variables <code>dePhaseCurves</code> and <code>dePhaseSettings</code> will be read by the <code>phaseplane()</code> application the next time you start it up. They will only take effect, however, if the variables pass some tests successfully. For example, if you start up the <code>phaseplane()</code> application for a different system of ODEs that does not contain all the same state variables and parameters as the state variables and parameters stored in the <code>dePhaseCurves</code> variables, the curves in <code>dePhaseCurves</code> are ignored.</p>
+<p>The variables <code>dePhaseCurves</code> and <code>dePhaseSettings</code> are overwritten every time the <code>phaseplane()</code> application ends. Therefore, if you want to save a particular set of curves and the application settings, you have to copy these variables to new variables with your own unique names. At a later time these saved variables can be assigned to the variables <code>dePhaseCurves</code> and <code>dePhaseSettings</code> again to start the <code>phaseplane()</code> application at the point where you left off.</p>
+<p>The variables <code>dePhaseCurves</code> and <code>dePhaseSettings</code> will be ignored completely if the <code>phaseplane()</code> application is started with the command-line argument <code>resume = FALSE</code>. The default of this command-line argument is <code>resume = TRUE</code>.</p>
+</div>
+<div id="optional-command-line-arguments" class="section level2">
+<h2><span class="header-section-number">2.6</span> Optional command-line arguments</h2>
+<p>The <code>phaseplane()</code> application allows for a number of additional arguments that can be included at the command line to tweak graphical default values used by the application. These arguments are all optional and adopt default values when not specified on the command line.</p>
+<p>The arguments that can be included on the command line are:</p>
+<ul>
+<li><p><code>lwd</code>: The line width used for plotting computed curves. The default value is 3.</p></li>
+<li><p><code>cex</code>: The base font size for labeling axes and legends in the plots. The default value is 1.2.</p></li>
+<li><p><code>tcl.len</code>: The length of ticks on the axes. The default value is 0.03.</p></li>
+</ul>
+
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references">
+<div id="ref-deSolve">
+<p>Soetaert, Karline, Thomas Petzoldt, and R. Woodrow Setzer. 2010. “Solving Differential Equations in R: Package deSolve.” <em>Journal of Statistical Software</em> 33 (9): 1–25. <a href="https://doi.org/10.18637/jss.v033.i09">https://doi.org/10.18637/jss.v033.i09</a>.</p>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="model-implementation.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="the-bifurcation-application.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": false
+},
+"fontsettings": {
+"theme": "sepia",
+"family": "sans",
+"size": 2
+},
+"edit": null,
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["deBif-manual.pdf"],
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"toolbar": {
+"position": "fixed"
+},
+"search": true,
+"info": false
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

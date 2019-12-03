@@ -1,7 +1,7 @@
 phaseUI <- function(state, parms, plotopts, numopts) {
   if (length(state) == 1)
-    choices <- c("Time plot"=1, "Nullclines"=2, "Steady state"=3)
-  else choices <- c("Time plot"=1, "Nullclines"=2, "Steady state"=3, "Vector field"=4, "Trajectory"=5, "Portrait"=6)
+    choices <- c("Time plot"=1, "Nullclines"=2, "Steady states"=3)
+  else choices <- c("Time plot"=1, "Nullclines"=2, "Steady states"=3, "Vector field"=4, "Trajectories"=5, "Portrait"=6)
   myTabs <- lapply(1:length(choices), function(i) {tabPanel(title = names(choices)[i], plotOutput(outputId=paste0("plot", choices[i]), height = "100%"), value = choices[i])})
 
   ui <- dashboardPagePlus(
@@ -11,7 +11,10 @@ phaseUI <- function(state, parms, plotopts, numopts) {
       # Set height of dashboardHeader
       title = tagList(
         span(class = "logo-lg", "Phaseplane analysis"),
-        icon("compass"), tags$style(".fa-compass {color:#E87722}")), titleWidth = 220,
+        icon("compass"), tags$style(".fa-compass {color:#E87722}")),
+      left_menu = tagList(span(class = "help-button", icon("question-circle"),
+                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 10px; top: 13px; position: absolute;}"))),
+      titleWidth = 220,
       enable_rightsidebar = TRUE,
       rightSidebarIcon = "gears"
     ),
@@ -75,6 +78,10 @@ phaseUI <- function(state, parms, plotopts, numopts) {
         objDiv.scrollTop = objDiv.scrollHeight;
         }
         );
+        // Bind function to respond to the help button
+        $('i.fa.fa-question-circle').on('click',function(){
+          Shiny.onInputChange('helpClicked', Math.random());
+        });
         // Bind function to the toggle sidebar button
         $('i.fa.fa-gears').on('click',function(){
           $(window).trigger('resize'); // Trigger resize event

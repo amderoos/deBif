@@ -18,5 +18,6 @@ deBifExample(example)
 \details{
 deBifExample(example)
 
+
 Function runs one of the examples provided with the deBif package
 }

@@ -25,8 +25,7 @@ phasePlot1D <- function(curtab, odes, state, parms, plotopts, numopts) {
   do.call('plot', c(list(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xlab, ylab=ylab, log=logxy,
                          cex.lab=as.numeric(plotopts["cex.lab"]), cex.axis=as.numeric(plotopts["cex.axis"]))))
   lines(c(xmin,xmax), c(0,0), col="black", lwd=1, lty=2)
-  legend("topright",legend=names(state)[1], col=plotopts$colors[1], lty=1, lwd=plotopts["lwd"],
-         cex=as.numeric(plotopts["cex.legend"]))
+  # legend("topright",legend=ylab, col=plotopts$colors[1], lty=1, lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]))
 
   xc <- seq(xmin, xmax, length.out = npixels)
   dxdt <- as.numeric(lapply(xc, function(i) {state[1] <- i; odes(0, state, parms)[[1]][[1]]}))

@@ -4,7 +4,7 @@
 \alias{phaseplane}
 \title{Phaseplane analysis of a system of ODEs}
 \usage{
-phaseplane(model, state, parms, ...)
+phaseplane(model, state, parms, resume = TRUE, ...)
 }
 \arguments{
 \item{model}{(function, required)
@@ -31,6 +31,16 @@ phaseplane(model, state, parms, ...)
               The values of the parameters in the ODE system. This vector should
               have name attributes for all its elements}
 
+\item{resume}{(boolean, optional)
+\preformatted{}
+              If TRUE the program will try to load the curves computed during
+              the last session from global variable 'deBifCurves' and try to
+              restore the numerical and plot settings by importing them from
+              the global variable 'deBifSettings'.
+              The program saves the curves computed during a session and the
+              numerical and plot settings of this last session in these global
+              variables 'deBifCurves' and 'deBifSettings'.}
+
 \item{...}{(optional arguments)
 \preformatted{}
               Additional arguments that can be included at the command line to tweak
@@ -39,7 +49,9 @@ phaseplane(model, state, parms, ...)
 \preformatted{}
               \code{lwd}: Line width (default 2)
 \preformatted{}
-              \code{cex}: Base font size (default 1.2)}
+              \code{cex}: Base font size (default 1.2)
+\preformatted{}
+              \code{tcl.len}:     Length of axes ticks (default 0.03)}
 }
 \value{
 None.
@@ -48,7 +60,7 @@ None.
 \code{phaseplane}
 }
 \details{
-phaseplane(model, state, parms, ...)
+phaseplane(model, state, parms, resume = TRUE, ...)
 }
 \examples{
 \dontrun{

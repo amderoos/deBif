@@ -49,6 +49,8 @@
 #'               \code{lwd}: Line width (default 2)
 #' \preformatted{}
 #'               \code{cex}: Base font size (default 1.2)
+#' \preformatted{}
+#'               \code{tcl.len}:     Length of axes ticks (default 0.03)
 #'
 #' @return None.
 #'
@@ -74,9 +76,10 @@
 #'
 #' phaseplane(model, state, parms)
 #' }
-#' @importFrom graphics contour legend lines par plot points
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
+#' @importFrom graphics contour legend lines par plot points
 #' @importFrom shinyjs useShinyjs click removeClass
+#' @importFrom utils browseURL
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
   if (interactive()) {
@@ -96,7 +99,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       initpopts[[i]] <- list(xcol = 1, xmin = 0, xmax = 1, logx = 0, xlab = "",
                              ycol = 1, ymin = 0, ymax = 1, logy = 0, ylab = "",
                              y2col = 1, y2min = 0, y2max = 1, logy2 = 0, y2lab = "None", plot3d = 0,
-                             plotmar = c(5,5,4,4), lwd = 2, pch = 20,
+                             plotmar = c(5,5,4,4), lwd = 2, pch = 20, tcl.len = 0.03, theta = -35,
                              cex = 1.2, cex.lab = 1.25, cex.axis = 1, cex.legend = 1,
                              colors = c("red","blue","darkgreen","darkorange","darkmagenta", "gold","darkorchid",
                                         "aquamarine","deeppink","gray",seq(2,991)))
@@ -111,7 +114,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
     }
 
     # Read options from the command line
-    adjustableopts <- c("lwd", "cex")
+    adjustableopts <- c("lwd", "cex", "tcl.len")
     dots <- list(...)
     if (!is.null(dots)) {
       useropts <- dots[names(dots) %in% adjustableopts]
@@ -417,11 +420,21 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         deletenr <- as.numeric(input$deletecurve1)
 
         if ((totalcurves > 0) && ((deletenr > 0) || (deletenr == -1)) && (deletenr < (totalcurves + 1))) {
-          if (deletenr == -1) curveList$Orbits <- list()
-          else curveList$Orbits[[deletenr]] <- NULL
+          if (deletenr == -1) {
+            msg <- paste0("All curves deleted\n")
+            curveList$Orbits <- list()
+          } else {
+            msg <- paste0("Curve '", curveList$Orbits[[deletenr]]$label, "' deleted\n")
+            curveList$Orbits[[deletenr]] <- NULL
+          }
+          if (!is.null(session)) updateConsoleLog(session, msg)
+          else cat(msg)
         }
         changeCurveMenu(-1)
         updatePlot(1)
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
       })
 
       # Save one or more curves
@@ -434,9 +447,19 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
           if (exists(varname, envir = .GlobalEnv)) {
             rm(list = varname, envir = .GlobalEnv)
           }
-          if (savenr == -1) (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, curveList$Orbits, 1L)
-          else (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, curveList$Orbits[[savenr]], 1L)
+          if (savenr == -1) {
+            msg <- paste0("All curves saved to '", varname, "'\n")
+            (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, curveList$Orbits, 1L)
+          } else {
+            msg <- paste0("Curve '", curveList$Orbits[[savenr]]$label, "' saved to '", varname, "'\n")
+            (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(varname, curveList$Orbits[[savenr]], 1L)
+          }
+          if (!is.null(session)) updateConsoleLog(session, msg)
+          else cat(msg)
         }
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
       })
 
       # Append one or more curves to the current curve list
@@ -449,6 +472,9 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
         changeCurveMenu(-1)
         updatePlot(1)
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
       })
 
       # Replace the current curve list with a stored list
@@ -461,6 +487,14 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         if (!is.null(newlist)) for (x in curveListNames) {curveList[[x]] <- newlist[[x]]}
         changeCurveMenu(-1)
         updatePlot(1)
+
+        # Update the console log
+        consoleLog(session$userData$alltext)
+      })
+
+      # Show the manual
+      observeEvent(input$helpClicked, {
+        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
       })
 
       # Actions to be carried out when the app is stopped

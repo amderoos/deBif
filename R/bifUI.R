@@ -9,7 +9,10 @@ bifUI <- function(state, parms, plotopts, numopts) {
       # Set height of dashboardHeader
       title = tagList(
         span(class = "logo-lg", "Bifurcation analysis"),
-        icon("compass"), tags$style(".fa-compass {color:#E87722}")), titleWidth = 220,
+        icon("compass"), tags$style(".fa-compass {color:#E87722}")),
+      titleWidth = 220,
+      left_menu = tagList(span(class = "help-button", icon("question-circle"),
+                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 10px; top: 13px; position: absolute;}"))),
       enable_rightsidebar = TRUE,
       rightSidebarIcon = "gears"
     ),
@@ -205,9 +208,13 @@ bifUI <- function(state, parms, plotopts, numopts) {
         objDiv.scrollTop = objDiv.scrollHeight;
         }
         );
+        // Bind function to respond to the help button
+        $('i.fa.fa-question-circle').on('click',function(){
+          Shiny.onInputChange('helpClicked', Math.random());
+        });
         // Bind function to the toggle sidebar button
         $('i.fa.fa-gears').on('click',function(){
-          $(window).trigger('resize'); // Trigger resize event
+          setTimeout( function() { $(window).trigger('resize')}, 200); // Trigger resize event
         });
         var dimension = [0, 0];
         $(document).on('shiny:connected', function(e) {
