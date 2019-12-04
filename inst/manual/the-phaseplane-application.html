@@ -24,7 +24,7 @@
 <meta name="author" content="André M. de Roos" />
 
 
-<meta name="date" content="2019-12-03" />
+<meta name="date" content="2019-12-04" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -143,7 +143,7 @@
 </ul>
 <p>The remainder of the application window consists of an area with up to 6 tab sheets, called <code>Time series</code>, <code>Nullclines</code>, <code>Steady states</code>, <code>Vector field</code>, <code>Trajectories</code> and <code>Portrait</code>. Only the first 3 tab sheets (<code>Time series</code>, <code>Nullclines</code> and <code>Steady states</code>) are shown if the system of ODEs consists of a single ODE. Switching between these tabs is achieved by clicking on the appropriate tab name. Each tab sheet includes a plot frame and a frame in which progress messages as well as errors will be reported. Notice that the plot frame differs between the different tab sheets.</p>
 <div class="figure"><span id="fig:phasestart"></span>
-<img src="imagesLD/phaseplane-Startup.png" alt="Starting view of the `phaseplane()` application. The red arrow indicates the gears icon that opens up the right sidebar." width="100%" />
+<img src="images/phaseplane-Startup.png" alt="Starting view of the `phaseplane()` application. The red arrow indicates the gears icon that opens up the right sidebar." width="100%" />
 <p class="caption">
 Figure 2.1: Starting view of the <code>phaseplane()</code> application. The red arrow indicates the gears icon that opens up the right sidebar.
 </p>
@@ -155,7 +155,7 @@ Figure 2.1: Starting view of the <code>phaseplane()</code> application. The red 
 <p>Numerical integration of the system of ODEs forward in time should always proceed without problems (if at least you specified the system of ODEs correctly), but numerical integration of the dynamics backward in time may cause problems as the values of the state variables in the ODEs may approach infinite values. Therefore, be careful with numerical integration backward in time, it is advisable to compute over a small time interval only. Hence, choose the value of the maximum integration time (see section <a href="the-phaseplane-application.html#phase-ts-num-options">2.1.3</a>) not too large.</p>
 <p>Every time the <code>&lt;&lt;Compute</code> or the <code>&gt;&gt;Compute</code> button is pressed a new time series curve is computed from the current initial state with the current parameters. All computed curves are shown in the graph. Each curve furthermore gets a label and the first and last point of the curve are labeled as special points. These special points are added to the drop-down menu at the top of the left sidebar. Figure <a href="the-phaseplane-application.html#fig:phasetsspecpnts">2.2</a> shows the application window with two time series that have been computed from different initial states, while the special points drop-down menu is expanded. The drop-down menu shows the first and last point of the two computed time series (started from <span class="math inline">\(R=0.05, C=0.1\)</span> and <span class="math inline">\(R=0.05, C=0.5\)</span>, respectively). These special points can be selected using the special points drop-down menu, in which case the values of the state variables and parameters of the special point are used as starting point for the next time series computation.</p>
 <div class="figure"><span id="fig:phasetsspecpnts"></span>
-<img src="imagesLD/phaseplane-TSspecialpoints.png" alt="Two computed time series are shown in the `phaseplane()` application and the special points menu is expanded, listing the first and last points of the two curves." width="100%" />
+<img src="images/phaseplane-TSspecialpoints.png" alt="Two computed time series are shown in the `phaseplane()` application and the special points menu is expanded, listing the first and last points of the two curves." width="100%" />
 <p class="caption">
 Figure 2.2: Two computed time series are shown in the <code>phaseplane()</code> application and the special points menu is expanded, listing the first and last points of the two curves.
 </p>
@@ -170,7 +170,7 @@ Figure 2.2: Two computed time series are shown in the <code>phaseplane()</code> 
 <h3><span class="header-section-number">2.1.2</span> Customizing the plot</h3>
 <p>Curves of the model dynamics that will be shown in the time series plot include as variables the time and the values of all state variables at each time. The plot frame on the <code>Time series</code> tab sheet always shows the independent time variable on the <em>x</em>-axis with the <em>x</em>-axis ranging from 0 to 100. On the <em>y</em>-axis this plot frame shows by default the values of all state variables with the <em>y</em>-axis from 0 to 1. These default settings can be customized using the right sidebar, which can be shown by pressing the gears icon in the right-top corner of the application window (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>).</p>
 <div class="figure"><span id="fig:phasetsplotopts"></span>
-<img src="imagesLD/phaseplane-TSplotopts.png" alt="The `phaseplane()` application window with right sidebar expanded allowing for customizing the time series plot." width="100%" />
+<img src="images/phaseplane-TSplotopts.png" alt="The `phaseplane()` application window with right sidebar expanded allowing for customizing the time series plot." width="100%" />
 <p class="caption">
 Figure 2.3: The <code>phaseplane()</code> application window with right sidebar expanded allowing for customizing the time series plot.
 </p>
@@ -180,7 +180,7 @@ Figure 2.3: The <code>phaseplane()</code> application window with right sidebar 
 <p>If state variables are selected to be plotted on both the primary and the secondary <em>y</em>-axis, the right sidebar also provides the option to plot the time series curve in a 3-dimensional perspective plot. If a 3-dimensional perspective plot is selected instead of a 2-dimensional plot, the right sidebar extends even further with a slider to adjust the viewing angle of the 3-dimensional graph.</p>
 <p>Figure <a href="the-phaseplane-application.html#fig:phasets4plotopts">2.4</a> shows the 4 different configurations of the right sidebar discussed above. Which one is shown depends on whether a single or all state variables are plotted on the primary, left <em>y</em>-axis, whether or not a second state variable is selected to be shown on the secondary, right <em>y</em>-axis and whether or not a 2-dimensional or 3-dimensional plot is selected.</p>
 <div class="figure"><span id="fig:phasets4plotopts"></span>
-<img src="imagesLD/bifurcation-TS4plotopts.png" alt="The 4 different configurations of the right sidebar of the `phaseplane()` application window depending on which state variables are selected to be shown on the primary and secondary *y*-axis." width="100%" />
+<img src="images/bifurcation-TS4plotopts.png" alt="The 4 different configurations of the right sidebar of the `phaseplane()` application window depending on which state variables are selected to be shown on the primary and secondary *y*-axis." width="100%" />
 <p class="caption">
 Figure 2.4: The 4 different configurations of the right sidebar of the <code>phaseplane()</code> application window depending on which state variables are selected to be shown on the primary and secondary <em>y</em>-axis.
 </p>
@@ -195,7 +195,7 @@ After adjusting the plot parameters in the right sidebar the <code>Apply</code> 
 <h3><span class="header-section-number">2.1.3</span> Numerical settings</h3>
 <p>In addition to the tab sheet for customizing the plot settings, the right sidebar contains a second tab sheet to customize numerical settings. This numerical options tab can be shown by pressing on the dial icon in the top-right corner of the right sidebar, whenever the latter is not hidden. Figure <a href="the-phaseplane-application.html#fig:phasetsnumopts">2.5</a> shows the <code>phaseplane()</code> application window with the right sidebar showing the numerical options tab.</p>
 <div class="figure"><span id="fig:phasetsnumopts"></span>
-<img src="imagesLD/phaseplane-TSnumopts.png" alt="The `phaseplane()` application window with extended right sidebar showing the numerical options tab sheet. Here numerical settings for the time series calculations can be customized." width="100%" />
+<img src="images/phaseplane-TSnumopts.png" alt="The `phaseplane()` application window with extended right sidebar showing the numerical options tab sheet. Here numerical settings for the time series calculations can be customized." width="100%" />
 <p class="caption">
 Figure 2.5: The <code>phaseplane()</code> application window with extended right sidebar showing the numerical options tab sheet. Here numerical settings for the time series calculations can be customized.
 </p>
@@ -218,7 +218,7 @@ After adjusting the numerical settings the <code>Apply</code> button has to be p
 </ul>
 <p>The phaseplane plot can be customized using the right sidebar, which can be shown by clicking the gears icon in the right-top corner of the application window (see Figure <a href="the-phaseplane-application.html#fig:phasestart">2.1</a>). Figure <a href="the-phaseplane-application.html#fig:phaseppplotopts">2.6</a> shows the <code>phaseplane()</code> application window with the <code>Nullclines</code> tab sheet selected and the right sidebar visible. The drop-down menus allow for selecting which state variables are used as <em>x</em>- and <em>y</em>-coordinates in the phaseplane plot. The boxes and drop-down menus in the right sidebar also allow for customization of the minimum and maximum values on the <em>x</em>- and <em>y</em>-axis as well as whether a linear of logarithmic axis scale should be used.</p>
 <div class="figure"><span id="fig:phaseppplotopts"></span>
-<img src="imagesLD/phaseplane-PPplotopts.png" alt="The `phaseplane()` application window showing a phaseplane diagram with the right sidebar expanded allowing for customizing the phaseplane plot." width="100%" />
+<img src="images/phaseplane-PPplotopts.png" alt="The `phaseplane()` application window showing a phaseplane diagram with the right sidebar expanded allowing for customizing the phaseplane plot." width="100%" />
 <p class="caption">
 Figure 2.6: The <code>phaseplane()</code> application window showing a phaseplane diagram with the right sidebar expanded allowing for customizing the phaseplane plot.
 </p>
@@ -246,7 +246,7 @@ Notice that the success of finding all equilibrium points of the model is depend
 <h2><span class="header-section-number">2.4</span> Curve management</h2>
 <p>The bottom part of the left sidebar of the <code>phaseplane()</code> application shows 3 submenus that allow for manipulation of the computed curves. Curves can be read into the <code>phaseplane()</code> application from variables that are present in the global R environment from which the application was started, computed curves can be saved to variables in this global R environment and curves can be deleted. Figure <a href="the-phaseplane-application.html#fig:phasecurvemenus">2.7</a> shows 4 snapshots of the left sidebar with the different submenus expanded and in different states.</p>
 <div class="figure"><span id="fig:phasecurvemenus"></span>
-<img src="imagesLD/bifurcation-CurveMenus.png" alt="The `phaseplane()` application window with the left sidebar showing the `Load curves` submenu, the `Save curves` submenu, the `Delete curves` submenu with the curve choice drop-down menu expanded and the `Delete curves` submenu with the `All` option selected. The action buttons in each submenu allow to load, save or delete the selected curves." width="100%" />
+<img src="images/bifurcation-CurveMenus.png" alt="The `phaseplane()` application window with the left sidebar showing the `Load curves` submenu, the `Save curves` submenu, the `Delete curves` submenu with the curve choice drop-down menu expanded and the `Delete curves` submenu with the `All` option selected. The action buttons in each submenu allow to load, save or delete the selected curves." width="100%" />
 <p class="caption">
 Figure 2.7: The <code>phaseplane()</code> application window with the left sidebar showing the <code>Load curves</code> submenu, the <code>Save curves</code> submenu, the <code>Delete curves</code> submenu with the curve choice drop-down menu expanded and the <code>Delete curves</code> submenu with the <code>All</code> option selected. The action buttons in each submenu allow to load, save or delete the selected curves.
 </p>
@@ -324,7 +324,7 @@ gitbook.start({
 "all": false
 },
 "fontsettings": {
-"theme": "sepia",
+"theme": "white",
 "family": "sans",
 "size": 2
 },

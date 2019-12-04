@@ -87,12 +87,13 @@
 #'
 #' bifurcation(model, state, parms)
 #' }
-#' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
-#' @importFrom grDevices trans3d
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
+#' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
+#' @importFrom grDevices trans3d dev.off png
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
-#' @importFrom grDevices dev.off png
+#' @importFrom tools file_path_sans_ext
+#' @importFrom utils browseURL capture.output
 #' @export
 bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
@@ -227,7 +228,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         content = function(file) {
           curtab <- as.numeric(isolate(input$plottab))
           curtabname <- curveListNames[curtab]
-          png(file,
+          pngfile <- paste0(tools::file_path_sans_ext(file), ".png")
+          png(pngfile,
               height = setPlotHeight(session, input),
               width = setPlotWidth(session, input))
           if (curtab == 1) bifOrbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
@@ -585,11 +587,24 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
       # Show the manual
       observeEvent(input$helpClicked, {
-#        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
-        tempDir <- tempdir()
-        file.copy(system.file("manual", package = "deBif"), tempDir, recursive=TRUE)
-        htmlFile <- file.path(tempDir, "manual/index.html")
-        rstudioapi::viewer(htmlFile, height="maximize")
+        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
+        # tempDir <- tempdir()
+        # file.copy(system.file("manual", package = "deBif"), tempDir, recursive=TRUE)
+        # htmlFile <- file.path(tempDir, "manual/index.html")
+        # rstudioapi::viewer(htmlFile, height="maximize")
+      })
+
+      # Show the model
+      observeEvent(input$showODEs, {
+        systxt <- capture.output({print(model)})
+        systxt <- paste0(systxt[1:(length(systxt))], collapse = "<br>")
+        odestxt <- paste0("<b>State variables:</b><br>",
+                          paste(names(state), ":", state, "<br>", collapse = ""),
+                          "<br><b>Parameters:</b><br>",
+                          paste(names(parms), ":", parms, "<br>", collapse = ""),
+                          "<br><b>System of ODEs:</b><br>",
+                          systxt, collapse = "")
+        showModal(modalDialog(title = "System of ODEs", HTML(odestxt)))
       })
 
       # Actions to be carried out when the app is stopped
