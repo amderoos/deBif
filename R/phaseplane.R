@@ -538,7 +538,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       })
     }
 
-    shinyApp(ui = ui, server = server)
+    shinyApp(ui = ui, server = server, options = list(width = 900, height = 900))
   }
 }
 

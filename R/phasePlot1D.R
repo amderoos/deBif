@@ -14,7 +14,7 @@ phasePlot1D <- function(curtab, odes, state, parms, plotopts, numopts) {
     xc <- 10^seq(log10(xmin), log10(xmax), length.out=npixels)
     logxy <- paste0(logxy, "x")
     xmin <- max(xmin, 1.0E-10)
-  } else xc <- seq(xmin+eps, xmax, length.out=npixels)
+  } else xc <- seq(xmin, xmax, length.out=npixels)
   if (logy) {
     logxy <- paste0(logxy, "y")
     ymin <- max(ymin, 1.0E-10)
@@ -27,7 +27,6 @@ phasePlot1D <- function(curtab, odes, state, parms, plotopts, numopts) {
   lines(c(xmin,xmax), c(0,0), col="black", lwd=1, lty=2)
   # legend("topright",legend=ylab, col=plotopts$colors[1], lty=1, lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]))
 
-  xc <- seq(xmin, xmax, length.out = npixels)
   dxdt <- as.numeric(lapply(xc, function(i) {state[1] <- i; odes(0, state, parms)[[1]][[1]]}))
 
   lines(xc, dxdt, lwd=plotopts["lwd"], col=plotopts$colors[1])

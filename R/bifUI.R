@@ -249,10 +249,10 @@ bifUI <- function(state, parms, plotopts, numopts) {
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
       box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#progress { font-size: 10px; width: calc(100%); left: calc(242px); height: 72px; overflow: auto;}"
+        "#progress { font-size: 10px; width: calc(100%); left: calc(242px); height: 110px; overflow: auto;}"
       ))),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
-      box(width = NULL, height = "90px", verbatimTextOutput("progress", placeholder = TRUE))
+      box(width = NULL, height = "130px", verbatimTextOutput("progress", placeholder = TRUE))
     ),
     ########## Right side-bar
     rightsidebar = rightSidebar(
@@ -378,7 +378,10 @@ bifUI <- function(state, parms, plotopts, numopts) {
         div(style="line-height: 12px !important", br()),
         actionButton("numoptsapply", "Apply", icon("refresh"))
       )
-    )
+    ),
+    ##### End of right-sidebar
+    collapse_sidebar = FALSE,
+    sidebar_fullCollapse = TRUE
   )
   return(ui)
 }

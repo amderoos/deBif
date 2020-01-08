@@ -1,7 +1,7 @@
 initLP <- function(state, parms, curveData, nopts, session = NULL) {
 
   # To continue an LP curve we use the extended system of eqs. (10.76) on pg. 504 in
-  # Kuznetsov (1996), as the matrix of this system has full rank at a Bogdanov-Takens
+  # Kuznetsov (1998), as the matrix of this system has full rank at a Bogdanov-Takens
   # point. As additional values we need then an approximation to the null vector of
   # the Jacobian q, which we also use as additional vector q0.
 
@@ -29,7 +29,7 @@ initLP <- function(state, parms, curveData, nopts, session = NULL) {
 LPcontinuation <- function(state, parms, curveData, nopts, rhsval) {
 
   # Continuation of a limitpoint is carried out using the defining system
-  # (10.97) on page 515 of Kuznetsov (1996):
+  # (10.97) on page 515 of Kuznetsov (1998):
   #
   #  F(x, p)                 = 0
   #  F_x(x, p) q             = 0
@@ -186,7 +186,7 @@ LP_BTtest <- function(state, parms, curveData, nopts, rhsval) {
   q = unlist(state[(curveData$pointdim + 2):(curveData$pointdim + 1 + curveData$statedim)]);
   p = unlist(state[(curveData$pointdim + 2 + curveData$statedim):(curveData$pointdim + 1 + 2*curveData$statedim)]);
 
-  # See pg 515 of Kuznetsov (1996), just below eq. (10.97)
+  # See pg 515 of Kuznetsov (1998), just below eq. (10.97)
 
   return(c(unlist(rhsval), as.numeric(p %*% q)))
 }
@@ -194,21 +194,20 @@ LP_BTtest <- function(state, parms, curveData, nopts, rhsval) {
 LP_CPtest <- function(state, parms, curveData, nopts, rhsval) {
 
   # Extract the additional variables from the state
-  q = unlist(state[(curveData$pointdim + 2):(curveData$pointdim + 1 + curveData$statedim)]);
-  p = unlist(state[(curveData$pointdim + 2 + curveData$statedim):(curveData$pointdim + 1 + 2*curveData$statedim)]);
+  qval = unlist(state[(curveData$pointdim + 2):(curveData$pointdim + 1 + curveData$statedim)]);
+  pval = unlist(state[(curveData$pointdim + 2 + curveData$statedim):(curveData$pointdim + 1 + 2*curveData$statedim)]);
 
   # The quantity B(q, q) can be computed most easily using a directional derivative
   # see eq. (10.52) and its approximation some lines below (10.52) on page 490 of
-  # Kuznetsov (1996)
-  s <- state
-  s[(curveData$freeparsdim+1):curveData$pointdim] <- s[(curveData$freeparsdim+1):curveData$pointdim] + sqrt(nopts$jacdif)*q
-  rhsP <- unlist(curveData$model(0, s, parms))
-  s <- state
-  s[(curveData$freeparsdim+1):curveData$pointdim] <- s[(curveData$freeparsdim+1):curveData$pointdim] - sqrt(nopts$jacdif)*q
-  rhsM <- unlist(curveData$model(0, s, parms))
+  # Kuznetsov (1998)
+  stmp <- state[1:curveData$pointdim]
+  hv <- rep(0, length(stmp))
+  hv[(curveData$freeparsdim+1):curveData$pointdim] <- sqrt(nopts$jacdif)*qval
+  rhsP <- unlist(curveData$model(0, (stmp + hv), parms))
+  rhsM <- unlist(curveData$model(0, (stmp - hv), parms))
   Bqq <- (rhsP + rhsM)/nopts$jacdif
 
-  # See bottom of pg 514 of Kuznetsov (1996), just above eq. (10.97)
+  # See bottom of pg 514 of Kuznetsov (1998), just above eq. (10.97)
 
-  return(c(unlist(rhsval), as.numeric(p %*% Bqq)))
+  return(c(unlist(rhsval), as.numeric(pval %*% Bqq)))
 }

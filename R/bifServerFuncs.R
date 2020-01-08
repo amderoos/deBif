@@ -75,9 +75,9 @@ updateSelectedPoint <- function(session, curtab, clist, pointid, snames, pnames)
            })
 
     inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
-    if ((cln1 == 'BifurcationBounds') && (inittype %in% c("BP", "HP", "LP"))) {
+    if ((curtab == 3) && (inittype %in% c("BP", "HP", "LP"))) {
       updateSelectInput(session, "curvetype3", selected = inittype)
-    } else if (cln1 == 'BifurcationCurves') {
+    } else if (curtab == 2) {
       if (inittype == "HP") updateSelectInput(session, "curvetype2", selected = "LC")
       else updateSelectInput(session, "curvetype2", selected = "EQ")
     }

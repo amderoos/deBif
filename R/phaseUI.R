@@ -90,8 +90,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
         });
         // Bind function to the toggle sidebar button
         $('i.fa.fa-gears').on('click',function(){
-          $(window).trigger('resize'); // Trigger resize event
-          $(window).trigger('resize'); // Trigger resize event
+          setTimeout( function() { $(window).trigger('resize')}, 200); // Trigger resize event
         });
         var dimension = [0, 0];
         $(document).on('shiny:connected', function(e) {

@@ -109,7 +109,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     initnopts <- list(odemethod = "lsoda", tmax = 1000, tstep = 0.1,
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
-                      rtol = 1e-7, atol = 1e-9, ctol = 1e-8, jacdif = 1.0E-6, maxiter = 100,
+                      rtol = 1e-7, atol = 1e-9, ctol = 1e-8, jacdif = 1.0E-4, maxiter = 100,
                       maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-5, replotfreq = 10,
                       ninterval = 10, glorder = 4, lcampl = 1.0E-6
     )
@@ -321,7 +321,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
               if (inittype != "TS")
                 initparms[as.numeric(clist[[cln1]][[ind2]]$bifpars)] <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (1:ii)])
               inittanvec <- clist[[cln1]][[ind2]]$tangent[ind3,]
-            } else {
+              } else {
               initstate <- state
               initparms <- parms
               for (i in statenames) initstate[i] <- input[[paste0(i, "_", curtab)]]
@@ -633,6 +633,6 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     }
     ############################################## END SERVER FUNCTION #####################################################
 
-    shinyApp(ui = ui, server = server)
+    shinyApp(ui = ui, server = server, options = list(width = 910, height = 950))
   }
 }
