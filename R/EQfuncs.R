@@ -25,8 +25,11 @@ initEQ <- function(state, parms, curveData, nopts, session = NULL) {
 
     # Solve the vector q2 from D q2 = 0
     eig <- eigen(D)
-    minindx <- which.min(abs(Re(eig$values)))
-    q2 <- as.numeric(c(eig$vectors[,minindx]))
+    # minindx <- which.min(abs(Re(eig$values)))
+    # q2 <- as.numeric(c(eig$vectors[,minindx]))
+    allindx <- (1:length(eig$values))[Im(eig$values) == 0]
+    minindx <- allindx[which.min(abs(Re(eig$values[Im(eig$values) == 0])))]
+    q2 <- as.numeric(Re(c(eig$vectors[,minindx])))
     names(q2) <- names(state)
 
     # Extract the (n+1)xn matrix (J(0))^T (see eq.(10.61)-(10.63) on pg. 499 of
@@ -54,8 +57,11 @@ initEQ <- function(state, parms, curveData, nopts, session = NULL) {
     # For the restricted matrix solve for the eigenvalues and select the
     # eigenvector belonging to the eigenvalue closest to 0
     eig <- eigen(JT[incrows,])
-    minindx <- which.min(abs(Re(eig$values)))
-    phi <- c(eig$vectors[,minindx])
+    # minindx <- which.min(abs(Re(eig$values)))
+    # phi <- c(eig$vectors[,minindx])
+    allindx <- (1:length(eig$values))[Im(eig$values) == 0]
+    minindx <- allindx[which.min(abs(Re(eig$values[Im(eig$values) == 0])))]
+    phi <- Re(c(eig$vectors[,minindx]))
 
     # Now compute B(q1,q2) and B(q2, q2) as explained. The function B(x,y) is
     # defined in eq. (10.56) on pg. 496 of Kuznetsov (1996). The vectors
