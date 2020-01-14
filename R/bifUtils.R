@@ -39,10 +39,10 @@ approxNullVec <- function(A) {
 
 rcprintf <- function(fmt, x) {
   # Prints x to string using sprintf(fmt,...), handling both real and complex numbers
-  if (is.complex(x) && Im(x) != 0) {
-    if (Im(x) > 0) return(sprintf("%12.5E+%11.5Ei", Re(x), abs(Im(x))))
-    else return(sprintf("%12.5E-%11.5Ei", Re(x), abs(Im(x))))
-  } else return(sprintf("%12.5E", abs(x)))
+  if (is.complex(x) && (abs(Im(x)) > 1.0E-99)) {
+    if (Im(x) > 0) return(sprintf("%12.5E+%11.5Ei", ifelse(abs(Re(x)) > 1.0E-99, Re(x), 0), abs(Im(x))))
+    else return(sprintf("%12.5E-%11.5Ei", ifelse(abs(Re(x)) > 1.0E-99, Re(x), 0), abs(Im(x))))
+  } else return(sprintf("%12.5E", ifelse(abs(x) > 1.0E-99, x, 0)))
 }
 
 converty2y <- function(y, ymin1, ymax1, logy1, ymin2, ymax2, logy2) {

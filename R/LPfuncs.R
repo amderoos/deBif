@@ -162,8 +162,8 @@ analyseLP <- function(state, parms, curveData, nopts, session) {
           tvnew <- curveData$tanvec[(1:curveData$pointdim)]
         }
 
-        if (biftype == "BT") testvals$btval <- NULL
-        else testvals$cpval <- NULL
+        if (biftype == "BT") testvals$btval <- LP_BTtest(y, parms, curveData, nopts, NULL)
+        else testvals$cpval <- LP_CPtest(y, parms, curveData, nopts, NULL)
 
         testvals[["y"]] <- y
         testvals[["tanvec"]] <- tvnew

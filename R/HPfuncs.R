@@ -98,7 +98,7 @@ analyseHP <- function(state, parms, curveData, nopts, session) {
           tvnew <- curveData$tanvec[(1:curveData$pointdim)]
         }
 
-        if (biftype == "BT") testvals$btval <- NULL
+        if (biftype == "BT") testvals$btval <- HP_BTtest(y, parms, curveData, nopts, NULL)
 
         testvals[["y"]] <- y
         testvals[["tanvec"]] <- tvnew

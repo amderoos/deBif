@@ -265,28 +265,31 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
         eigval <- eig$values[order(Re(eig$values), decreasing = TRUE)]
         names(eigval) <-  unlist(lapply((1:curveData$statedim), function(i){paste0("Eigenvalue", i)}))
 
-        # Append the current tangent vector as the last row to the jacobian to
-        # preserve direction. See the matcont manual at
-        # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
-        # Notice that jacobian.full returns a square matrix with NA values on the last row
-        jac[nrow(jac),] <- curveData$tanvec
-        if (rcond(jac) > nopts$atol) {
-          tvnew <- solve(jac, c(rep(0, (length(curveData$tanvec)-1)), 1))
-          tvnorm <- sqrt(sum(tvnew^2))
-          tvnew <- tvnew/tvnorm
-          names(tvnew) <- unlist(lapply((1:length(state)), function(i){paste0("d", names(state)[i])}))
-        } else {
-          tvnew <- curveData$tanvec
+        NeutralSaddle <- (biftype == "HP") && (abs(Im(eigval[1])) < as.numeric(nopts$iszero))
+        if (!NeutralSaddle) {
+          # Append the current tangent vector as the last row to the jacobian to
+          # preserve direction. See the matcont manual at
+          # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
+          # Notice that jacobian.full returns a square matrix with NA values on the last row
+          jac[nrow(jac),] <- curveData$tanvec
+          if (rcond(jac) > nopts$atol) {
+            tvnew <- solve(jac, c(rep(0, (length(curveData$tanvec)-1)), 1))
+            tvnorm <- sqrt(sum(tvnew^2))
+            tvnew <- tvnew/tvnorm
+            names(tvnew) <- unlist(lapply((1:length(state)), function(i){paste0("d", names(state)[i])}))
+          } else {
+            tvnew <- curveData$tanvec
+          }
+
+          if (biftype == "BP") testvals$bpval <- EQ_BPtest(y, parms, curveData, nopts, NULL)
+          else if (biftype == "HP") testvals$hpval <- EQ_HPtest(y, parms, curveData, nopts, NULL)
+          else testvals$lpval <- EQ_LPtest(y, parms, curveData, nopts, NULL)
+
+          testvals[["y"]] <- y
+          testvals[["tanvec"]] <- tvnew
+          testvals[["eigval"]] <- eigval
+          testvals[["biftype"]] <- biftype
         }
-
-        if (biftype == "BP") testvals$bpval <- NULL
-        else if (biftype == "HP") testvals$hpval <- NULL
-        else testvals$lpval <- NULL
-
-        testvals[["y"]] <- y
-        testvals[["tanvec"]] <- tvnew
-        testvals[["eigval"]] <- eigval
-        testvals[["biftype"]] <- biftype
       } else {
         if (biftype == "BP") msg <- "Locating branching point failed\n"
         else if (biftype == "HP") msg <- "Locating Hopf bifurcation point failed\n"

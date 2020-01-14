@@ -1,7 +1,22 @@
+# The Rosenzweig-McArthur predator-prey model
+# -------------------------------------------
+
+# Equations:
+# ----------
+#
+# dR            R       R
+# -- = r R (1 - -) - ------- C
+# dt            K    1 + ahR
+#
+# dC          R
+# -- = eps -------C - mu C
+# dt       1 + ahR
+#
+
 # The initial state of the system has to be specified as a named vector of state values.
 state <- c(R = 0.05, C = 0.1)
 
-# Parameters has to be specified as a named vector of parameters.
+# Parameters have to be specified as a named vector of parameters.
 parms <- c(r = 0.5, K = 0.1, a = 5.0, h = 3.0, eps = 0.5, mu = 0.05)
 
 # The model has to be specified as a function that returns

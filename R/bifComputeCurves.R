@@ -236,6 +236,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
   specialtags <- NULL
 
   while ((pntnr - cData$pntnr) < as.numeric(maxpoints)) {
+    reportlevel <- cData$reportlevel
     res <- tryCatch(stode(cData$guess, time = 0, func = cData$extSys, parms = cData$fixedpars,
                           rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol, jacfunc = cData$jacfun,
                           maxiter = nopts$maxiter, verbose = verbose, curveData = cData, nopts = nopts),
@@ -316,22 +317,26 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           if (!is.null(session)) updateConsoleLog(session, msg)
           else cat(msg)
 
-          if (cData$reportlevel == 2) {
-            msg <- paste0(msg, "Test values:\n")
-            if ("bpval" %in% names(testvals)) msg <- paste0(msg, "BP:", sprintf("%12.5E", testvals$bpval), "; ")
-            if ("hpval" %in% names(testvals)) msg <- paste0(msg, "HP:", sprintf("%12.5E", testvals$hpval), "; ")
-            if ("lpval" %in% names(testvals)) msg <- paste0(msg, "LP:", sprintf("%12.5E", testvals$lpval), "; ")
-            if ("btval" %in% names(testvals)) msg <- paste0(msg, "BT:", sprintf("%12.5E", testvals$btval), "; ")
-            if ("cpval" %in% names(testvals)) msg <- paste0(msg, "CP:", sprintf("%12.5E", testvals$cpval), "; ")
-            msg <- paste0(msg, "\n")
-            cat(msg)
-          }
-          else if (cData$reportlevel == 1) {
-            yy <- c(as.numeric(y), eigval)
+          if (reportlevel >= 1) {
+            yy <- c(as.numeric(y[1:cData$pointdim]), eigval)
+            if (reportlevel == 2) {
+              specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
+              for (testname in specvar) {
+                if (testname %in% names(testvals)) yy <- c(yy, as.numeric(testvals[[testname]]))
+              }
+            }
             names(yy) <- NULL
             cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "),
                 sprintf("**%s**\n", testvals$biftype))
+
+            # Prevent reportin this solution point a second time
+            reportlevel <- 0
           }
+          # Reset the detected bifurcation test value to NULL
+          specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
+          speclbl <- c("BP", "HP", "LP", "BT", "CP")
+          ii <- (1:length(speclbl))[testvals$biftype == speclbl]
+          testvals[[specvar[ii]]] <- NULL
 
           testvals$y <- NULL
           testvals$tanvec <- NULL
@@ -363,27 +368,16 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                       sprintf("%12.5E", y[cData$pointdim]),
                       "\n")
       } else {
-        msg <- paste0("Solution ", pntnr, " found:\n",
+        msg <- paste0("Solution ", sprintf("%-5d", pntnr), ":  ",
                       paste(unlist(lapply(1:cData$pointdim,
                                           function(i) {paste0(names(y[i]), "=", sprintf("%12.5E", y[i]))})), collapse=', '), "\n")
-        msg <- paste0(msg, "Eigenvalues:\n",
+        msg <- paste0(msg, "Eigenvalues   :  ",
                       paste(unlist(lapply(1:length(eigval), function(i) {rcprintf("%12.5E", eigval[i])})), collapse=' '), "\n")
       }
       if (!is.null(session)) shinyjs::html(id = "progress", html = HTML(gsub("\n", "<br>", msg)))
       else cat(msg)
 
-      if (cData$reportlevel == 2) {
-        specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
-        speclbl <- c("BP", "HP", "LP", "BT", "CP")
-        if (any(specvar %in% names(cData$testvals)))
-          msg <- paste0(msg, "Test values:\n",
-                        paste(unlist(lapply((1:length(specvar)),
-                                            function(i) {if (specvar[i] %in% names(cData$testvals))
-                                              paste0(speclbl[i], ": ", sprintf("%12.5E", cData$testvals[[specvar[i]]]))})),
-                              collapse='; '), "\n")
-        cat(msg)
-      }
-      else if (cData$reportlevel == 1) {
+      if (reportlevel >= 1) {
         if (curvetype == "LC") {
           yy <- c(as.numeric(y[1:cData$freeparsdim]),
                   unlist(lapply((1:cData$statedim),
@@ -396,16 +390,32 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                                        function(i){c(paste0("min.", cData$varnames[i+1]),
                                                      paste0("max.", cData$varnames[i+1]))})),
                          names(y[cData$pointdim]))
-            cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
+            cat("\n\n", paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
           }
         } else {
-          yy <- c(as.numeric(y), eigval)
+          specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
+          speclbl <- c("BP", "HP", "LP", "BT", "CP")
           if (pntnr == 1) {
-            namesyy <- c(names(y), cData$eignames)
-            cat(paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
+            msg <- paste(unlist(lapply(names(y[1:cData$pointdim]), function(x) {sprintf("%12s", x)})), collapse = " ")
+            for (ii in (1:length(cData$eignames))) {
+              if (abs(Im(eigval[ii])) < nopts$iszero) msg <- paste(msg, sprintf("%12s", cData$eignames[ii]))
+              else msg <- paste(msg, sprintf("%25s", cData$eignames[ii]))
+            }
+            if (reportlevel == 2) {
+              for (ii in (1:length(specvar))) {
+                if (specvar[ii] %in% names(cData$testvals)) msg <- paste(msg, sprintf("%7s test", speclbl[ii]))
+              }
+            }
+            cat("\n\n", msg, "\n")
           }
+          yy <- c(as.numeric(y[1:cData$pointdim]), eigval)
+          if (reportlevel == 2) {
+            for (testname in specvar) {
+              if (testname %in% names(cData$testvals)) yy <- c(yy, as.numeric(cData$testvals[[testname]]))
+            }
+          }
+          cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
         }
-        cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
       }
 
       ############## Store the results
