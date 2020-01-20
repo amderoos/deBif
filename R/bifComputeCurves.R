@@ -252,7 +252,9 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                       return(NULL)
                     })
     # Solution found
-    if (!is.null(res) && !is.null(attr(res, "steady")) && attr(res, "steady")) {
+    nonzeroyold <- (abs(cData$yold) > nopts$iszero)
+    if (!is.null(res) && !is.null(attr(res, "steady")) && attr(res, "steady") &&
+        (max((cData$yold[nonzeroyold] - res$y[nonzeroyold])^2/cData$yold[nonzeroyold]^2) < nopts$neartol)) {
       y <- res$y
 
       # Compute the Jacobian w.r.t. to free parameters (the first cData$freeparsdim
@@ -450,8 +452,9 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
 
       if (pntnr > 10) {
-        if ((as.numeric(y[1]) < (as.numeric(popts$xmin) - as.numeric(nopts$iszero))) ||
-            (as.numeric(y[1]) > (as.numeric(popts$xmax) + as.numeric(nopts$iszero)))) {
+        bndtol <- 0.0 # as.numeric(nopts$iszero)
+        if ((as.numeric(y[1]) < (as.numeric(popts$xmin) - bndtol)) ||
+            (as.numeric(y[1]) > (as.numeric(popts$xmax) + bndtol))) {
           msg <- "Computation halted:\nMinimum or maximum of x-axis domain reached\n"
           if (!is.null(session)) updateConsoleLog(session, msg)
           else cat(msg)
@@ -460,14 +463,14 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         }
         if (curvetype == "EQ") {
           if (popts$ycol == 1) {
-            if (all(as.numeric(y[(2:(cData$statedim+1))]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero)))) {
+            if (all(as.numeric(y[(2:(cData$statedim+1))]) < (as.numeric(popts$ymin) - bndtol))) {
               msg <- "Computation halted:\nMinimum of y-axis domain reached for all y-axis variables\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
               cData <- NULL
               break
             }
-            if (all(as.numeric(y[(2:(cData$statedim+1))]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
+            if (all(as.numeric(y[(2:(cData$statedim+1))]) > (as.numeric(popts$ymax) + bndtol))) {
               msg <- "Computation halted:\nMaximum of y-axis domain reached for all y-axis variables\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
@@ -475,8 +478,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               break
             }
           } else {
-            if ((as.numeric(y[popts$ycol]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
-                (as.numeric(y[popts$ycol]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
+            if ((as.numeric(y[popts$ycol]) < (as.numeric(popts$ymin) - bndtol)) ||
+                (as.numeric(y[popts$ycol]) > (as.numeric(popts$ymax) + bndtol))) {
               msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
@@ -484,8 +487,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               break
             }
             if ((popts$y2col > 1) &&
-                ((as.numeric(y[popts$y2col]) < (as.numeric(popts$y2min) - as.numeric(nopts$iszero))) ||
-                 (as.numeric(y[popts$y2col]) > (as.numeric(popts$y2max) + as.numeric(nopts$iszero))))) {
+                ((as.numeric(y[popts$y2col]) < (as.numeric(popts$y2min) - bndtol)) ||
+                 (as.numeric(y[popts$y2col]) > (as.numeric(popts$y2max) + bndtol)))) {
               msg <- "Computation halted:\nMaximum or maximum of y-axis domain reached for 2nd y-axis variable\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
@@ -503,8 +506,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               break
             }
           } else if (curvetype != "LC") {
-            if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - as.numeric(nopts$iszero))) ||
-                (as.numeric(y[2]) > (as.numeric(popts$ymax) + as.numeric(nopts$iszero)))) {
+            if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - bndtol)) ||
+                (as.numeric(y[2]) > (as.numeric(popts$ymax) + bndtol))) {
               msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
@@ -514,7 +517,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
           }
         }
 
-        # if (any(as.numeric(y[(1:(cData$freeparsdim + cData$statedim))]) < 0 - as.numeric(nopts$iszero))) {
+        # if (any(as.numeric(y[(1:(cData$freeparsdim + cData$statedim))]) < 0 - bndtol)) {
         #   msg <- "Computation halted:\nOne of the variables has become negative\n"
         #   if (!is.null(session)) updateConsoleLog(session, msg)
         #   else cat(msg)

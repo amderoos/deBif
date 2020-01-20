@@ -272,6 +272,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
               }
+              label {font-size: 14px;}
               #xmin{height: 30px}
               #xmax{height: 30px}
               #ymin{height: 30px}
@@ -282,6 +283,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #tstep{height: 30px}
               #rtol{height: 30px}
               #atol{height: 30px}
+              #neartol{height: 30px}
               #iszero{height: 30px}
               #jacdif{height: 30px}
               #stepsize{height: 30px}
@@ -355,22 +357,24 @@ bifUI <- function(state, parms, plotopts, numopts) {
           condition = "input.plottab > 1",
           h4("Curve continuation"),
           div(style="font-size: 18px; line-height: 0px; margin-top: 20px; margin-bottom: 12px; !important", ("Tolerances")),
-          splitLayout(cellWidths = c("50%", "50%"),
+          splitLayout(cellWidths = c("45%", "55%"),
                       textInput(inputId="rtol", label="Relative", value=sprintf("%.1E", numopts$rtol)),
                       textInput(inputId="atol", label="Absolute", value=sprintf("%.1E", numopts$atol))),
-          textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
+          splitLayout(cellWidths = c("45%", "55%"),
+                      textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
+                      textInput(inputId="neartol", label="Neighbourhood", value=sprintf("%.1E", numopts$neartol))),
           textInput(inputId="jacdif", label="Jacobian pertubation", value=sprintf("%.1E", numopts$jacdif)),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
-          splitLayout(cellWidths = c("50%", "50%"),
+          splitLayout(cellWidths = c("45%", "55%"),
                       numericInput(inputId="stepsize", label="Target", value=numopts$stepsize),
                       numericInput(inputId="minstepsize", label="Minimum", value=numopts$minstepsize)),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Iterations")),
-          numericInput(inputId="maxiter", label="Maximum number of iterations", value=numopts$maxiter),
+          numericInput(inputId="maxiter", label="Maximum iterations", value=numopts$maxiter),
           numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
           numericInput(inputId="replotfreq", label="Points between plot updates", min=1, max=10000,
                        value=numopts$replotfreq, step=1),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Limit cycle continuation")),
-          splitLayout(cellWidths = c("50%", "50%"),
+          splitLayout(cellWidths = c("45%", "55%"),
                       numericInput(inputId="ninterval", label="Intervals", value=numopts$ninterval, min = 1, max = 40, step = 1),
                       numericInput(inputId="glorder", label="Order", value=numopts$glorder), min = 2, max = 7, step = 1),
           textInput(inputId="lcampl", label="Initial amplitude", value=sprintf("%.1E", numopts$lcampl))

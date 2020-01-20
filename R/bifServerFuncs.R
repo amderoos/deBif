@@ -168,6 +168,8 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
     updateTextInput(session, "atol", value=sprintf("%.1E", nopts$atol))
     nopts$iszero <- max(text2numeric(nopts$iszero, input[["iszero"]]), 1.0E-10)
     updateTextInput(session, "iszero", value=sprintf("%.1E", nopts$iszero))
+    nopts$neartol <- max(text2numeric(nopts$neartol, input[["neartol"]]), 1.0E-10)
+    updateTextInput(session, "neartol", value=sprintf("%.1E", nopts$neartol))
     nopts$jacdif <- max(text2numeric(nopts$jacdif, input[["jacdif"]]), 1.0E-10)
     updateTextInput(session, "jacdif", value=sprintf("%.1E", nopts$jacdif))
 

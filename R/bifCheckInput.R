@@ -12,6 +12,8 @@ bifCheckNumSettings <- function(oldopts, inlist) {
       initnopts$rtol <- nlist$rtol
     if (("atol" %in% names(nlist)) && is.numeric(nlist$atol) && (nlist$atol > 0) && (nlist$atol < 1) )
       initnopts$atol <- nlist$atol
+    if (("neartol" %in% names(nlist)) && is.numeric(nlist$neartol) && (nlist$neartol > 0) && (nlist$neartol < 1) )
+      initnopts$neartol <- nlist$neartol
     if (("iszero" %in% names(nlist)) && is.numeric(nlist$iszero) && (nlist$iszero > 0) && (nlist$iszero < 1) )
       initnopts$iszero <- nlist$iszero
     if (("jacdif" %in% names(nlist)) && is.numeric(nlist$jacdif) && (nlist$jacdif > 0) && (nlist$jacdif < 1) )
