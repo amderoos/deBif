@@ -133,6 +133,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
               }
+              label {font-size: 14px;}
               #xmin{height: 30px}
               #xmax{height: 30px}
               #ymin{height: 30px}
