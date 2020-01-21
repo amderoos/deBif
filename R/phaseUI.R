@@ -13,13 +13,13 @@ phaseUI <- function(state, parms, plotopts, numopts) {
         span(class = "logo-lg", "Phaseplane analysis"),
         icon("compass"), tags$style(".fa-compass {color:#E87722}")),
       left_menu = tagList(span(class = "help-button", icon("question-circle"),
-                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 10px; top: 13px; position: absolute;}"))),
-      tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
-              tags$style(".show-odes {font-size: 13px;
+                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
+        tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
+                tags$style(".show-odes {font-size: 13px;
                                       border-width:2px;
                                       width: 85px; height: 30px;
                                       text-indent: -8px;
-                                      left: 50px; top: 12px; position: absolute;}")),
+                                      left: 270px; top: 11px; position: fixed;}"))),
       titleWidth = 220,
       enable_rightsidebar = TRUE,
       rightSidebarIcon = "gears"

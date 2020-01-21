@@ -82,7 +82,7 @@
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
 #' @importFrom tools file_path_sans_ext
-#' @importFrom utils browseURL capture.output
+#' @importFrom utils browseURL capture.output unzip
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
   if (interactive()) {
@@ -498,7 +498,16 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
 
       # Show the manual
       observeEvent(input$helpClicked, {
-        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
+        # browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
+        oldwd <- getwd()
+        tempDir <- tempdir()
+        unlink(paste0(tempDir, "/manual"), recursive = TRUE)
+        dir.create(paste0(tempDir, "/manual"))
+        setwd(paste0(tempDir, "/manual"))
+        unzip(paste0(system.file("manual", package = "deBif"), "/deBif-manual.zip"))
+        setwd(oldwd)
+        htmlFile <- file.path(tempDir, "manual/index.html")
+        browseURL(paste0("file:/", htmlFile))
       })
 
       # Show the model

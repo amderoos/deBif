@@ -93,7 +93,7 @@
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
 #' @importFrom tools file_path_sans_ext
-#' @importFrom utils browseURL capture.output
+#' @importFrom utils browseURL capture.output unzip
 #' @export
 bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
@@ -587,11 +587,15 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
       # Show the manual
       observeEvent(input$helpClicked, {
-        browseURL(paste0(system.file("manual", package = "deBif"), "/index.html"))
-        # tempDir <- tempdir()
-        # file.copy(system.file("manual", package = "deBif"), tempDir, recursive=TRUE)
-        # htmlFile <- file.path(tempDir, "manual/index.html")
-        # rstudioapi::viewer(htmlFile, height="maximize")
+        oldwd <- getwd()
+        tempDir <- tempdir()
+        unlink(paste0(tempDir, "/manual"), recursive = TRUE)
+        dir.create(paste0(tempDir, "/manual"))
+        setwd(paste0(tempDir, "/manual"))
+        unzip(paste0(system.file("manual", package = "deBif"), "/deBif-manual.zip"))
+        setwd(oldwd)
+        htmlFile <- file.path(tempDir, "manual/index.html")
+        browseURL(paste0("file:/", htmlFile))
       })
 
       # Show the model
