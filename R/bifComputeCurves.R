@@ -463,15 +463,15 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         }
         if (curvetype == "EQ") {
           if (popts$ycol == 1) {
-            if (all(as.numeric(y[(2:(cData$statedim+1))]) < (as.numeric(popts$ymin) - bndtol))) {
-              msg <- "Computation halted:\nMinimum of y-axis domain reached for all y-axis variables\n"
+            if (any(as.numeric(y[(2:(cData$statedim+1))]) < (as.numeric(popts$ymin) - bndtol))) {
+              msg <- "Computation halted:\nMinimum of y-axis domain reached for one of the y-axis variables\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
               cData <- NULL
               break
             }
-            if (all(as.numeric(y[(2:(cData$statedim+1))]) > (as.numeric(popts$ymax) + bndtol))) {
-              msg <- "Computation halted:\nMaximum of y-axis domain reached for all y-axis variables\n"
+            if (any(as.numeric(y[(2:(cData$statedim+1))]) > (as.numeric(popts$ymax) + bndtol))) {
+              msg <- "Computation halted:\nMaximum of y-axis domain reached for one of the y-axis variables\n"
               if (!is.null(session)) updateConsoleLog(session, msg)
               else cat(msg)
               cData <- NULL

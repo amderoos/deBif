@@ -11,25 +11,33 @@ bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
   if (!is.null(curvelist) && (length(curvelist) > 0)) {
     lapply((1:length(curvelist)), function(i) {
       cnames <- colnames(curvelist[[i]]$points)
-      if (cnames[1] != popts$xlab) {
-        msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
-        if (!is.null(session)) updateConsoleLog(session, msg)
-        return(NA)
+      if (cnames[1] == popts$xlab) clx <- 1
+      else {
+        if (cnames[2] == popts$xlab) clx <- 2
+        else {
+          msg <- paste0("Curve plotting skipped: parameter '", popts$xlab, "' not one of the curve variables\n")
+          if (!is.null(session)) updateConsoleLog(session, msg)
+          return(NA)
+        }
       }
-      if (cnames[2] != popts$ylab) {
-        msg <- paste0("Curve plotting skipped: parameter '", popts$ylab, "' not one of the curve variables\n")
-        if (!is.null(session)) updateConsoleLog(session, msg)
-        return(NA)
+      if (cnames[1] == popts$ylab) cly <- 1
+      else {
+        if (cnames[2] == popts$ylab) cly <- 2
+        else {
+          msg <- paste0("Curve plotting skipped: parameter '", popts$ylab, "' not one of the curve variables\n")
+          if (!is.null(session)) updateConsoleLog(session, msg)
+          return(NA)
+        }
       }
       colindx <- match(curvelist[[i]]$type, c("BP", "HP", "LP"))
-      lines(curvelist[[i]]$points[,1], curvelist[[i]]$points[,2], col=popts$colors[colindx], lwd=popts$lwd)
+      lines(curvelist[[i]]$points[,clx], curvelist[[i]]$points[,cly], col=popts$colors[colindx], lwd=popts$lwd)
 
       if (!is.null(curvelist[[i]]$special.points)) {
         lbls <- c(curvelist[[i]]$special.tags[,1])
         bps <- (lbls %in% c("BT", "CP"))
         if (any(bps)) {
-          x <- curvelist[[i]]$special.points[bps,1]
-          y <- curvelist[[i]]$special.points[bps,2]
+          x <- curvelist[[i]]$special.points[bps,clx]
+          y <- curvelist[[i]]$special.points[bps,cly]
           points(x, y, pch=popts$bifsym, cex=popts$cex.sym, lwd=2)
           text(x, y, labels=lbls[bps], pos = popts$biflblpos)
         }
