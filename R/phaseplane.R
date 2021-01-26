@@ -276,7 +276,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       # Handle requests to save the plot as an image file
       output$saveplot <- downloadHandler(
         filename = function() {
-          tempfile(pattern = "Rplot", tmpdir = '', fileext = ".png")
+          tempfile(pattern = "Rplot", tmpdir = getwd(), fileext = ".png")
         },
         content = function(file) {
           curtab <- as.numeric(input$plottab)
