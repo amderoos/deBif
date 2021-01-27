@@ -197,6 +197,12 @@ phaseUI <- function(state, parms, plotopts, numopts) {
                     numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
                     numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
         selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod),
+        conditionalPanel(
+          condition = "input.plottab > 2",
+          sliderInput(inputId="ssgrid", label="Steady state search grid", min = 1, max = 50, step = 1, value=numopts$ssgrid)),
+        conditionalPanel(
+          condition = "input.plottab == 6",
+          sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 1, max = 10, step = 1, value=numopts$pgrid)),
         div(style="line-height: 12px !important", br()),
         actionButton("numoptsapply", "Apply", icon("refresh")
         )

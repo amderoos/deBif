@@ -8,6 +8,10 @@ phaseCheckNumSettings <- function(oldopts, inlist) {
       initnopts$tmax <- nlist$tmax
     if (("tstep" %in% names(nlist)) && is.numeric(nlist$tstep) && (nlist$tstep > 0))
       initnopts$tstep <- nlist$tstep
+    if (("ssgrid" %in% names(nlist)) && is.numeric(nlist$ssgrid))
+      initnopts$ssgrid <- min(max(nlist$ssgrid, 1), 50)
+    if (("pgrid" %in% names(nlist)) && is.numeric(nlist$pgrid))
+      initnopts$pgrid <- min(max(nlist$pgrid, 1), 10)
   }
   return(initnopts)
 }

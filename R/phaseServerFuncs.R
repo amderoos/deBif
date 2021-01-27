@@ -7,7 +7,7 @@ allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
   ymax <- as.numeric(plotopts$ymax)
   logx <- (as.numeric(plotopts$logx) == 1)
   logy <- (as.numeric(plotopts$logy) == 1)
-  grid <- numopts$grid
+  grid <- numopts$ssgrid
 
   # find a steady state
   gridy <- ifelse((length(state) > 1), grid, 1)
@@ -25,7 +25,7 @@ allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
         if (logy) state[ycol] <- 10^((j-1)*dy + dy/2 + log10(ymin))
         else state[ycol] <- (j-1)*dy + dy/2 + ymin
       }
-      q <- steady(y=state, func=odes, parms=parms)
+      q <- tryCatch(steady(y=state, func=odes, parms=parms))
       if (attr(q,"steady")) {
         equ <- q$y
         equ <- ifelse(abs(equ) < 1e-8, 0, equ)

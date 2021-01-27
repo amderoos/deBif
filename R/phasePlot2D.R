@@ -10,7 +10,7 @@ phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
   logy <- (as.numeric(plotopts$logy) == 1)
   xlab <- plotopts$xlab
   ylab <- plotopts$ylab
-  grid <- numopts$grid
+  grid <- numopts$pgrid
   eps  <- numopts$eps
   npixels <- numopts$npixels
 

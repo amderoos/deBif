@@ -160,6 +160,8 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
     nopts$tmax <- as.numeric(input[["tmax"]])
     nopts$tstep <- abs(as.numeric(input[["tstep"]]))
     nopts$odemethod <- input[["method"]]
+    if ("ssgrid" %in% names(input)) nopts$ssgrid <- min(max(input[["ssgrid"]], 1), 50)
+    if ("pgrid" %in% names(input)) nopts$pgrid <- min(max(input[["pgrid"]], 1), 10)
   }
   else {
     nopts$rtol <- max(text2numeric(nopts$rtol, input[["rtol"]]), 1.0E-10)

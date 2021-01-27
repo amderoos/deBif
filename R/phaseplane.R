@@ -94,7 +94,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
     parmsnames <- names(parms)
 
     # Initialize numerical options
-    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, grid=5, npixels=500)
+    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, pgrid=5, ssgrid=10, npixels=500)
 
     # Initialize options for plotting etc.
     initpopts <- vector(mode = "list", 2)
@@ -403,6 +403,8 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       # Apply newly entered numerical settings
       observeEvent(input$numoptsapply, {
         processNumOptionsApply(session, input, 1, numopts)
+
+        updatePlot(1)
 
         # Update the console log
         consoleLog(session$userData$alltext)
