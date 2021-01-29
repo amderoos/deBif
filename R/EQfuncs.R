@@ -89,17 +89,10 @@ initEQ <- function(state, parms, curveData, nopts, session = NULL) {
     v2 <- (-b22/(2*b12))*q1 + q2
     v2 <- v2/sqrt(sum(v2^2))
 
-    # Determine the relative change in the components and the index of the
-    # largest change Indices of zero elements of y. Ignore there relative change
-    indx0s <- (1:length(state))[abs(state) < as.numeric(nopts$iszero)]
-    dy <- abs(v2)/(pmax(abs(state), as.numeric(nopts$iszero)))
-    dy[indx0s] <- 0
-    # Index with maximum relative change
-    dyind <- which.max(dy)
-    dy <- as.numeric(nopts$stepsize)*v2
-    dyscaled <- max(abs(as.numeric(nopts$stepsize)*state[dyind]), as.numeric(nopts$minstepsize))*(dy/abs(dy[dyind]))
+    ############## Determine the new step along the curve (in bifUtils.R)
+    dyscaled <- setStepSize(state, v2, as.numeric(nopts$stepsize), as.numeric(nopts$minstepsize), as.numeric(nopts$iszero))
 
-    guess <- state + c(as.numeric(nopts$stepsize)*dyscaled)
+    guess <- state + dyscaled
 
     return(list(y = guess, tanvec = v2))
   } else return(list())

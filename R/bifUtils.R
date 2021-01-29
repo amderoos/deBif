@@ -61,3 +61,36 @@ converty2y <- function(y, ymin1, ymax1, logy1, ymin2, ymax2, logy2) {
   return(yval)
 }
 
+setStepSize <- function(y, tanvec, step, minstep, iszero) {
+  stepsize <- as.numeric(step)
+  minstepsize <- as.numeric(minstep)
+
+  ############## Take a default step along the curve
+  dy <- stepsize*tanvec
+
+  # Determine the relative change in the components and the index of the largest change
+  yabs <- abs(y)
+  indx0s <- (yabs < as.numeric(iszero))                     # Indices of zero elements of y. Ignore there relative change
+  yabs[indx0s] <- 1.0
+  dyrel <- abs(dy)/yabs
+  dyrel[indx0s] <- 0
+  dyind <- which.max(dyrel)                                 # Index with maximum relative change
+
+  # Compute the target step size as a percentage change equal to stepsize in the fastest changing y component
+  dyfinal <- max(abs(stepsize*y[dyind]), minstepsize) * (dy / abs(dy[dyind]))
+
+  # Original implementation:
+  # dyfinal <- max(abs(stepsize*y[dyind]), minstepsize) * (dy/abs(dy[dyind]))
+
+  # If the target step along the branch is smaller than stepsize * tangent, take the geometric mean of the two
+  # if (abs(dyfinal[dyind]) < abs(stepsize*tanvec[dyind])) {
+  #   dyfinal <- sqrt(abs((stepsize*tanvec[dyind]) * dyfinal[dyind]))  * (dyfinal / abs(dyfinal[dyind]))
+  # }
+
+  # The absolute minimum step size times the tangent is the minimum step along the branch
+  if (all(abs(dyfinal) < abs(minstepsize*tanvec))) dyfinal <- minstepsize*tanvec
+
+  if (any(is.infinite(dyfinal)) || any(is.na(dyfinal))) dyfinal <- dy
+
+  return(dyfinal)
+}

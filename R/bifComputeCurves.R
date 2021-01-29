@@ -422,18 +422,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       alltvs <- rbind(alltvs, (c(tvnew)[1:cData$pointdim]))
       if (curvetype != "LC") alleigs <- rbind(alleigs, c(eigval))
 
-      ############## Take a new step along the curve
-      # Determine the relative change in the components and the index of the largest change
-      indx0s <- (1:length(y))[abs(y) < as.numeric(nopts$iszero)]   # Indices of zero elements of y. Ignore there relative change
-      dy <- abs(tvnew)/(pmax(abs(y), as.numeric(nopts$iszero)))
-      dy[indx0s] <- 0
-      dyind <- which.max(dy)                      # Index with maximum relative change
-
-      dy <- as.numeric(nopts$stepsize)*tvnew
-
-      cData$dyscaled <- max(abs(as.numeric(nopts$stepsize)*y[dyind]), as.numeric(nopts$minstepsize))*(dy/abs(dy[dyind]))
-
-      if (any(is.infinite(cData$dyscaled)) || any(is.na(cData$dyscaled))) cData$dyscaled <- dy
+      ############## Determine the new step along the curve (in bifUtils.R)
+      cData$dyscaled <- setStepSize(y, tvnew, as.numeric(nopts$stepsize), as.numeric(nopts$minstepsize), as.numeric(nopts$iszero))
 
       cData$stepscalefac <- max(1, cData$stepscalefac/2)
       cData$guess <- y + cData$dyscaled/cData$stepscalefac
@@ -532,7 +522,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         else cat(msg)
         return(NULL)
       }
-      if (cData$stepscalefac > 4096) {
+      if (cData$stepscalefac > 32768) {
         msg <- "Step size too small\n"
         if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
