@@ -36,5 +36,6 @@ deBifExample <- function(example) {
 
   # find and launch the app
   appDir <- system.file("shiny-examples", paste0(example, ".R"), package = "deBif")
+  file.show(appDir)
   shiny::runApp(appDir, display.mode = "normal")
 }
