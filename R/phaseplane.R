@@ -52,6 +52,10 @@
 #' \preformatted{}
 #'               \code{tcl.len}:     Length of axes ticks (default 0.03)
 #'
+#' \preformatted{}
+#'               \code{saveplotas}:  Possible values: "pdf" or "png" (default).
+#'                                   Save plot to PDF or PNG file.
+#'
 #' @return None.
 #'
 #' @examples
@@ -78,10 +82,10 @@
 #' }
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
-#' @importFrom grDevices trans3d dev.off png
+#' @importFrom grDevices trans3d dev.off png pdf
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
-#' @importFrom tools file_path_sans_ext
+#' @importFrom tools file_path_sans_ext file_ext
 #' @importFrom utils browseURL capture.output unzip
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
@@ -105,7 +109,8 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
                              plotmar = c(5,5,4,4), lwd = 2, pch = 20, tcl.len = 0.03, theta = -35,
                              cex = 1.2, cex.lab = 1.25, cex.axis = 1, cex.legend = 1,
                              colors = c("red","blue","darkgreen","darkorange","darkmagenta", "gold","darkorchid",
-                                        "aquamarine","deeppink","gray",seq(2,991)))
+                                        "aquamarine","deeppink","gray",seq(2,991)),
+                             saveplotas = "png")
     }
     initpopts[[2]]$ycol <- 2
 
@@ -125,6 +130,9 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         for (j in 1:length(useropts)) {
           for (i in 1:length(initpopts)) initpopts[[i]][names(useropts)[j]] <- useropts[j]
         }
+      }
+      if (("saveplotas" %in% names(dots)) && ((dots["saveplotas"] == "png") || (dots["saveplotas"] == "pdf"))) {
+        for (i in 1:length(initpopts)) initpopts[[i]]["saveplotas"] <- dots["saveplotas"]
       }
     }
     initpopts[[1]]$xlab  <- "Time"
@@ -276,17 +284,24 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       # Handle requests to save the plot as an image file
       output$saveplot <- downloadHandler(
         filename = function() {
-          tempfile(pattern = "Rplot", tmpdir = getwd(), fileext = ".png")
+          tempfile(pattern = "Rplot", tmpdir = getwd(), fileext = paste0(".", initpopts[[1]]$saveplotas))
         },
         content = function(file) {
           curtab <- as.numeric(input$plottab)
           clist <- reactiveValuesToList(curveList)
           popts <- reactiveValuesToList(plotopts)
           nopts <- reactiveValuesToList(numopts)
-          pngfile <- paste0(tools::file_path_sans_ext(file), ".png")
-          png(pngfile,
-              height = setPlotHeight(session, input),
-              width = setPlotWidth(session, input))
+          filetype <- tools::file_ext(file)
+          destfile <- paste0(tools::file_path_sans_ext(file), ".", filetype)
+          if (filetype == "png") {
+            png(destfile,
+                height = setPlotHeight(session, input),
+                width = setPlotWidth(session, input))
+          } else {
+            pdf(file = destfile, onefile = T,
+                height = 7 * setPlotHeight(session, input) / setPlotWidth(session, input),
+                width = 7)
+          }
           if (curtab == 1) bifOrbitplot(session, clist$Orbits, popts$Orbits)
           else {
             if (length(curstate) == 1) {
@@ -310,8 +325,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
             }
           }
           dev.off()
-        },
-        contentType = "image/png")
+        })
 
       # Respond to a change in plot tabs
       observeEvent(input$plottab, {

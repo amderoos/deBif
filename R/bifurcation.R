@@ -63,6 +63,10 @@
 #'               \code{unstablelty}: Line style of curve section representing unstable
 #'                                   equilibrium points (default: 3 (refers to dotted lines))
 #'
+#' \preformatted{}
+#'               \code{saveplotas}:  Possible values: "pdf" or "png" (default).
+#'                                   Save plot to PDF or PNG file.
+#'
 #' @return None.
 #'
 #' @examples
@@ -89,10 +93,10 @@
 #' }
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
-#' @importFrom grDevices trans3d dev.off png
+#' @importFrom grDevices trans3d dev.off png pdf
 #' @importFrom shinyjs useShinyjs click removeClass html
 #' @importFrom stats setNames
-#' @importFrom tools file_path_sans_ext
+#' @importFrom tools file_path_sans_ext file_ext
 #' @importFrom utils browseURL capture.output unzip
 #' @export
 bifurcation <- function(model, state, parms, resume = TRUE, ...) {
@@ -111,7 +115,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
                       methods_run = as.character(formals(deSolve::ode)$method),
                       rtol = 1e-7, atol = 1e-9, ctol = 1e-8, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
                       maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-4, replotfreq = 10,
-                      ninterval = 10, glorder = 4, lcampl = 1.0E-6
+                      ninterval = 10, glorder = 4, lcampl = 1.0E-4
     )
 
     # Initialize options for plotting etc.
@@ -123,7 +127,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
                              lwd = 3, bifsym = 8, unstablelty = 3, tcl.len = 0.03, theta = -35,
                              cex = 1.2, cex.lab = 1.25, cex.axis = 1, cex.legend = 1, cex.sym = 1, biflblpos = 3,
                              colors = c("red","blue","darkgreen","darkorange","darkmagenta",
-                                        "gold","darkorchid","aquamarine","deeppink","gray",seq(2,991)))
+                                        "gold","darkorchid","aquamarine","deeppink","gray",seq(2,991)),
+                             saveplotas = "png")
     }
     initpopts[[1]]$xmax <- initnopts$tmax
     initpopts[[3]]$ycol <- 2
@@ -144,6 +149,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         for (j in 1:length(useropts)) {
           for (i in 1:length(initpopts)) initpopts[[i]][names(useropts)[j]] <- useropts[j]
         }
+      }
+      if (("saveplotas" %in% names(dots)) && ((dots["saveplotas"] == "png") || (dots["saveplotas"] == "pdf"))) {
+        for (i in 1:length(initpopts)) initpopts[[i]]["saveplotas"] <- dots["saveplotas"]
       }
     }
 
@@ -223,21 +231,27 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
       # Handle requests to save the plot as an image file
       output$saveplot <- downloadHandler(
         filename = function() {
-          tempfile(pattern = "Rplot", tmpdir = getwd(), fileext = ".png")
+          tempfile(pattern = "Rplot", tmpdir = getwd(), fileext = paste0(".", initpopts[[1]]$saveplotas))
         },
         content = function(file) {
           curtab <- as.numeric(isolate(input$plottab))
           curtabname <- curveListNames[curtab]
-          pngfile <- paste0(tools::file_path_sans_ext(file), ".png")
-          png(pngfile,
-              height = setPlotHeight(session, input),
-              width = setPlotWidth(session, input))
+          filetype <- tools::file_ext(file)
+          destfile <- paste0(tools::file_path_sans_ext(file), ".", filetype)
+          if (filetype == "png") {
+            png(destfile,
+                height = setPlotHeight(session, input),
+                width = setPlotWidth(session, input))
+          } else {
+            pdf(file = destfile, onefile = T,
+                height = 7 * setPlotHeight(session, input) / setPlotWidth(session, input),
+                width = 7)
+          }
           if (curtab == 1) bifOrbitplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else if (curtab == 2) bif1parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           else bif2parplot(session, curveList[[curtabname]], plotopts[[curtabname]])
           dev.off()
-        },
-        contentType = "image/png")
+        })
 
       # React to changes in curveList by updating the special point selection menu
       observe({

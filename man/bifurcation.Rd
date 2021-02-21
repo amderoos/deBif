@@ -62,7 +62,11 @@ bifurcation(model, state, parms, resume = TRUE, ...)
                                   the symbol marking the bifurcation point (default: 3)
 \preformatted{}
               \code{unstablelty}: Line style of curve section representing unstable
-                                  equilibrium points (default: 3 (refers to dotted lines))}
+                                  equilibrium points (default: 3 (refers to dotted lines))
+
+\preformatted{}
+              \code{saveplotas}:  Possible values: "pdf" or "png" (default).
+                                  Save plot to PDF or PNG file.}
 }
 \value{
 None.

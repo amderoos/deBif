@@ -51,7 +51,11 @@ phaseplane(model, state, parms, resume = TRUE, ...)
 \preformatted{}
               \code{cex}: Base font size (default 1.2)
 \preformatted{}
-              \code{tcl.len}:     Length of axes ticks (default 0.03)}
+              \code{tcl.len}:     Length of axes ticks (default 0.03)
+
+\preformatted{}
+              \code{saveplotas}:  Possible values: "pdf" or "png" (default).
+                                  Save plot to PDF or PNG file.}
 }
 \value{
 None.

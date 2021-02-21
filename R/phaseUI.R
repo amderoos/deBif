@@ -107,9 +107,9 @@ phaseUI <- function(state, parms, plotopts, numopts) {
       ),
       do.call(tabsetPanel, c(myTabs, id = "plottab")),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#saveplot { left: calc(100% - 125px); top: 108px; position: absolute;}"
+        "#saveplot { width: 105px; left: calc(100% - 125px); top: 107px; position: absolute;}"
       ))),
-      downloadButton("saveplot", label = "Save png"),
+      downloadButton("saveplot", label = paste0("Save ", plotopts[[1]]$saveplotas)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),

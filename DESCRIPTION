@@ -1,7 +1,7 @@
 Package: deBif
 Type: Package
 Title: Bifurcation Analysis of Ordinary Differential Equation Systems
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: c(person("Andre M.", "de Roos", email = "A.M.deRoos@uva.nl", role = c("aut", "cre")))
 Description: Performs bifurcation and phaseplane analysis of systems of ordinary differential equations. 
     The package allows for computation of equilibrium curves as a function of a single free parameter,
@@ -21,6 +21,6 @@ Imports: graphics,
          shinydashboard (>= 0.7), 
          shinydashboardPlus  (>= 0.7)
 Suggests: knitr, R.rsp, rmarkdown
-RoxygenNote: 7.0.1
+RoxygenNote: 7.1.1
 VignetteBuilder: R.rsp
 Depends: R (>= 4.0)
