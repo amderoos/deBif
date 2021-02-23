@@ -370,8 +370,10 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
 
       # React to selection of an initial point
       observeEvent(input$selectpoint1, {
-        curtab <- as.numeric(input$plottab)
-        curtabname <- curveListNames[curtab]
+        # In contrast to bifurcation() there is only a single button 'selectpoint1' and
+        # all curves are stored under the 'Orbits' element of curveList, hence curtab
+        # is always 1
+        curtab <- 1
         clist <- reactiveValuesToList(curveList)
         updateSelectedPoint(session, curtab, clist, as.numeric(input[[paste0('selectpoint', curtab)]]),
                             statenames, parmsnames)
