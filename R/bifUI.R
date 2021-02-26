@@ -363,7 +363,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
           splitLayout(cellWidths = c("45%", "55%"),
                       textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
                       textInput(inputId="neartol", label="Neighbourhood", value=sprintf("%.1E", numopts$neartol))),
-          textInput(inputId="jacdif", label="Jacobian pertubation", value=sprintf("%.1E", numopts$jacdif)),
+          textInput(inputId="jacdif", label="Jacobian perturbation", value=sprintf("%.1E", numopts$jacdif)),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
           splitLayout(cellWidths = c("45%", "55%"),
                       numericInput(inputId="stepsize", label="Target", value=numopts$stepsize),
