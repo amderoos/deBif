@@ -53,9 +53,6 @@ LPcontinuation <- function(state, parms, curveData, nopts, rhsval) {
   # This function is only called when curveData$freeparsdim == 2, in which case the
   # Jacobian equals the following square (n+2)x(n+2) matrix of partial
   # derivatives:
-  # This function is only called when curveData$freeparsdim == 2, in which case the
-  # Jacobian equals the following square (n+2)x(n+2) matrix of partial
-  # derivatives:
   #
   #           |dF1/dp1 dF1/dp2 dF1/dx1 ... dF1/dxn|
   #           |dF2/dp1 dF2/dp2 dF2/dx1 ... dF2/dxn|
