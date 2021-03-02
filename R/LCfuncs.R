@@ -125,8 +125,9 @@ initLC <- function(state, parms, curveData, nopts, session = NULL) {
       wpvec[j,] <- sval/denom
     }
 
-    cData$wi <- ncWeights(nopts$glorder)
-    cData$wt <- wghts
+    cData$wi  <- ncWeights(nopts$glorder)
+    cData$pwi <- matrix(cData$wi, nrow = cData$statedim, ncol = length(cData$wi), byrow = T)
+    cData$wt  <- wghts
     cData$wpvec <- wpvec
     cData$wp <- kronecker(t(wpvec), diag(cData$statedim))
 
