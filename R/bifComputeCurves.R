@@ -236,30 +236,51 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
   specialtags <- NULL
 
   while ((pntnr - cData$pntnr) < as.numeric(maxpoints)) {
-    res <- tryCatch(stode(cData$guess, time = 0, func = cData$extSys, parms = cData$fixedpars,
-                          rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol, jacfunc = cData$jacfun,
-                          maxiter = nopts$maxiter, verbose = verbose, curveData = cData, nopts = nopts),
-                    warning = function(e) {
-                      msg <- gsub(".*:", "Warning in rootSolve:", e)
-                      if (!is.null(session)) updateConsoleLog(session, msg)
-                      else cat(msg)
-                      return(NULL)
-                    },
-                    error = function(e) {
-                      msg <- gsub(".*:", "Error in rootSolve:", e)
-                      if (!is.null(session)) updateConsoleLog(session, msg)
-                      else cat(msg)
-                      return(NULL)
-                    })
-    # Solution found
+    if (nopts$deBifC) {
+      res <- tryCatch(.Call("deBif", curvetype, cData$model, cData$guess, cData$fixedpars, cData$tanvec,
+                            nopts$rtol, nopts$atol, nopts$atol, nopts$jacdif, nopts$maxiter, nopts$glorder, nopts$ninterval,
+                            cData[c("statedim", "finemeshdim", "upoldp", "wi", "wt", "wp", "wpvec")]),
+                      warning = function(e) {
+                        msg <- gsub(".*:", "Warning in deBif:", e)
+                        if (!is.null(session)) updateConsoleLog(session, msg)
+                        else cat(msg)
+                        return(NULL)
+                      },
+                      error = function(e) {
+                        msg <- gsub(".*:", "Error in deBif:", e)
+                        if (!is.null(session)) updateConsoleLog(session, msg)
+                        else cat(msg)
+                        return(NULL)
+                      })
+    } else {
+      res <- tryCatch(stode(cData$guess, time = 0, func = cData$extSys, parms = cData$fixedpars,
+                            rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol, jacfunc = cData$jacfun,
+                            maxiter = nopts$maxiter, verbose = verbose, curveData = cData, nopts = nopts),
+                      warning = function(e) {
+                        msg <- gsub(".*:", "Warning in rootSolve:", e)
+                        if (!is.null(session)) updateConsoleLog(session, msg)
+                        else cat(msg)
+                        return(NULL)
+                      },
+                      error = function(e) {
+                        msg <- gsub(".*:", "Error in rootSolve:", e)
+                        if (!is.null(session)) updateConsoleLog(session, msg)
+                        else cat(msg)
+                        return(NULL)
+                      })
+    }
     nonzeroyold <- (abs(cData$yold) > nopts$iszero)
-    if (!is.null(res) && !is.null(attr(res, "steady")) && attr(res, "steady") &&
+    if (!is.null(res) &&
         (max((cData$yold[nonzeroyold] - res$y[nonzeroyold])^2/cData$yold[nonzeroyold]^2) < nopts$neartol)) {
       y <- res$y
 
-      # Compute the Jacobian w.r.t. to free parameters (the first cData$freeparsdim
-      # columns) and the state variables
-      jac <- cData$jacfun(y=y, func=cData$extSys, parms=cData$fixedpars, pert = nopts$jacdif, curveData = cData, nopts = nopts)
+      if (!is.null(attr(res, "Jacobian"))) {
+        jac <- res$Jacobian
+      } else {
+        # Compute the Jacobian w.r.t. to free parameters (the first cData$freeparsdim
+        # columns) and the state variables
+        jac <- cData$jacfun(y=y, func=cData$extSys, parms=cData$fixedpars, pert = nopts$jacdif, curveData = cData, nopts = nopts)
+      }
 
       if (curvetype == "LC") {
         cData$upoldp <- updateRefSol(0, y, cData$fixedpars, cData, nopts)
@@ -272,19 +293,22 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         names(eigval) <- cData$eignames
       }
 
-      # Append the current tangent vector as the last row to the jacobian to
-      # preserve direction. See the matcont manual at
-      # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
-      # Notice that cData$jacfun returns a square matrix with NA values on the last row
-      jac[nrow(jac),] <- cData$tanvec
-      if (rcond(jac) > nopts$atol) {
-        tvnew <- solve(jac, c(rep(0, (length(cData$tanvec)-1)), 1))
-        tvnorm <- sqrt(sum(tvnew^2))
-        tvnew <- tvnew/tvnorm
-        names(tvnew) <- cData$tvnames
-        cData$tanvec <- tvnew
-      } else tvnew <- cData$tanvec
-
+      if (!is.null(attr(res, "tangent"))) {
+        cData$tanvec <- res$tangent
+      } else {
+        # Append the current tangent vector as the last row to the jacobian to
+        # preserve direction. See the matcont manual at
+        # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
+        # Notice that cData$jacfun returns a square matrix with NA values on the last row
+        jac[nrow(jac),] <- cData$tanvec
+        if (rcond(jac) > nopts$atol) {
+          tvnew <- solve(jac, c(rep(0, (length(cData$tanvec)-1)), 1))
+          tvnorm <- sqrt(sum(tvnew^2))
+          tvnew <- tvnew/tvnorm
+          names(tvnew) <- cData$tvnames
+          cData$tanvec <- tvnew
+        } else tvnew <- cData$tanvec
+      }
       ############## Execute the test functions and store the results
       if (!is.null(cData$analysefun)) {
         testvals <- cData$analysefun(state = y, parms = cData$fixedpars, cData, nopts, session = session)
@@ -423,7 +447,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       if (curvetype != "LC") alleigs <- rbind(alleigs, c(eigval))
 
       ############## Determine the new step along the curve (in bifUtils.R)
-      cData$dyscaled <- setStepSize(y, tvnew, as.numeric(nopts$stepsize), as.numeric(nopts$minstepsize), as.numeric(nopts$iszero))
+      cData$dyscaled <- setStepSize(y, tvnew, as.numeric(nopts$stepsize), as.numeric(nopts$minstepsize), as.numeric(nopts$ctol))
 
       cData$stepscalefac <- max(1, cData$stepscalefac/2)
       cData$guess <- y + cData$dyscaled/cData$stepscalefac
@@ -442,7 +466,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
 
       if (pntnr > 10) {
-        bndtol <- 0.0 # as.numeric(nopts$iszero)
+        bndtol <- as.numeric(nopts$iszero)
         if ((as.numeric(y[1]) < (as.numeric(popts$xmin) - bndtol)) ||
             (as.numeric(y[1]) > (as.numeric(popts$xmax) + bndtol))) {
           msg <- "Computation halted:\nMinimum or maximum of x-axis domain reached\n"

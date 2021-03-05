@@ -87,6 +87,12 @@ setStepSize <- function(y, tanvec, step, minstep, iszero) {
   #   dyfinal <- sqrt(abs((stepsize*tanvec[dyind]) * dyfinal[dyind]))  * (dyfinal / abs(dyfinal[dyind]))
   # }
 
+  # If the change in the first component (a bifurcation parameter) is non-zero enforce a minimum step size equal
+  # to minstepsize in that direction
+  if ((abs(dy[1]) > as.numeric(iszero)) && (abs(dyfinal[1]) < minstepsize)) {
+    dyfinal <- minstepsize * (dy / abs(dy[1]))
+  }
+
   # The absolute minimum step size times the tangent is the minimum step along the branch
   if (all(abs(dyfinal) < abs(minstepsize*tanvec))) dyfinal <- minstepsize*tanvec
 

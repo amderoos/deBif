@@ -3,7 +3,7 @@
 #' \code{bifurcation}
 #'
 #'
-#'   bifurcation(model, state, parms, resume = TRUE, ...)
+#'   bifurcation(model, state, parms, resume = TRUE, deBifC = TRUE, ...)
 #'
 #'
 #' @param   model  (function, required)
@@ -39,6 +39,12 @@
 #'               The program saves the curves computed during a session and the
 #'               numerical and plot settings of this last session in these global
 #'               variables 'deBifCurves' and 'deBifSettings'.
+#'
+#' @param   deBifC  (boolean, optional)
+#' \preformatted{}
+#'               If TRUE the program will use the C code for locating solutions.
+#'               Otherwise the program will use the rootSolve library for locating
+#'               solution.
 #'
 #' @param   ...  (optional arguments)
 #' \preformatted{}
@@ -91,6 +97,7 @@
 #'
 #' bifurcation(model, state, parms)
 #' }
+#' @useDynLib deBif
 #' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
 #' @importFrom grDevices trans3d dev.off png pdf
@@ -99,7 +106,7 @@
 #' @importFrom tools file_path_sans_ext file_ext
 #' @importFrom utils browseURL capture.output unzip
 #' @export
-bifurcation <- function(model, state, parms, resume = TRUE, ...) {
+bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) {
 
   if (interactive()) {
     if (length(unlist(model(0, state, parms))) != length(state))
@@ -113,7 +120,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     initnopts <- list(odemethod = "lsoda", tmax = 1000, tstep = 0.1,
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
-                      rtol = 1e-7, atol = 1e-9, ctol = 1e-8, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
+                      atol = 1e-7, rtol = 1e-9, ctol = 1e-8, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
                       maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-4, replotfreq = 10,
                       ninterval = 10, glorder = 4, lcampl = 1.0E-4
     )
@@ -139,6 +146,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
       initnopts <- bifCheckNumSettings(initnopts, inlist)
       initpopts <- bifCheckPlotSettings(initpopts, inlist, state, parms)
     }
+    initnopts$deBifC <- deBifC
 
     # Read options from the command line
     adjustableopts <- c("lwd", "cex", "tcl.len", "bifsym", "biflblpos", "unstablelty")
