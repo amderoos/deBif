@@ -24,7 +24,7 @@
     You should have received a copy of the GNU General Public License
     along with deBif. If not, see <http://www.gnu.org/licenses/>.
 
-    Last modification: AMdR - Mar 01, 2021
+    Last modification: AMdR - Mar 08, 2021
 ***/
 #ifndef CURVE
 #define CURVE
@@ -51,7 +51,7 @@
 #endif
 
 #ifndef JACOBIAN_MIN_STEP
-#define JACOBIAN_MIN_STEP         1.0E-6
+#define JACOBIAN_MIN_STEP         1.0E-5
 #endif
 
 static int                        FastNumerics = FASTNUMERICS;
@@ -117,7 +117,7 @@ int ErrorMsg(const char *msg)
 /*==================================================================================================================================*/
 
 int FindPoint(const int pntdim, const int freeparsdim, double *guess, double *tanvec,
-              double rtol, double atol, double ctol, const int max_iter, int *niter,
+              double rhstol, double vartol, const int max_iter, int *niter,
               int (*fnc)(double *, double *),
               int (jacfun)(const int, double *, const int, double *, int (*fnc)(double *, double *), int))
 
@@ -136,9 +136,8 @@ int FindPoint(const int pntdim, const int freeparsdim, double *guess, double *ta
  *                            to start the iteration from. The first element of
  *                            the vector is assumed to be non-adjustable parameter.
  *              tanvec      : Tangent vector along the solution curve.
- *              rtol        : Relative tolerance
- *              atol        : Absolute tolerance
- *              ctol        : Tolerance of consecutive update points
+ *              rhstol      : Tolerance for right-hand side of defining equations
+ *              vartol      : Tolerance for variable change
  *              max_iter    : Maximum stepnumber allowed in iteration.
  *              fnc         : Pointer to function specifying the system of
  *                            equations. The function must have a (double)
@@ -146,18 +145,6 @@ int FindPoint(const int pntdim, const int freeparsdim, double *guess, double *ta
  *                            in which to evaluate the system and a (double)
  *                            pointer as second argument, containing the
  *                            results after evaluation of the equations.
- *
- * The solver will control the vector e of estimated local errors in y, according
- * to an inequality of the form max-norm of ( e/ewt ) ≤ 1, where ewt is a vector
- * of positive error weights. The values of rtol and atol should all be non-negative.
- * The form of ewt is:
- *
- *            ewt = rtol x abs(y) + atol
- *
- * where multiplication of two vectors is element-by-element.
- *
- * In addition, the solver will stop if between two iterations, the maximal change in
- * the values of y is less than ctol.
  */
 
 {
@@ -216,25 +203,8 @@ int FindPoint(const int pntdim, const int freeparsdim, double *guess, double *ta
           break;
         }
 
-      dyconverged = ((dynorm/pntdim) < ctol);
-      // for (int ii = 0; ii < pntdim; ii++)
-      //   {
-      //     dyconverged = dyconverged && (dy[ii] < ctol * y[ii]);
-      //   }
-
-      // The point is always p0, (p1), y0, y1, ... yn, while the RHS
-      // is dy0dt, dy1dt, dy2dt, ..... dyndt, (B, HP, or LP condition)
-      // the parts in parenthesis only when freeparsdim > 1
-      // rhsconverged = TRUE;
-      // for (int ii = 0; ii < (rhsdim - (freeparsdim - 1)); ii++)                     // Skip the BP, HP, LP condition of freeparsdim > 1
-      //   {
-      //     rhsconverged = rhsconverged && (rhs[ii] < (rtol * y[ii + freeparsdim] + atol));
-      //   }
-      // // If freeparsdim > 1 measure the BP, HP, LP condition against the value of p1
-      // if (freeparsdim > 1)
-      //   rhsconverged = rhsconverged && (rhs[rhsdim - 1] < (rtol * y[1] + atol));
-
-      rhsconverged = ((rhsnorm/pntdim) < atol + rtol * ynorm);
+      dyconverged = ((dynorm/pntdim) < vartol);
+      rhsconverged = ((rhsnorm/pntdim) < rhstol);
       // The dimension of rhs is pntdim, for example in case of BP localisation or PGR calculations
       if (dyconverged && rhsconverged)
         {
@@ -310,6 +280,7 @@ int FindPoint(const int pntdim, const int freeparsdim, double *guess, double *ta
     }
 
   free(dBaseMem);
+  dBaseMem = NULL;
 
   return retcode;
 }
@@ -361,6 +332,7 @@ int TangentVec(const int pntdim, double *sol, double *JacExport, double *tanvec,
     {
       ErrorMsg("Norm overflow in curvedir");
       free(dBaseMem);
+      dBaseMem = NULL;
       return NORM_OVERFLOW;
     }
 
@@ -394,6 +366,7 @@ int TangentVec(const int pntdim, double *sol, double *JacExport, double *tanvec,
       memset((void *)tanvec, 0, pntdim*sizeof(double));
       tanvec[0] = 1.0;
       free(dBaseMem);
+      dBaseMem = NULL;
       return retcode;
     }
 
@@ -412,6 +385,7 @@ int TangentVec(const int pntdim, double *sol, double *JacExport, double *tanvec,
   for (int ii = 0; ii < pntdim; ii++) tanvec[ii] /= norm;
 
   free(dBaseMem);
+  dBaseMem = NULL;
 
   return SUCCES;
 }
@@ -629,6 +603,7 @@ int Jacobian(const int pntdim, double *pnt, const int fncdim, double *jac, int (
                 {
                   ErrorMsg("Right-hand side computation failed");
                   free(dBaseMem);
+                  dBaseMem = NULL;
                   return FAILURE;
                 }
             }
@@ -638,6 +613,7 @@ int Jacobian(const int pntdim, double *pnt, const int fncdim, double *jac, int (
                 {
                   ErrorMsg("Right-hand side computation failed");
                   free(dBaseMem);
+                  dBaseMem = NULL;
                   return FAILURE;
                 }
             }
@@ -652,6 +628,7 @@ int Jacobian(const int pntdim, double *pnt, const int fncdim, double *jac, int (
                     {
                       ErrorMsg("Right-hand side computation failed");
                       free(dBaseMem);
+                      dBaseMem = NULL;
                       return FAILURE;
                     }
                 }
@@ -661,21 +638,16 @@ int Jacobian(const int pntdim, double *pnt, const int fncdim, double *jac, int (
                     {
                       ErrorMsg("Right-hand side computation failed");
                       free(dBaseMem);
+                      dBaseMem = NULL;
                       return FAILURE;
                     }
                 }
             }
         }
-#if defined(MATLAB_MEX_FILE) || defined(OCTAVE_MEX_FILE) || defined(R_PACKAGE)
-      if (checkInterrupt())
-        {
-          free(dBaseMem);
-          return FAILURE;
-        }
-#endif
     }
 
   free(dBaseMem);
+  dBaseMem = NULL;
   return SUCCES;
 }
 
@@ -703,6 +675,7 @@ int Determinant(const int N, double *M, double *det, double *cond)
   if (iBaseMem == NULL)
     {
       free(dBaseMem);
+      dBaseMem = NULL;
       return ErrorMsg("Memory allocation error in Determinant()");
     }
 
@@ -751,6 +724,8 @@ int Determinant(const int N, double *M, double *det, double *cond)
 
   free(dBaseMem);
   free(iBaseMem);
+  dBaseMem = NULL;
+  iBaseMem = NULL;
 
   return retval;
 }
@@ -793,6 +768,7 @@ int SolveLinearSystem(const int N, double *A, double *B)
   if (iBaseMem == NULL)
     {
       free(dBaseMem);
+      dBaseMem = NULL;
       return ErrorMsg("Memory allocation error in SolveLinearSystem()");
     }
 
@@ -826,6 +802,8 @@ int SolveLinearSystem(const int N, double *A, double *B)
 
   free(dBaseMem);
   free(iBaseMem);
+  dBaseMem = NULL;
+  iBaseMem = NULL;
 
   return retval;
 }

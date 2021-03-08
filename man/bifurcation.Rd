@@ -4,7 +4,7 @@
 \alias{bifurcation}
 \title{Phaseplane analysis of a system of ODEs}
 \usage{
-bifurcation(model, state, parms, resume = TRUE, deBifC = TRUE, ...)
+bifurcation(model, state, parms, resume = TRUE, ...)
 }
 \arguments{
 \item{model}{(function, required)
@@ -41,12 +41,6 @@ bifurcation(model, state, parms, resume = TRUE, deBifC = TRUE, ...)
               numerical and plot settings of this last session in these global
               variables 'deBifCurves' and 'deBifSettings'.}
 
-\item{deBifC}{(boolean, optional)
-\preformatted{}
-              If TRUE the program will use the C code for locating solutions.
-              Otherwise the program will use the rootSolve library for locating
-              solution.}
-
 \item{...}{(optional arguments)
 \preformatted{}
               Additional arguments that can be included at the command line to tweak
@@ -81,7 +75,7 @@ None.
 \code{bifurcation}
 }
 \details{
-bifurcation(model, state, parms, resume = TRUE, deBifC = TRUE, ...)
+bifurcation(model, state, parms, resume = TRUE, ...)
 }
 \examples{
 \dontrun{

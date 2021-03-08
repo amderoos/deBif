@@ -22,7 +22,7 @@
     You should have received a copy of the GNU General Public License
     along with this software. If not, see <http://www.gnu.org/licenses/>.
 
-    Last modification: AMdR - Mar 01, 2021
+    Last modification: AMdR - Mar 08, 2021
 ***/
 #ifndef GLOBALS
 #define GLOBALS
@@ -136,7 +136,7 @@ EXTERN double                     Jacobian_Step;
 int                               ErrorMsg(const char *msg);
 int                               checkInterrupt();
 int                               FindPoint(const int pntdim, const int freeparsdim, double *guess, double *tanvec,
-                                            double rtol, double atol, double ctol, const int max_iter, int *niter,
+                                            double rhstol, double vartol, const int max_iter, int *niter,
                                             int (*fnc)(double *, double *),
                                             int (jacfun)(const int, double *, const int, double *, int (*fnc)(double *, double *), int));
 int                               Jacobian(const int pntdim, double *pnt, const int fncdim, double *jac,

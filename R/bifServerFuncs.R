@@ -164,10 +164,10 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
     if ("pgrid" %in% names(input)) nopts$pgrid <- min(max(input[["pgrid"]], 1), 10)
   }
   else {
-    nopts$rtol <- max(text2numeric(nopts$rtol, input[["rtol"]]), 1.0E-10)
-    updateTextInput(session, "rtol", value=sprintf("%.1E", nopts$rtol))
-    nopts$atol <- max(text2numeric(nopts$atol, input[["atol"]]), 1.0E-10)
-    updateTextInput(session, "atol", value=sprintf("%.1E", nopts$atol))
+    nopts$rhstol <- max(text2numeric(nopts$rhstol, input[["rhstol"]]), 1.0E-10)
+    updateTextInput(session, "rhstol", value=sprintf("%.1E", nopts$rhstol))
+    nopts$dytol <- max(text2numeric(nopts$dytol, input[["dytol"]]), 1.0E-10)
+    updateTextInput(session, "dytol", value=sprintf("%.1E", nopts$dytol))
     nopts$iszero <- max(text2numeric(nopts$iszero, input[["iszero"]]), 1.0E-10)
     updateTextInput(session, "iszero", value=sprintf("%.1E", nopts$iszero))
     nopts$neartol <- max(text2numeric(nopts$neartol, input[["neartol"]]), 1.0E-10)
@@ -175,8 +175,8 @@ processNumOptionsApply <- function(session, input, curtab, nopts) {
     nopts$jacdif <- max(text2numeric(nopts$jacdif, input[["jacdif"]]), 1.0E-10)
     updateTextInput(session, "jacdif", value=sprintf("%.1E", nopts$jacdif))
 
-    nopts$stepsize <- as.numeric(input[["stepsize"]])
     nopts$minstepsize <- max(as.numeric(input[["minstepsize"]]), 1.0E-10)
+    nopts$maxstepsize <- max(as.numeric(input[["maxstepsize"]]), nopts$minstepsize)
     nopts$maxiter <- max(as.numeric(input[["maxiter"]]), 1)
     nopts$maxpoints <- max(as.numeric(input[["maxpoints"]]), 1)
     nopts$replotfreq <- max(round(as.numeric(input[["replotfreq"]])), 1)

@@ -25,7 +25,7 @@
     You should have received a copy of the GNU General Public License
     along with deBif. If not, see <http://www.gnu.org/licenses/>.
 
-    Last modification: AMdR - Mar 01, 2021
+    Last modification: AMdR - Mar 08, 2021
 */
 
 #include "globals.h"
@@ -38,190 +38,6 @@
  *====================================================================================================================================
  */
 
-#if (defined(CMDLINEDEBUG))
-
-const int                         pntDim = 84, sysOdeDim = 2, freeparsdim = 1, glorder = 4, ninterval = 10, CDfinemeshdim = 41, MaxIter = 20;
-static int                        CurveType = LC;
-
-static double                     ATol = 1.0E-9, RTol = 1.0E-7, CTol = 1.0E-8;
-
-#define STARTPNT                  1
-#if (STARTPNT == 1)
-// This is the starting point from the HP in rosenzweig
-static double                     point[] = {0.12390952,
-                                             0.02867143,  0.10991672, 0.02867020, 0.10993486, 0.02866653, 0.10995255,
-                                             0.02866053, 0.10996937, 0.02865233, 0.10998489, 0.02864214, 0.10999872,
-                                             0.02863021, 0.11001054, 0.02861683, 0.11002005, 0.02860233, 0.11002702,
-                                             0.02858707, 0.11003126, 0.02857143, 0.11003269, 0.02855579, 0.11003126,
-                                             0.02854053, 0.11002702, 0.02852603, 0.11002005, 0.02851265, 0.11001054,
-                                             0.02850072, 0.10999872, 0.02849053, 0.10998489, 0.02848233, 0.10996937,
-                                             0.02847632, 0.10995255, 0.02847266, 0.10993486, 0.02847143, 0.10991672,
-                                             0.02847266, 0.10989857, 0.02847632, 0.10988088, 0.02848233, 0.10986406,
-                                             0.02849053, 0.10984855, 0.02850072, 0.10983471, 0.02851265, 0.10982289,
-                                             0.02852603, 0.10981338, 0.02854053, 0.10980641, 0.02855579, 0.10980217,
-                                             0.02857143, 0.10980074, 0.02858707, 0.10980217, 0.02860233, 0.10980641,
-                                             0.02861683, 0.10981338, 0.02863021, 0.10982289, 0.02864214, 0.10983471,
-                                             0.02865233, 0.10984855, 0.02866053, 0.10986406, 0.02866653, 0.10988088,
-                                             0.02867020, 0.10989857, 0.02867143, 0.10991672,
-                                             54.17611241};
-
-static double                     tanvec[] = { 0.000000e+00,
-                                               1.444861e-01,  2.414423e-10,  1.427073e-01,  2.621384e-02,  1.374145e-01,  5.178220e-02,
-                                               1.287381e-01,  7.607552e-02,  1.168917e-01,  9.849560e-02,  1.021671e-01,  1.184904e-01,
-                                               8.492681e-02,  1.355676e-01,  6.559533e-02,  1.493066e-01,  4.464867e-02,  1.593692e-01,
-                                               2.260261e-02,  1.655077e-01, -2.800177e-10,  1.675707e-01, -2.260261e-02,  1.655077e-01,
-                                              -4.464867e-02,  1.593692e-01, -6.559533e-02,  1.493066e-01, -8.492681e-02,  1.355676e-01,
-                                              -1.021671e-01,  1.184904e-01, -1.168917e-01,  9.849560e-02, -1.287381e-01,  7.607552e-02,
-                                              -1.374145e-01,  5.178220e-02, -1.427073e-01,  2.621384e-02, -1.444861e-01, -2.414423e-10,
-                                              -1.427073e-01, -2.621384e-02, -1.374145e-01, -5.178220e-02, -1.287381e-01, -7.607552e-02,
-                                              -1.168917e-01, -9.849560e-02, -1.021671e-01, -1.184904e-01, -8.492681e-02, -1.355676e-01,
-                                              -6.559533e-02, -1.493066e-01, -4.464867e-02, -1.593692e-01, -2.260261e-02, -1.655077e-01,
-                                               2.800177e-10, -1.675707e-01,  2.260261e-02, -1.655077e-01,  4.464867e-02, -1.593692e-01,
-                                               6.559533e-02, -1.493066e-01,  8.492681e-02, -1.355676e-01,  1.021671e-01, -1.184904e-01,
-                                               1.168917e-01, -9.849560e-02,  1.287381e-01, -7.607552e-02,  1.374145e-01, -5.178220e-02,
-                                               1.427073e-01, -2.621384e-02,  1.444861e-01,  2.414423e-10,
-                                               0.000000e+00};
-
-static double                     CDupoldp[] = {-1.938025e-09,  1.159770e+00,
-                                                -1.564345e-01,  1.145492e+00,
-                                                -3.090170e-01,  1.103007e+00,
-                                                -4.539905e-01,  1.033363e+00,
-                                                -5.877853e-01,  9.382740e-01,
-                                                -7.071068e-01,  8.200815e-01,
-                                                -8.090170e-01,  6.816960e-01,
-                                                -8.910065e-01,  5.265248e-01,
-                                                -9.510565e-01,  3.583888e-01,
-                                                -9.876883e-01,  1.814281e-01,
-                                                -1.000000e+00, -1.671042e-09,
-                                                -9.876883e-01, -1.814281e-01,
-                                                -9.510565e-01, -3.583888e-01,
-                                                -8.910065e-01, -5.265248e-01,
-                                                -8.090170e-01, -6.816960e-01,
-                                                -7.071068e-01, -8.200815e-01,
-                                                -5.877853e-01, -9.382740e-01,
-                                                -4.539905e-01, -1.033363e+00,
-                                                -3.090170e-01, -1.103007e+00,
-                                                -1.564345e-01, -1.145492e+00,
-                                                 1.938025e-09, -1.159770e+00,
-                                                 1.564345e-01, -1.145492e+00,
-                                                 3.090170e-01, -1.103007e+00,
-                                                 4.539905e-01, -1.033363e+00,
-                                                 5.877853e-01, -9.382740e-01,
-                                                 7.071068e-01, -8.200815e-01,
-                                                 8.090170e-01, -6.816960e-01,
-                                                 8.910065e-01, -5.265248e-01,
-                                                 9.510565e-01, -3.583888e-01,
-                                                 9.876883e-01, -1.814281e-01,
-                                                 1.000000e+00,  1.671042e-09,
-                                                 9.876883e-01,  1.814281e-01,
-                                                 9.510565e-01,  3.583888e-01,
-                                                 8.910065e-01,  5.265248e-01,
-                                                 8.090170e-01,  6.816960e-01,
-                                                 7.071068e-01,  8.200815e-01,
-                                                 5.877853e-01,  9.382740e-01,
-                                                 4.539905e-01,  1.033363e+00,
-                                                 3.090170e-01,  1.103007e+00,
-                                                 1.564345e-01,  1.145492e+00,
-                                                -1.938025e-09,  1.159770e+00};
-
-#elif (STARTPNT == 2)
-// This is the starting point for the LC number 66 starting from the HP in rosenzweig
-static double                     point[] = { 0.13186143,
-                                              0.05269729, 0.09623171, 0.05459896, 0.09957497, 0.05563825, 0.10319565, 0.05582370, 0.10701612, 0.05520802, 0.11095244,
-                                              0.05387226, 0.11491474, 0.05191043, 0.11880671, 0.04942278, 0.12252634, 0.04651215, 0.12596693, 0.04328328, 0.12901963,
-                                              0.03984294, 0.13157730, 0.03629951, 0.13354174, 0.03276100, 0.13483060, 0.02933147, 0.13538493, 0.02610472, 0.13517799,
-                                              0.02315737, 0.13421905, 0.02054403, 0.13255374, 0.01829543, 0.13025976, 0.01641908, 0.12743876, 0.01490553, 0.12420439,
-                                              0.01373451, 0.12067351, 0.01288091, 0.11695871, 0.01232133, 0.11316217, 0.01203774, 0.10937423, 0.01202001, 0.10567329,
-                                              0.01226715, 0.10212689, 0.01278846, 0.09879380, 0.01360326, 0.09572633, 0.01474045, 0.09297213, 0.01623671, 0.09057565,
-                                              0.01813375, 0.08857932, 0.02047048, 0.08702356, 0.02327381, 0.08594554, 0.02654627, 0.08537791, 0.03024804, 0.08534577,
-                                              0.03428362, 0.08586358, 0.03849582, 0.08693256, 0.04267469, 0.08853925, 0.04658020, 0.09065497, 0.04998315, 0.09323710,
-                                              0.05269729, 0.09623171,
-                                             56.05687471};
-
-static double                     tanvec[] = { 0.0041731514,
-                                               0.0079112818, -0.0038699427,  0.0084893444, -0.0030582381,  0.0087256846, -0.0021643494,
-                                               0.0086526044, -0.0012026157,  0.0083180474, -0.0001886375,  0.0077730010,  0.0008599207,
-                                               0.0070616052,  0.0019216841,  0.0062210097,  0.0029703525,  0.0052824604,  0.0039740028,
-                                               0.0042743467,  0.0048951538,  0.0032261007,  0.0056915607,  0.0021704154,  0.0063199598,
-                                               0.0011436418,  0.0067402310,  0.0001839419,  0.0069208225, -0.0006730296,  0.0068456886,
-                                              -0.0014003249,  0.0065180197, -0.0019840155,  0.0059609693, -0.0024247646,  0.0052144258,
-                                              -0.0027370140,  0.0043284633, -0.0029432930,  0.0033545527, -0.0030693343,  0.0023397827,
-                                              -0.0031399510,  0.0013229137, -0.0031752747,  0.0003321937, -0.0031898289, -0.0006132053,
-                                              -0.0031921242, -0.0015016426, -0.0031846404, -0.0023269750, -0.0031638662, -0.0030862033,
-                                              -0.0031197608, -0.0037775897, -0.0030350980, -0.0043991819, -0.0028847890, -0.0049477566,
-                                              -0.0026348831, -0.0054177347, -0.0022446391, -0.0058008628, -0.0016703991, -0.0060865848,
-                                              -0.0008735477, -0.0062626946,  0.0001655520, -0.0063171188,  0.0014314375, -0.0062400275,
-                                               0.0028627494, -0.0060259064,  0.0043543968, -0.0056744797,  0.0057725841, -0.0051910811,
-                                               0.0069897273, -0.0045854854,  0.0079112818, -0.0038699427,
-                                               0.9991182275};
-
-static double                     CDupoldp[] = {  0.091738925,  0.126042827,
-                                                  0.058325770,  0.138474570,
-                                                  0.024137031,  0.147946308,
-                                                 -0.008747712,  0.154208602,
-                                                 -0.038935729,  0.157018478,
-                                                 -0.065641196,  0.156135779,
-                                                 -0.088481775,  0.151319226,
-                                                 -0.107296668,  0.142357701,
-                                                 -0.122004610,  0.129113446,
-                                                 -0.132530838,  0.111583174,
-                                                 -0.138794223,  0.089967827,
-                                                 -0.140758543,  0.064740605,
-                                                 -0.138504654,  0.036691293,
-                                                 -0.132311764,  0.006927776,
-                                                 -0.122717673, -0.023195487,
-                                                 -0.110499456, -0.052224153,
-                                                 -0.096585910, -0.078787514,
-                                                 -0.081916728, -0.101775174,
-                                                 -0.067295261, -0.120468878,
-                                                 -0.053285841, -0.134555022,
-                                                 -0.040184665, -0.144076471,
-                                                 -0.028044899, -0.149336917,
-                                                 -0.016730133, -0.150773661,
-                                                 -0.005976690, -0.148864707,
-                                                  0.004556817, -0.144061514,
-                                                  0.015253578, -0.136751270,
-                                                  0.026513063, -0.127236626,
-                                                  0.038725097, -0.115739466,
-                                                  0.052235875, -0.102411731,
-                                                  0.067291800, -0.087356699,
-                                                  0.083953231, -0.070652176,
-                                                  0.101960971, -0.052399053,
-                                                  0.120590091, -0.032753056,
-                                                  0.138524995, -0.011953075,
-                                                  0.153827178,  0.009640996,
-                                                  0.164129642,  0.031554341,
-                                                  0.167093911,  0.053224164,
-                                                  0.161052655,  0.074052128,
-                                                  0.145588275,  0.093452477,
-                                                  0.121746728,  0.110921036,
-                                                  0.091738925,  0.126042827};
-#endif
-
-static double                     CDwi[] = {0.07777778, 0.35555556, 0.13333333, 0.35555556, 0.07777778};
-static double                     CDwt[] = { 0.52520833,  0.8078098, -0.508159,  0.2143279, -0.03918701,
-                                            -0.04082282,  0.6735161,  0.475506, -0.1283069,  0.02010762,
-                                             0.02010762, -0.1283069,  0.475506,  0.6735161, -0.04082282,
-                                            -0.03918701,  0.2143279, -0.508159,  0.8078098,  0.52520833};
-
-static double                     CDwpvec[] = {-5.4645619,  7.703378, -3.211852,  1.171819, -0.1987826,
-                                               -0.1119474, -4.530089,  5.542103, -1.046150,  0.1460829,
-                                               -0.1460829,  1.046150, -5.542103,  4.530089,  0.1119474,
-                                                0.1987826, -1.171819,  3.211852, -7.703378,  5.4645619};
-
-static double                     CDwpdt[] = {-5.4645619,  0.0000000, -0.1119474,  0.0000000, -0.1460829,  0.0000000,  0.1987826,  0.0000000,
-                                               0.0000000, -5.4645619,  0.0000000, -0.1119474,  0.0000000, -0.1460829,  0.0000000,  0.1987826,
-                                               7.7033780,  0.0000000, -4.5300890,  0.0000000,  1.0461500,  0.0000000, -1.1718190,  0.0000000,
-                                               0.0000000,  7.7033780,  0.0000000, -4.5300890,  0.0000000,  1.0461500,  0.0000000, -1.1718190,
-                                              -3.2118520,  0.0000000,  5.5421030,  0.0000000, -5.5421030,  0.0000000,  3.2118520,  0.0000000,
-                                               0.0000000, -3.2118520,  0.0000000,  5.5421030,  0.0000000, -5.5421030,  0.0000000,  3.2118520,
-                                               1.1718190,  0.0000000, -1.0461500,  0.0000000,  4.5300890,  0.0000000, -7.7033780,  0.0000000,
-                                               0.0000000,  1.1718190,  0.0000000, -1.0461500,  0.0000000,  4.5300890,  0.0000000, -7.7033780,
-                                              -0.1987826,  0.0000000,  0.1460829,  0.0000000,  0.1119474,  0.0000000,  5.4645619,  0.0000000,
-                                               0.0000000, -0.1987826,  0.0000000,  0.1460829,  0.0000000,  0.1119474,  0.0000000,  5.4645619};
-
-#else
-
 static int                        pntDim, sysOdeDim = 0, freeparsdim;
 static int                        CurveType;
 
@@ -232,9 +48,7 @@ static SEXP                       R_FixedPars;
 static long int                   N_Protected;
 
 static int                        glorder, ninterval, CDfinemeshdim;
-static double                     *CDupoldp = NULL, *CDwi = NULL, *CDwt = NULL, *CDwpvec = NULL, *CDwpdt = NULL;
-
-#endif
+static double                     *CDupoldp = NULL, *CDwi = NULL, *CDwt = NULL, *CDwpvec = NULL, *CDwp = NULL;
 
 static int                        dGlobalMemDim = 0;
 static double                     *dGlobalMem = NULL;
@@ -248,25 +62,6 @@ static int                        state0Dim, rhsDim, upsRows, upsCols, ficdmatRo
  *  Implementation of problem specification routines
  *====================================================================================================================================
  */
-
-#if (defined(CMDLINEDEBUG))
-
-int EQsystem(double *argument, double *result)
-
-{
-  double  K = argument[0];
-  double  R = argument[1];
-  double  C = argument[2];
-
-  double  r = 0.5, a = 5.0, h = 3.0, eps = 0.5, mu = 0.05;
-
-  result[0] = r * R * (1 - R/K) - a * R * C/(1 + a * h *R);
-  result[1] = eps * a * R * C/(1 + a * h * R) - mu * C;
-
-  return SUCCES;
-}
-
-#else
 
 int EQsystem(double *argument, double *result)
 
@@ -293,7 +88,6 @@ int EQsystem(double *argument, double *result)
   return SUCCES;
 }
 
-#endif
 
 /*==================================================================================================================================*/
 
@@ -437,6 +231,7 @@ int BPcondition(const int pntdim, double *y, int (*fnc)(double *, double *), int
   res[resindx++] = dot(sysOdeDim, evec, evec) - 1;
 
   free(dBaseMem);
+  dBaseMem = NULL;
 
   return retcode;
 }
@@ -509,10 +304,12 @@ int HPcondition(const int pntdim, double *y, int (*fnc)(double *, double *), int
     {
       ErrorMsg("Failed to compute determinant of bialternate matrix product in HPcondition()");
       free(dBaseMem);
+      dBaseMem = NULL;
       return retcode;
     }
 
   free(dBaseMem);
+  dBaseMem = NULL;
 
   return retcode;
 }
@@ -618,6 +415,7 @@ int LPcondition(const int pntdim, double *y, int (*fnc)(double *, double *), con
   res[resindx++] = dot(sysOdeDim, pv, pv) - 1;
 
   free(dBaseMem);
+  dBaseMem = NULL;
 
   return SUCCES;
 }
@@ -625,31 +423,33 @@ int LPcondition(const int pntdim, double *y, int (*fnc)(double *, double *), con
 
 /*==================================================================================================================================*/
 
-static void ExtSystemLCblockjac(double *xp, double *state0, double lcperiod, double *partjacout)
+static void ExtSystemLCblockjac(double *xp, double *state0, double lcperiod, double *partjacout, int method)
 
 // ExtSystemLCblockjac <- function(xp, state, parms, curveData, nopts = NULL) {
 
 {
-  int                             CDwpdtRows  = (sysOdeDim * (glorder + 1));
-  int                             CDwpdtCols  = (sysOdeDim * (glorder));
+  int                             CDwpRows  = (sysOdeDim * (glorder + 1));
+  int                             CDwpCols  = (sysOdeDim * (glorder));
   double                          *sysjac;
 
   sysjac = blockjac + sysOdeDim;
 
   /* The first term on the right-hand side of the blockjac assignment below amounts to a direct copy
-   * of CDwpdt into rows 1..(1 + CDwpdtRows) of partjac
+   * of CDwp into rows 1..(1 + CDwpRows) of partjac
    *
    *   wploc = curveData$wp/dt;
    *   blockjac[range1,1+(1:(jaccol-2))] <- wploc[range1,] - state["LCperiod"]*fastkron(glorder, sysOdeDim, t(CDwt[,j]), sysjac)
    */
-  memcpy(partjacout + partjacCols, CDwpdt, (CDwpdtRows * CDwpdtCols) * sizeof(double));
+  double dt = 1.0 / ninterval;
+
+  for (int ii = 0; ii < (CDwpRows * CDwpCols); ii++) partjacout[partjacCols + ii] = CDwp[ii] / dt;
 
   // Evaluate function value on each collocation point
   for (int ii = 0; ii < glorder; ii++)
     {
       memcpy(state0 + 1, xp + ii * sysOdeDim, sysOdeDim * sizeof(double));
       memset(blockjac, 0, (blockjacRows * blockjacCols) * sizeof(double));
-      Jacobian((freeparsdim + sysOdeDim), state0, sysOdeDim, blockjac, EQsystem, FORWARD);
+      Jacobian((freeparsdim + sysOdeDim), state0, sysOdeDim, blockjac, EQsystem, method);
 
       // Derivatives w.r.t. the bifurcation parameter in first row
       memcpy(partjacout + (ii * sysOdeDim), blockjac, sysOdeDim * sizeof(double));
@@ -676,6 +476,7 @@ static void ExtSystemLCblockjac(double *xp, double *state0, double lcperiod, dou
 }
 
 
+/*==================================================================================================================================*/
 
 static int ExtSystemLCjac(const int pntdim, double *y, const int fncdim, double *fulljac, int (*fnc)(double *, double *), int method)
 
@@ -740,7 +541,7 @@ static int ExtSystemLCjac(const int pntdim, double *y, const int fncdim, double 
 
       // partjac <- ExtSystemLCblockjac(xp, state0, parms, curveData, nopts)
       memset(partjac, 0, (partjacRows * partjacCols) * sizeof(double));
-     ExtSystemLCblockjac(xp, state0, LCperiod, partjac);
+     ExtSystemLCblockjac(xp, state0, LCperiod, partjac, method);
 
       // The derivative w.r.t. the bifurcation parameter
       memcpy(fulljac + ii * partjacCols, partjac, partjacCols * sizeof(double));
@@ -772,6 +573,9 @@ static int ExtSystemLCjac(const int pntdim, double *y, const int fncdim, double 
 
   return SUCCES;
 }
+
+
+/*==================================================================================================================================*/
 
 static int LCcondition(double *argument, double *result)
 
@@ -868,110 +672,14 @@ int AllEquations(double *argument, double *result)
 
 /*==================================================================================================================================*/
 
-#if (defined(CMDLINEDEBUG))
-
-int main(int argc, char **argv)
-{
-  int matsize = ((sysOdeDim * (glorder + 1)) * (sysOdeDim * glorder));
-
-  // Elements of curveData$wp are only used in ExtSystemLCblockjac and
-  // all divided by dt = 1.0 / ninterval. Take care of that multiplication here
-  for (int ii = 0; ii < matsize; ii++) CDwpdt[ii] *= ninterval;
-
-  // Allocate the global memory
-  state0Dim    = freeparsdim + sysOdeDim + 1;
-  rhsDim       = sysOdeDim;
-  upsRows      = CDfinemeshdim;
-  upsCols      = sysOdeDim;
-  ficdmatRows  = ninterval;
-  ficdmatCols  = glorder+1;
-  ficdDim      = CDfinemeshdim;
-  xpRows       = glorder;
-  xpCols       = sysOdeDim;
-  tRows        = glorder;
-  tCols        = sysOdeDim;
-  blockjacRows = freeparsdim + sysOdeDim;
-  blockjacCols = sysOdeDim;
-  partjacRows  = sysOdeDim * (glorder+1) + freeparsdim + 1;
-  partjacCols  = sysOdeDim * glorder;
-  icDim        = pntDim;
-
-  dGlobalMemDim  = 0;
-  dGlobalMemDim += state0Dim;
-  dGlobalMemDim += rhsDim;
-  dGlobalMemDim += upsRows      * upsCols;
-  dGlobalMemDim += ficdmatRows  * ficdmatCols;
-  dGlobalMemDim += ficdDim;
-  dGlobalMemDim += xpRows       * xpCols;
-  dGlobalMemDim += tRows        * tCols;
-  dGlobalMemDim += blockjacRows * blockjacCols;
-  dGlobalMemDim += partjacRows  * partjacCols;
-  dGlobalMemDim += icDim;
-
-  state0 = dGlobalMem = calloc(dGlobalMemDim, sizeof(double));
-  if (!dGlobalMem)
-    {
-      ErrorMsg("Memory allocation error in deBif()");
-      return 1;
-    }
-
-  rhs       = state0    + state0Dim;
-  ups       = rhs       + rhsDim;
-  ficdmat   = ups       + upsRows      * upsCols;
-  ficd      = ficdmat   + ficdmatRows  * ficdmatCols;
-  xp        = ficd      + ficdDim;
-  t         = xp        + xpRows       * xpCols;
-  blockjac  = t         + tRows        * tCols;
-  partjac   = blockjac  + blockjacRows * blockjacCols;
-  ic        = partjac   + partjacRows  * partjacCols;
-
-  Jacobian_Step = 1.0E-4;
-  int nIter = MaxIter;
-
-  int retcode = FindPoint(pntDim, freeparsdim, point, tanvec, RTol, ATol, CTol, MaxIter, &nIter, LCcondition, ExtSystemLCjac);
-
-  if (retcode == SUCCES)
-    ErrorMsg("FindPoint: Succes!");
-  else
-    ErrorMsg("FindPoint: Error!");
-
-  double                          fulljac[pntDim * pntDim];
-
-  retcode = TangentVec(pntDim, point, fulljac, tanvec, LCcondition, ExtSystemLCjac, NULL);
-
-  if (retcode == SUCCES)
-    ErrorMsg("TangentVec: Succes!");
-  else
-    ErrorMsg("TangentVec: Error!");
-
-  for (int ii = 0; ii < pntDim; ii++)
-    printf("%E, ", tanvec[ii]);
-  printf("\n");
-
-  ExtSystemLCjac(pntDim, point, pntDim - 1, fulljac, EQsystem, FORWARD);
-
-  if (retcode == SUCCES)
-    ErrorMsg("ExtSystemLCjac: Succes!");
-  else
-    ErrorMsg("ExtSystemLCjac: Error!");
-
-  free(dGlobalMem);
-
-  return 0;
-}
-
-#else
-
-/*==================================================================================================================================*/
-
 SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP tanVec,
-           SEXP rTol, SEXP aTol, SEXP cTol, SEXP jacStep, SEXP maxIter, SEXP glOrder, SEXP nInterval, SEXP cData)
+           SEXP rhsTol, SEXP varTol, SEXP jacStep, SEXP maxIter, SEXP glOrder, SEXP nInterval, SEXP cData)
 
 {
   int                             MaxIter, retcode = FAILURE, listel = 0, nIter = 10;
-  double                          RTol, ATol, CTol;
+  double                          RhsTol, VarTol;
   double                          *dBaseMem, *point, *tanvec, *JacExport, *dblPnt;
-  SEXP                            outputList = R_NilValue, nms, outputListEl[3], R_VarNames;
+  SEXP                            outputList = R_NilValue, nms, outputListEl[4], R_VarNames;
   SEXP                            R_VarNamesLC, R_cDataNames;
 
   N_Protected = 0L;
@@ -995,9 +703,8 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
 
   //============================== Process the numerical option argument =============================================================
 
-  RTol          = asReal(rTol);
-  ATol          = asReal(aTol);
-  CTol          = asReal(cTol);
+  RhsTol        = asReal(rhsTol);
+  VarTol        = asReal(varTol);
   Jacobian_Step = asReal(jacStep);
   MaxIter       = asInteger(maxIter);
   glorder       = asInteger(glOrder);
@@ -1097,7 +804,8 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
         {
           ErrorMsg("Memory allocation error in deBif()");
           free(dBaseMem);
-
+          dBaseMem = NULL;
+          dGlobalMem = NULL;
           return outputList;
         }
 
@@ -1115,7 +823,7 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
       CDwi      = CDupoldp  + (pntDim - 2);
       CDwt      = CDwi      + (glorder + 1);
       CDwpvec   = CDwt      + ((glorder) * (glorder + 1));
-      CDwpdt    = CDwpvec   + ((glorder) * (glorder + 1));
+      CDwp      = CDwpvec   + ((glorder) * (glorder + 1));
 
       for (int ii = 0, nset = 0; ii < ncols; ii++)
         {
@@ -1143,11 +851,7 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
           else if (strcmp(optname, "wp") == 0)
             {
               int matsize = ((sysOdeDim * (glorder + 1)) * (sysOdeDim * glorder));
-              memcpy(CDwpdt, REAL(VECTOR_ELT(cData, ii)), matsize * sizeof(double));
-
-              // Elements of curveData$wp are only used in ExtSystemLCblockjac and
-              // all divided by dt = 1.0 / ninterval. Take care of that multiplication here
-              for (int ii = 0; ii < matsize; ii++) CDwpdt[ii] *= ninterval;
+              memcpy(CDwp, REAL(VECTOR_ELT(cData, ii)), matsize * sizeof(double));
               nset++;
             }
           if (nset == 5) break;
@@ -1190,11 +894,11 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
   retcode = FAILURE;
   if (CurveType == LC)
     {
-        retcode = FindPoint(pntDim, freeparsdim, point, tanvec, RTol, ATol, CTol, MaxIter, &nIter, LCcondition, ExtSystemLCjac);
+      retcode = FindPoint(pntDim, freeparsdim, point, tanvec, RhsTol, VarTol, MaxIter, &nIter, LCcondition, ExtSystemLCjac);
     }
   else
     {
-      retcode = FindPoint(pntDim, freeparsdim, point, tanvec, RTol, ATol, CTol, MaxIter, &nIter, AllEquations, Jacobian);
+      retcode = FindPoint(pntDim, freeparsdim, point, tanvec, RhsTol, VarTol, MaxIter, &nIter, AllEquations, Jacobian);
     }
 
   //============================= Return the solution point =========================================================================
@@ -1256,9 +960,9 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
       switch (listel)
         {
           case 4:
-            SET_STRING_ELT(nms, 2, mkChar("Jacobian"));
+            SET_STRING_ELT(nms, 3, mkChar("Jacobian"));
           case 3:
-            SET_STRING_ELT(nms, 1, mkChar("tangent"));
+            SET_STRING_ELT(nms, 2, mkChar("tanvec"));
           case 2:
             SET_STRING_ELT(nms, 1, mkChar("niter"));
           default:
@@ -1273,8 +977,8 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
 
   if (dGlobalMem) free(dGlobalMem);
   free(dBaseMem);
+  dBaseMem = NULL;
+  dGlobalMem = NULL;
 
   return outputList;
 }
-
-#endif

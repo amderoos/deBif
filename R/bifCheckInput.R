@@ -8,20 +8,20 @@ bifCheckNumSettings <- function(oldopts, inlist) {
       initnopts$tmax <- nlist$tmax
     if (("tstep" %in% names(nlist)) && is.numeric(nlist$tstep) && (nlist$tstep > 0))
       initnopts$tstep <- nlist$tstep
-    if (("rtol" %in% names(nlist)) && is.numeric(nlist$rtol) && (nlist$rtol > 0) && (nlist$rtol < 1) )
-      initnopts$rtol <- nlist$rtol
-    if (("atol" %in% names(nlist)) && is.numeric(nlist$atol) && (nlist$atol > 0) && (nlist$atol < 1) )
-      initnopts$atol <- nlist$atol
+    if (("rhstol" %in% names(nlist)) && is.numeric(nlist$rhstol) && (nlist$rhstol > 0) && (nlist$rhstol < 1) )
+      initnopts$rhstol <- nlist$rhstol
+    if (("dytol" %in% names(nlist)) && is.numeric(nlist$dytol) && (nlist$dytol > 0) && (nlist$dytol < 1) )
+      initnopts$dytol <- nlist$dytol
     if (("neartol" %in% names(nlist)) && is.numeric(nlist$neartol) && (nlist$neartol > 0) && (nlist$neartol < 1) )
       initnopts$neartol <- nlist$neartol
     if (("iszero" %in% names(nlist)) && is.numeric(nlist$iszero) && (nlist$iszero > 0) && (nlist$iszero < 1) )
       initnopts$iszero <- nlist$iszero
     if (("jacdif" %in% names(nlist)) && is.numeric(nlist$jacdif) && (nlist$jacdif > 0) && (nlist$jacdif < 1) )
       initnopts$jacdif <- nlist$jacdif
-    if (("stepsize" %in% names(nlist)) && is.numeric(nlist$stepsize) && (nlist$stepsize > 0))
-      initnopts$stepsize <- nlist$stepsize
     if (("minstepsize" %in% names(nlist)) && is.numeric(nlist$minstepsize) && (nlist$minstepsize > 0))
       initnopts$minstepsize <- nlist$minstepsize
+    if (("maxstepsize" %in% names(nlist)) && is.numeric(nlist$maxstepsize) && (nlist$maxstepsize > initnopts$minstepsize))
+      initnopts$maxstepsize <- nlist$maxstepsize
     if (("maxiter" %in% names(nlist)) && is.numeric(nlist$maxiter) && (nlist$maxiter > 0))
       initnopts$maxiter <- as.integer(nlist$maxiter)
     if (("maxpoints" %in% names(nlist)) && is.numeric(nlist$maxpoints) && (nlist$maxpoints > 0))
@@ -114,7 +114,7 @@ bifCheckInputCurves <- function(oldcurves, inlist, snames, pnames) {
       for (i in (1:length(nlist))) {
         if (nlist[[i]]$type == "EQ") {
           if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
-                    "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
+                    "tanvec", "special.points", "special.eigvals", "special.tanvec", "special.tags") %in% names(nlist[[i]]))
               && (ncol(nlist[[i]]$points) == (length(snames)+1))
               && ((colnames(nlist[[i]]$points))[1] %in% pnames)
               && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
@@ -124,7 +124,7 @@ bifCheckInputCurves <- function(oldcurves, inlist, snames, pnames) {
         }
         if (nlist[[i]]$type == "LC") {
           if (all(c("label", "type", "initstate", "parameters", "bifpars", "points",
-                    "tangent", "special.points", "special.tangent", "special.tags") %in% names(nlist[[i]]))
+                    "tanvec", "special.points", "special.tanvec", "special.tags") %in% names(nlist[[i]]))
               && ((colnames(nlist[[i]]$points))[1] %in% pnames)
               && all(colnames(nlist[[i]]$points)[2:(length(snames)+1)] == snames)) {
             clist$BifurcationCurves[[length((clist$BifurcationCurves))+1]] <- nlist[[i]]
@@ -137,7 +137,7 @@ bifCheckInputCurves <- function(oldcurves, inlist, snames, pnames) {
       nlist <- inlist$BifurcationBounds
       for (i in (1:length(nlist))) {
         if (all(c("label", "type", "initstate", "parameters", "bifpars", "points", "eigvals",
-                  "tangent", "special.points", "special.eigvals", "special.tangent", "special.tags") %in% names(nlist[[i]]))
+                  "tanvec", "special.points", "special.eigvals", "special.tanvec", "special.tags") %in% names(nlist[[i]]))
             && (ncol(nlist[[i]]$points) == (length(snames)+2))
             && all((colnames(nlist[[i]]$points))[1:2] %in% pnames)
             && all(colnames(nlist[[i]]$points)[3:(length(snames)+2)] == snames))

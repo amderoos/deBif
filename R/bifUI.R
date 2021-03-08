@@ -281,13 +281,13 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #y2max{height: 30px}
               #tmax{height: 30px}
               #tstep{height: 30px}
-              #rtol{height: 30px}
-              #atol{height: 30px}
+              #rhstol{height: 30px}
+              #dytol{height: 30px}
               #neartol{height: 30px}
               #iszero{height: 30px}
               #jacdif{height: 30px}
-              #stepsize{height: 30px}
               #minstepsize{height: 30px}
+              #maxstepsize{height: 30px}
               #maxiter{height: 30px}
               #maxpoints{height: 30px}
               #replotfreq{height: 30px}
@@ -358,16 +358,16 @@ bifUI <- function(state, parms, plotopts, numopts) {
           h4("Curve continuation"),
           div(style="font-size: 18px; line-height: 0px; margin-top: 20px; margin-bottom: 12px; !important", ("Tolerances")),
           splitLayout(cellWidths = c("45%", "55%"),
-                      textInput(inputId="rtol", label="Relative", value=sprintf("%.1E", numopts$rtol)),
-                      textInput(inputId="atol", label="Absolute", value=sprintf("%.1E", numopts$atol))),
+                      textInput(inputId="rhstol", label="Function", value=sprintf("%.1E", numopts$rhstol)),
+                      textInput(inputId="dytol", label="Variable", value=sprintf("%.1E", numopts$dytol))),
           splitLayout(cellWidths = c("45%", "55%"),
                       textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
                       textInput(inputId="neartol", label="Neighbourhood", value=sprintf("%.1E", numopts$neartol))),
           textInput(inputId="jacdif", label="Jacobian perturbation", value=sprintf("%.1E", numopts$jacdif)),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
-          splitLayout(cellWidths = c("45%", "55%"),
-                      numericInput(inputId="stepsize", label="Target", value=numopts$stepsize),
-                      numericInput(inputId="minstepsize", label="Minimum", value=numopts$minstepsize)),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="minstepsize", label="Minimum", value=sprintf("%.1E", numopts$minstepsize)),
+                      numericInput(inputId="maxstepsize", label="Maximum", value=sprintf("%.1E", numopts$maxstepsize))),
           div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Iterations")),
           numericInput(inputId="maxiter", label="Maximum iterations", value=numopts$maxiter),
           numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),

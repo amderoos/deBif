@@ -3,7 +3,7 @@
 #' \code{bifurcation}
 #'
 #'
-#'   bifurcation(model, state, parms, resume = TRUE, deBifC = TRUE, ...)
+#'   bifurcation(model, state, parms, resume = TRUE, ...)
 #'
 #'
 #' @param   model  (function, required)
@@ -39,12 +39,6 @@
 #'               The program saves the curves computed during a session and the
 #'               numerical and plot settings of this last session in these global
 #'               variables 'deBifCurves' and 'deBifSettings'.
-#'
-#' @param   deBifC  (boolean, optional)
-#' \preformatted{}
-#'               If TRUE the program will use the C code for locating solutions.
-#'               Otherwise the program will use the rootSolve library for locating
-#'               solution.
 #'
 #' @param   ...  (optional arguments)
 #' \preformatted{}
@@ -106,7 +100,7 @@
 #' @importFrom tools file_path_sans_ext file_ext
 #' @importFrom utils browseURL capture.output unzip
 #' @export
-bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) {
+bifurcation <- function(model, state, parms, resume = TRUE, ...) {
 
   if (interactive()) {
     if (length(unlist(model(0, state, parms))) != length(state))
@@ -120,9 +114,9 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
     initnopts <- list(odemethod = "lsoda", tmax = 1000, tstep = 0.1,
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
-                      atol = 1e-7, rtol = 1e-9, ctol = 1e-8, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
-                      maxpoints = 500, iszero = 1.0E-5, stepsize = 0.01, minstepsize = 1.0E-4, replotfreq = 10,
-                      ninterval = 10, glorder = 4, lcampl = 1.0E-4
+                      rhstol = 1e-7, dytol = 1e-7, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
+                      maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-6, maxstepsize = 0.1,
+                      replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-2
     )
 
     # Initialize options for plotting etc.
@@ -146,7 +140,6 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
       initnopts <- bifCheckNumSettings(initnopts, inlist)
       initpopts <- bifCheckPlotSettings(initpopts, inlist, state, parms)
     }
-    initnopts$deBifC <- deBifC
 
     # Read options from the command line
     adjustableopts <- c("lwd", "cex", "tcl.len", "bifsym", "biflblpos", "unstablelty")
@@ -327,7 +320,6 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
           } else {
             if (curtabname == 'BifurcationCurves') curvetype <- input$curvetype2
             else if (curtabname == 'BifurcationBounds') curvetype <- input$curvetype3
-            numopts$stepsize <- as.numeric(curveDirection())*abs(numopts$stepsize)
 
             # Get the starting point
             if (pointid > 0) {
@@ -342,7 +334,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
               inittype <- clist[[cln1]][[ind2]]$special.tags[ind3, "Type"]
               if (inittype != "TS")
                 initparms[as.numeric(clist[[cln1]][[ind2]]$bifpars)] <- as.numeric(clist[[cln1]][[ind2]]$special.points[ind3, (1:ii)])
-              inittanvec <- clist[[cln1]][[ind2]]$tangent[ind3,]
+              inittanvec <- clist[[cln1]][[ind2]]$tanvec[ind3,]
               } else {
               initstate <- state
               initparms <- parms
@@ -355,7 +347,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
             names(initparms) <- names(parms)
 
             newlist <- initCurveContinuation(session, model, initstate, initparms, inittanvec, curtabname, clist,
-                                             curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel))
+                                             curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel), as.numeric(curveDirection()))
             if (!is.null(newlist)) {
               lapply((1:length(newlist)), function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
               updatePlot(1)
@@ -401,11 +393,11 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
             newcurve <- curveList[[curveData$tabname]][[curveData$newcurvenr]]
             newcurve$points <- rbind(newcurve$points, nsol$points)
             newcurve$eigvals <- rbind(newcurve$eigvals, nsol$eigvals)
-            newcurve$tangent <- rbind(newcurve$tangent, nsol$tangent)
+            newcurve$tanvec <- rbind(newcurve$tanvec, nsol$tanvec)
             newcurve$special.points <- rbind(newcurve$special.points, nsol$special.points)
             newcurve$special.tags <- rbind(newcurve$special.tags, nsol$special.tags)
             newcurve$special.eigvals <- rbind(newcurve$special.eigvals, nsol$special.eigvals)
-            newcurve$special.tangent <- rbind(newcurve$special.tangent, nsol$special.tangent)
+            newcurve$special.tanvec <- rbind(newcurve$special.tanvec, nsol$special.tanvec)
 
             curveList[[curveData$tabname]][[curveData$newcurvenr]] <- newcurve
           }
@@ -484,7 +476,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, deBifC = TRUE, ...) 
 
           newcurve$special.points <- rbind(newcurve$special.points, newcurve$points[nrow(newcurve$points),])
           newcurve$special.eigvals <- rbind(newcurve$special.eigvals, newcurve$special.eigvals[nrow(newcurve$special.eigvals),])
-          newcurve$special.tangent <- rbind(newcurve$special.tangent, newcurve$special.tangent[nrow(newcurve$special.tangent),])
+          newcurve$special.tanvec <- rbind(newcurve$special.tanvec, newcurve$special.tanvec[nrow(newcurve$special.tanvec),])
           newcurve$special.tags <- rbind(newcurve$special.tags, c(endPnt))
 
           curveList[[curveData$tabname]][[curveData$newcurvenr]] <- newcurve

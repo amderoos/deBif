@@ -89,10 +89,8 @@ initEQ <- function(state, parms, curveData, nopts, session = NULL) {
     v2 <- (-b22/(2*b12))*q1 + q2
     v2 <- v2/sqrt(sum(v2^2))
 
-    ############## Determine the new step along the curve (in bifUtils.R)
-    dyscaled <- setStepSize(state, v2, as.numeric(nopts$stepsize), as.numeric(nopts$minstepsize), as.numeric(nopts$iszero))
-
-    guess <- state + dyscaled
+    ############## Determine the new step along the curve
+    guess <- state + curveData$stepsize * v2
 
     return(list(y = guess, tanvec = v2))
   } else return(list())
@@ -165,7 +163,7 @@ TangentVecEQ <- function(state, parms, curveData, nopts) {
   # dimension as the equilibrium curve
   if (!is.null(curveData$tanvec) && (length(curveData$tanvec) == (curveData$statedim + 1))) {
     jac[nrow(jac),] <- curveData$tanvec
-    if (rcond(jac) > nopts$atol) {
+    if (rcond(jac) > nopts$rhstol) {
       # Solve for the tangent vector to the curve of the 1st free parameter and
       # the state variables.
       tvnew <- solve(jac, c(rep(0, (length(curveData$tanvec)-1)), 1))
@@ -221,13 +219,13 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
   biftype <- NULL
 
   if (!is.null(lastvals)) {
-    if (!is.null(lastvals$hpval) && ((lastvals$hpval)*hpval < -(nopts$atol*nopts$atol))) {
+    if (!is.null(lastvals$hpval) && ((lastvals$hpval)*hpval < -(nopts$rhstol*nopts$rhstol))) {
       biftype = "HP"
     }
-    if (!is.null(lastvals$lpval) && ((lastvals$lpval)*lpval < -(nopts$atol*nopts$atol))) {
+    if (!is.null(lastvals$lpval) && ((lastvals$lpval)*lpval < -(nopts$rhstol*nopts$rhstol))) {
       biftype = "LP"
     }
-    else if (!is.null(lastvals$bpval) && ((lastvals$bpval)*bpval < -(nopts$atol*nopts$atol))) {
+    else if (!is.null(lastvals$bpval) && ((lastvals$bpval)*bpval < -(nopts$rhstol*nopts$rhstol))) {
       biftype = "BP"
     }
     if (!is.null(biftype)) {
@@ -236,7 +234,7 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
       cData$tanvec <- NULL
       cData$condfun <- list(get(paste0("EQ_", biftype, "test"), mode = "function"))
       res <- tryCatch(stode(state, time = 0, func = ExtSystemEQ, parms = parms,
-                            rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                            atol = nopts$rhstol, ctol = nopts$dytol, rtol = nopts$rhstol,
                             maxiter = nopts$maxiter, verbose = FALSE, curveData = cData, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
@@ -271,7 +269,7 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
           # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
           # Notice that jacobian.full returns a square matrix with NA values on the last row
           jac[nrow(jac),] <- curveData$tanvec
-          if (rcond(jac) > nopts$atol) {
+          if (rcond(jac) > nopts$rhstol) {
             tvnew <- solve(jac, c(rep(0, (length(curveData$tanvec)-1)), 1))
             tvnorm <- sqrt(sum(tvnew^2))
             tvnew <- tvnew/tvnorm

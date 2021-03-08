@@ -102,10 +102,10 @@ analyseLP <- function(state, parms, curveData, nopts, session) {
   biftype <- NULL
 
   if (!is.null(lastvals)) {
-    if (!is.null(lastvals$cpval) && ((lastvals$cpval)*cpval < -(nopts$atol*nopts$atol))) {
+    if (!is.null(lastvals$cpval) && ((lastvals$cpval)*cpval < -(nopts$rhstol*nopts$rhstol))) {
       biftype = "CP"
     }
-    if (!is.null(lastvals$btval) && ((lastvals$btval)*btval < -(nopts$atol*nopts$atol))) {
+    if (!is.null(lastvals$btval) && ((lastvals$btval)*btval < -(nopts$rhstol*nopts$rhstol))) {
       biftype = "BT"
     }
     if (!is.null(biftype)) {
@@ -114,7 +114,7 @@ analyseLP <- function(state, parms, curveData, nopts, session) {
       cData$tanvec <- NULL
       cData$condfun <- list(LPcontinuation, get(paste0("LP_", biftype, "test"), mode = "function"))
       res <- tryCatch(stode(state, time = 0, func = ExtSystemEQ, parms = parms,
-                            rtol = nopts$rtol, atol = nopts$atol, ctol = nopts$ctol,
+                            atol = nopts$rhstol, ctol = nopts$dytol, rtol = nopts$rhstol,
                             maxiter = nopts$maxiter, verbose = FALSE, curveData = cData, nopts = nopts),
                       warning = function(e) {
                         msg <- gsub(".*:", "Warning in rootSolve:", e)
@@ -150,7 +150,7 @@ analyseLP <- function(state, parms, curveData, nopts, session) {
         # http://www.matcont.ugent.be/manual.pdf, page 10 & 11
         # Notice that jacobian.full returns a square matrix with NA values on the last row
         jac[nrow(jac),] <- curveData$tanvec[(1:curveData$pointdim)]
-        if (rcond(jac) > nopts$atol) {
+        if (rcond(jac) > nopts$rhstol) {
           tvnew <- solve(jac, c(rep(0, (curveData$pointdim-1)), 1))
           tvnorm <- sqrt(sum(tvnew^2))
           tvnew <- tvnew/tvnorm
