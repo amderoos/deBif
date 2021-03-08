@@ -115,7 +115,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   cData$tanvec <- tanvec
   cData$testvals <- NULL
   cData$pntnr <- 1
-  cData$stepsize <- as.numeric(direction)*abs(nopts$maxstepsize)
+  cData$stepsize <- as.numeric(direction)*abs(nopts$maxstepsize) / 10.0
 
   cData$tabname <- curtabname
   cData$model <- model
