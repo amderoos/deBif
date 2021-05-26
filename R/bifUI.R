@@ -2,28 +2,27 @@ bifUI <- function(state, parms, plotopts, numopts) {
   choices <- c("Time series" = 1, "1 parameter bifurcation" = 2, "2 parameter bifurcation" = 3)
   myTabs <- lapply(1:length(choices), function(i) {tabPanel(title = names(choices)[i], plotOutput(outputId=paste0("plot", choices[i]), height = "100%"), value = choices[i])})
 
-  ui <- dashboardPagePlus(
+  ui <- shinydashboardPlus::dashboardPage(
     shinyjs::useShinyjs(),
     ########## Header of window
-    header = dashboardHeaderPlus(
+    header = shinydashboardPlus::dashboardHeader(
       # Set height of dashboardHeader
       title = tagList(
         span(class = "logo-lg", "Bifurcation analysis"),
         icon("compass"), tags$style(".fa-compass {color:#E87722}")),
-      titleWidth = 220,
-      left_menu = tagList(span(class = "help-button", icon("question-circle"),
-                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
-        tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
-                tags$style(".show-odes {font-size: 13px;
+      leftUi = tagList(span(class = "help-button", icon("question-circle"),
+                            tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
+                       tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
+                               tags$style(".show-odes {font-size: 13px;
                                       border-width:2px;
                                       width: 85px; height: 30px;
                                       text-indent: -8px;
                                       left: 270px; top: 11px; position: fixed;}"))),
-      enable_rightsidebar = TRUE,
-      rightSidebarIcon = "gears"
+      titleWidth = 220,
+      controlbarIcon = shiny::icon("gears")
     ),
     ########## Left side-bar
-    sidebar = dashboardSidebar(
+    sidebar = shinydashboardPlus::dashboardSidebar(
       width = 220,
       tags$style(type='text/css', "#computefwrd1 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computefwrd2 { font-size: 13px; margin-left: 2px; }"),
@@ -205,7 +204,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
       )
     ),
     ########## Main panels
-    body = dashboardBody(
+    body = shinydashboard::dashboardBody(
       tags$script(
         "
         Shiny.addCustomMessageHandler('scrollCallback',
@@ -247,23 +246,60 @@ bifUI <- function(state, parms, plotopts, numopts) {
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
-      box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
+      shinydashboard::box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
         "#progress { font-size: 10px; width: calc(100%); left: calc(242px); height: 110px; overflow: auto;}"
       ))),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
-      box(width = NULL, height = "130px", verbatimTextOutput("progress", placeholder = TRUE))
+      shinydashboard::box(width = NULL, height = "130px", verbatimTextOutput("progress", placeholder = TRUE))
     ),
     ########## Right side-bar
-    rightsidebar = rightSidebar(
-      background = "dark",
-      # I copied here the function rightSidebarTabContent and changed it to get
-      # rid of the additional blank heading line
-      shiny::tags$div(
-        tags$head(
-          tags$style(
-            HTML(
-              '
+    controlbar = shinydashboardPlus::dashboardControlbar(
+      controlbarMenu(
+        id = "controlbartabs",
+        controlbarItem(
+          NULL,
+          h3("Plot options"),
+          selectInput('xcol', 'Variable(s) on X-axis',
+                      c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$xcol),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
+                      numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
+          selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
+          div(style="line-height: 6px !important", br()),
+          selectInput('ycol', 'Variable(s) on Y-axis',
+                      c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
+                      numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
+          selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
+          div(style="line-height: 6px !important", br()),
+          conditionalPanel(
+            condition = "input.plottab != 3 && input.ycol > 1",
+            selectInput('y2col', 'Variable on 2nd Y-axis',
+                        c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
+            conditionalPanel(
+              condition = "input.y2col > 1",
+              splitLayout(cellWidths = c("50%", "50%"),
+                          numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
+                          numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
+              selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
+              splitLayout(cellWidths = c("50%", "50%"),
+                          strong("Plot type"),
+                          radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
+                                       inline = TRUE)),
+              conditionalPanel(condition = "input.plot3d == 1",
+                               sliderInput(inputId="theta", label="Viewing angle",
+                                           min=-90, max=90, value=plotopts[[1]]$theta, step=1,
+                                           ticks = FALSE, round=TRUE))
+            )
+          ),
+          div(style="line-height: 12px !important", br()),
+          actionButton("plotoptsapply", "Apply", icon("refresh")),
+          tags$head(
+            tags$style(
+              HTML(
+                '
               .form-group {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
@@ -279,6 +315,61 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #ymax{height: 30px}
               #y2min{height: 30px}
               #y2max{height: 30px}
+              '))),
+          value = "control-sidebar-plotopttab-tab",
+          icon = shiny::icon("chart-line")),
+        controlbarItem(
+          NULL,
+          h3("Numerical options"),
+          conditionalPanel(
+            condition = "input.plottab == 1",
+            h4("Time integration"),
+            splitLayout(cellWidths = c("50%", "50%"),
+                        numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
+                        numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
+            selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod)
+          ),
+          conditionalPanel(
+            condition = "input.plottab > 1",
+            h4("Curve continuation"),
+            div(style="font-size: 18px; line-height: 0px; margin-top: 20px; margin-bottom: 12px; !important", ("Tolerances")),
+            splitLayout(cellWidths = c("45%", "55%"),
+                        textInput(inputId="rhstol", label="Function", value=sprintf("%.1E", numopts$rhstol)),
+                        textInput(inputId="dytol", label="Variable", value=sprintf("%.1E", numopts$dytol))),
+            splitLayout(cellWidths = c("45%", "55%"),
+                        textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
+                        textInput(inputId="neartol", label="Neighbourhood", value=sprintf("%.1E", numopts$neartol))),
+            textInput(inputId="jacdif", label="Jacobian perturbation", value=sprintf("%.1E", numopts$jacdif)),
+            div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
+            splitLayout(cellWidths = c("50%", "50%"),
+                        numericInput(inputId="minstepsize", label="Minimum", value=sprintf("%.1E", numopts$minstepsize)),
+                        numericInput(inputId="maxstepsize", label="Maximum", value=sprintf("%.1E", numopts$maxstepsize))),
+            div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Iterations")),
+            numericInput(inputId="maxiter", label="Maximum iterations", value=numopts$maxiter),
+            numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
+            numericInput(inputId="replotfreq", label="Points between plot updates", min=1, max=10000,
+                         value=numopts$replotfreq, step=1),
+            div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Limit cycle continuation")),
+            splitLayout(cellWidths = c("45%", "55%"),
+                        numericInput(inputId="ninterval", label="Intervals", value=numopts$ninterval, min = 1, max = 40, step = 1),
+                        numericInput(inputId="glorder", label="Order", value=numopts$glorder), min = 2, max = 7, step = 1),
+            textInput(inputId="lcampl", label="Initial amplitude", value=sprintf("%.1E", numopts$lcampl))
+          ),
+          div(style="line-height: 12px !important", br()),
+          actionButton("numoptsapply", "Apply", icon("refresh")),
+          tags$head(
+            tags$style(
+              HTML(
+                '
+              .form-group {
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
+              }
+              .shiny-split-layout {
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
+              }
+              label {font-size: 14px;}
               #tmax{height: 30px}
               #tstep{height: 30px}
               #rhstol{height: 30px}
@@ -294,98 +385,14 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #ninterval{height: 30px}
               #glorder{height: 30px}
               #lcampl{height: 30px}
-              '
-            )
-          )
-        ),
-        class = "tab-pane active",
-        id = "control-sidebar-plotopttab-tab",
-        icon = "chart-line",
-        h3("Plot options"),
-        selectInput('xcol', 'Variable(s) on X-axis',
-                    c("Time" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$xcol),
-        splitLayout(cellWidths = c("50%", "50%"),
-                    numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
-                    numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
-        selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
-        div(style="line-height: 6px !important", br()),
-        selectInput('ycol', 'Variable(s) on Y-axis',
-                    c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
-        splitLayout(cellWidths = c("50%", "50%"),
-                    numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
-                    numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
-        selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
-        div(style="line-height: 6px !important", br()),
-        conditionalPanel(
-          condition = "input.plottab != 3 && input.ycol > 1",
-          selectInput('y2col', 'Variable on 2nd Y-axis',
-                      c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
-          conditionalPanel(
-            condition = "input.y2col > 1",
-            splitLayout(cellWidths = c("50%", "50%"),
-                        numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
-                        numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
-            selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
-            splitLayout(cellWidths = c("50%", "50%"),
-                        strong("Plot type"),
-                        radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
-                                     inline = TRUE)),
-            conditionalPanel(condition = "input.plot3d == 1",
-                             sliderInput(inputId="theta", label="Viewing angle",
-                                         min=-90, max=90, value=plotopts[[1]]$theta, step=1,
-                                         ticks = FALSE, round=TRUE))
-          )
-        ),
-        div(style="line-height: 12px !important", br()),
-        actionButton("plotoptsapply", "Apply", icon("refresh"))
-      ),
-      # sidebarMenu() and menuItem() do not work in the right sidebar. Only conditionpanels can be used
-      shiny::tags$div(
-        class = "tab-pane",
-        id = "control-sidebar-numopttab-tab",
-        icon = "dashboard",
-        h3("Numerical options"),
-        conditionalPanel(
-          condition = "input.plottab == 1",
-          h4("Time integration"),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
-                      numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
-          selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod)
-          ),
-        conditionalPanel(
-          condition = "input.plottab > 1",
-          h4("Curve continuation"),
-          div(style="font-size: 18px; line-height: 0px; margin-top: 20px; margin-bottom: 12px; !important", ("Tolerances")),
-          splitLayout(cellWidths = c("45%", "55%"),
-                      textInput(inputId="rhstol", label="Function", value=sprintf("%.1E", numopts$rhstol)),
-                      textInput(inputId="dytol", label="Variable", value=sprintf("%.1E", numopts$dytol))),
-          splitLayout(cellWidths = c("45%", "55%"),
-                      textInput(inputId="iszero", label="Zero identity", value=sprintf("%.1E", numopts$iszero)),
-                      textInput(inputId="neartol", label="Neighbourhood", value=sprintf("%.1E", numopts$neartol))),
-          textInput(inputId="jacdif", label="Jacobian perturbation", value=sprintf("%.1E", numopts$jacdif)),
-          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Step size")),
-          splitLayout(cellWidths = c("50%", "50%"),
-                      numericInput(inputId="minstepsize", label="Minimum", value=sprintf("%.1E", numopts$minstepsize)),
-                      numericInput(inputId="maxstepsize", label="Maximum", value=sprintf("%.1E", numopts$maxstepsize))),
-          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Iterations")),
-          numericInput(inputId="maxiter", label="Maximum iterations", value=numopts$maxiter),
-          numericInput(inputId="maxpoints", label="Maximum number of points", value=numopts$maxpoints),
-          numericInput(inputId="replotfreq", label="Points between plot updates", min=1, max=10000,
-                       value=numopts$replotfreq, step=1),
-          div(style="font-size: 18px; line-height: 0px; margin-top: 24px; margin-bottom: 12px; !important", ("Limit cycle continuation")),
-          splitLayout(cellWidths = c("45%", "55%"),
-                      numericInput(inputId="ninterval", label="Intervals", value=numopts$ninterval, min = 1, max = 40, step = 1),
-                      numericInput(inputId="glorder", label="Order", value=numopts$glorder), min = 2, max = 7, step = 1),
-          textInput(inputId="lcampl", label="Initial amplitude", value=sprintf("%.1E", numopts$lcampl))
-        ),
-        div(style="line-height: 12px !important", br()),
-        actionButton("numoptsapply", "Apply", icon("refresh"))
-      )
-    ),
-    ##### End of right-sidebar
-    collapse_sidebar = FALSE,
-    sidebar_fullCollapse = TRUE
+              '))),
+          value = "control-sidebar-numopttab-tab",
+          icon = shiny::icon("dashboard")),
+        selected = "control-sidebar-plotopttab-tab"),
+      id = "controlbar",
+      skin = "dark"),
+    footer = NULL
   )
+
   return(ui)
 }

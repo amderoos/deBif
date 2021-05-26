@@ -4,28 +4,27 @@ phaseUI <- function(state, parms, plotopts, numopts) {
   else choices <- c("Time plot"=1, "Nullclines"=2, "Steady states"=3, "Vector field"=4, "Trajectories"=5, "Portrait"=6)
   myTabs <- lapply(1:length(choices), function(i) {tabPanel(title = names(choices)[i], plotOutput(outputId=paste0("plot", choices[i]), height = "100%"), value = choices[i])})
 
-  ui <- dashboardPagePlus(
+  ui <- shinydashboardPlus::dashboardPage(
     shinyjs::useShinyjs(),
     ########## Header of window
-    header = dashboardHeaderPlus(
+    header = shinydashboardPlus::dashboardHeader(
       # Set height of dashboardHeader
       title = tagList(
         span(class = "logo-lg", "Phaseplane analysis"),
         icon("compass"), tags$style(".fa-compass {color:#E87722}")),
-      left_menu = tagList(span(class = "help-button", icon("question-circle"),
-                               tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
-        tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
-                tags$style(".show-odes {font-size: 13px;
+      leftUi = tagList(span(class = "help-button", icon("question-circle"),
+                            tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
+                       tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
+                               tags$style(".show-odes {font-size: 13px;
                                       border-width:2px;
                                       width: 85px; height: 30px;
                                       text-indent: -8px;
                                       left: 270px; top: 11px; position: fixed;}"))),
       titleWidth = 220,
-      enable_rightsidebar = TRUE,
-      rightSidebarIcon = "gears"
+      controlbarIcon = shiny::icon("gears")
     ),
     ########## Left side-bar
-    sidebar = dashboardSidebar(
+    sidebar = shinydashboardPlus::dashboardSidebar(
       width = 220,
       tags$style(type='text/css', "#computefwrd1 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computebwrd1 { font-size: 13px;}"),
@@ -75,7 +74,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
                  tabName = "deletetab1"
         )
       )),
-    body = dashboardBody(
+    body = shinydashboard::dashboardBody(
       tags$script(
         "
         Shiny.addCustomMessageHandler('scrollCallback',
@@ -114,17 +113,52 @@ phaseUI <- function(state, parms, plotopts, numopts) {
         "#console { font-size: 11px; width: calc(100%); left: calc(242px); height: 149px; overflow: auto; }"
       ))),
       tags$head(tags$style(HTML('.box {margin-bottom: 0px; margin-top: 0px;}'))),
-      box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
+      shinydashboard::box(width = NULL, height = "170px", verbatimTextOutput("console", placeholder = TRUE)),
     ),
-    rightsidebar = rightSidebar(
-      background = "dark",
-      # I copied here the function rightSidebarTabContent and changed it to get
-      # rid of the additional blank heading line
-      shiny::tags$div(
-        tags$head(
-          tags$style(
-            HTML(
-              '
+    controlbar = shinydashboardPlus::dashboardControlbar(
+      controlbarMenu(
+        id = "controlbartabs",
+        controlbarItem(
+          NULL,
+          h3("Plot options"),
+          selectInput('xcol', 'Variable(s) on X-axis', c("Time" = 1), selected=plotopts[[1]]$xcol),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
+                      numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
+          selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
+          div(style="line-height: 6px !important", br()),
+          selectInput('ycol', 'Variable(s) on Y-axis',
+                      c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
+                      numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
+          selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
+          div(style="line-height: 6px !important", br()),
+          conditionalPanel(
+            condition = "input.plottab == 1 && input.ycol > 1",
+            selectInput('y2col', 'Variable on 2nd Y-axis',
+                        c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
+            conditionalPanel(
+              condition = "input.y2col > 1",
+              splitLayout(cellWidths = c("50%", "50%"),
+                          numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
+                          numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
+              selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
+              splitLayout(cellWidths = c("50%", "50%"),
+                          strong("Plot type"),
+                          radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
+                                       inline = TRUE)),
+              conditionalPanel(condition = "input.plot3d == 1",
+                               sliderInput(inputId="theta", label="Viewing angle",
+                                           min=-90, max=90, value=plotopts[[1]]$theta, step=1,
+                                           ticks = FALSE, round=TRUE))
+            )),
+          div(style="line-height: 12px !important", br()),
+          actionButton("plotoptsapply", "Apply", icon("refresh")),
+          tags$head(
+            tags$style(
+              HTML(
+                '
               .form-group {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
@@ -140,74 +174,48 @@ phaseUI <- function(state, parms, plotopts, numopts) {
               #ymax{height: 30px}
               #y2min{height: 30px}
               #y2max{height: 30px}
+              '))),
+          value = "control-sidebar-plotopttab-tab",
+          icon = shiny::icon("chart-line")),
+        controlbarItem(
+          NULL,
+          h3("Numerical options"),
+          h4("Time integration"),
+          splitLayout(cellWidths = c("50%", "50%"),
+                      numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
+                      numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
+          selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod),
+          conditionalPanel(
+            condition = "input.plottab > 2",
+            sliderInput(inputId="ssgrid", label="Steady state search grid", min = 1, max = 50, step = 1, value=numopts$ssgrid)),
+          conditionalPanel(
+            condition = "input.plottab == 6",
+            sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 1, max = 10, step = 1, value=numopts$pgrid)),
+          div(style="line-height: 12px !important", br()),
+          actionButton("numoptsapply", "Apply", icon("refresh")
+          ),
+          tags$head(
+            tags$style(
+              HTML(
+                '
+              .form-group {
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
+              }
+              .shiny-split-layout {
+              margin-top: 0 !important;
+              margin-bottom: 2px !important;
+              }
+              label {font-size: 14px;}
               #tmax{height: 30px}
               #tstep{height: 30px}
-              '
-            )
-          )
-        ),
-        class = "tab-pane active",
-        id = "control-sidebar-plotopttab-tab",
-        icon = "chart-line",
-        h3("Plot options"),
-        selectInput('xcol', 'Variable(s) on X-axis', c("Time" = 1), selected=plotopts[[1]]$xcol),
-        splitLayout(cellWidths = c("50%", "50%"),
-                    numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
-                    numericInput(inputId="xmax", label="Maximum", value=plotopts[[1]]$xmax)),
-        selectInput('logx', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logx),
-        div(style="line-height: 6px !important", br()),
-        selectInput('ycol', 'Variable(s) on Y-axis',
-                    c("All" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$ycol),
-        splitLayout(cellWidths = c("50%", "50%"),
-                    numericInput(inputId="ymin", label="Minimum", value=plotopts[[1]]$ymin),
-                    numericInput(inputId="ymax", label="Maximum", value=plotopts[[1]]$ymax)),
-        selectInput('logy', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy),
-        div(style="line-height: 6px !important", br()),
-        conditionalPanel(
-          condition = "input.plottab == 1 && input.ycol > 1",
-          selectInput('y2col', 'Variable on 2nd Y-axis',
-                      c("None" = 1, setNames((2:(length(state)+1)), names(state))), selected=plotopts[[1]]$y2col),
-          conditionalPanel(
-            condition = "input.y2col > 1",
-            splitLayout(cellWidths = c("50%", "50%"),
-                        numericInput(inputId="y2min", label="Minimum", value=plotopts[[1]]$y2min),
-                        numericInput(inputId="y2max", label="Maximum", value=plotopts[[1]]$y2max)),
-            selectInput('logy2', 'Scale type', c("Linear" = 0, "Logarithmic" = 1), selected=plotopts[[1]]$logy2),
-            splitLayout(cellWidths = c("50%", "50%"),
-                        strong("Plot type"),
-                        radioButtons("plot3d", NULL, choices = c("2D" = 0, "3D" = 1), selected = plotopts[[1]]$plot3d,
-                                     inline = TRUE)),
-            conditionalPanel(condition = "input.plot3d == 1",
-                             sliderInput(inputId="theta", label="Viewing angle",
-                                         min=-90, max=90, value=plotopts[[1]]$theta, step=1,
-                                         ticks = FALSE, round=TRUE))
-          )
-        ),
-        div(style="line-height: 12px !important", br()),
-        actionButton("plotoptsapply", "Apply", icon("refresh"))
-      ),
-      # sidebarMenu() and menuItem() do not work in the right sidebar. Only conditionpanels can be used
-      shiny::tags$div(
-        class = "tab-pane",
-        id = "control-sidebar-numopttab-tab",
-        icon = "dashboard",
-        h3("Numerical options"),
-        h4("Time integration"),
-        splitLayout(cellWidths = c("50%", "50%"),
-                    numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
-                    numericInput(inputId="tstep", label="Time step", value=numopts$tstep, min=0, step=0.1)),
-        selectInput('method', 'Integrator', c("lsoda", "ode23", "ode45", "rk4"),selected=numopts$odemethod),
-        conditionalPanel(
-          condition = "input.plottab > 2",
-          sliderInput(inputId="ssgrid", label="Steady state search grid", min = 1, max = 50, step = 1, value=numopts$ssgrid)),
-        conditionalPanel(
-          condition = "input.plottab == 6",
-          sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 1, max = 10, step = 1, value=numopts$pgrid)),
-        div(style="line-height: 12px !important", br()),
-        actionButton("numoptsapply", "Apply", icon("refresh")
-        )
-      )
-    )
+              '))),
+          value = "control-sidebar-numopttab-tab",
+          icon = shiny::icon("dashboard")),
+        selected = "control-sidebar-plotopttab-tab"),
+      id = "controlbar",
+      skin = "dark"),
+    footer = NULL
   )
 
   return(ui)

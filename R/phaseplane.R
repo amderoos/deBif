@@ -80,7 +80,10 @@
 #'
 #' phaseplane(model, state, parms)
 #' }
-#' @import deSolve rootSolve shiny shinydashboard shinydashboardPlus
+#' @import deSolve rootSolve
+#' @import shiny
+#' @importFrom shinydashboard dashboardBody box menuItem sidebarMenu
+#' @importFrom shinydashboardPlus dashboardPage dashboardHeader dashboardSidebar dashboardControlbar controlbarItem controlbarMenu
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
 #' @importFrom grDevices trans3d dev.off png pdf
 #' @importFrom shinyjs useShinyjs click removeClass html
@@ -235,7 +238,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
 
         isolate({
           # Close the rightSidebar
-          shinyjs::removeClass(selector = "body.skin-blue.sidebar-mini", class = "control-sidebar-open")
+          shinyjs::removeClass(id = "controlbar", class = "control-sidebar-open")
           # Collapse the State variables and Parameters stacks
           # shinyjs::removeClass(selector = "li.treeview", class = "active")
           # shinyjs::hide(selector = "ul.menu-open");
