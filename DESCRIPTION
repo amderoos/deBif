@@ -21,6 +21,6 @@ Imports: graphics,
          shinydashboard (>= 0.7), 
          shinydashboardPlus  (>= 0.7)
 Suggests: knitr, R.rsp, rmarkdown
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 VignetteBuilder: R.rsp
 Depends: R (>= 4.0)
