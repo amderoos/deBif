@@ -34,7 +34,6 @@ phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
   par(cex = as.numeric(plotopts["cex"]), mar = plotopts$plotmar)
   plot(NULL, type='n', xlim=c(xmin,xmax), ylim=c(ymin,ymax), xlab=xlab, ylab=ylab, log=logxy,
        cex.lab=as.numeric(plotopts["cex.lab"]), cex.axis=as.numeric(plotopts["cex.axis"]))
-  legend("topright", legend=paste0('d', names(state)[ishows], '/dt'), col=plotopts$colors[ishows], lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]))
 
   vstate <- as.list(state)
   npixels2 <- npixels^2
@@ -77,4 +76,5 @@ phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
       }
     }
   }
+  legend("topright", legend=paste0('d', names(state)[ishows], '/dt'), col=plotopts$colors[ishows], lwd=plotopts["lwd"], cex=as.numeric(plotopts["cex.legend"]), bg = "white")
 }

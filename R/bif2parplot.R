@@ -43,6 +43,6 @@ bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
         }
       }
     })
-    legend("topright", legend=c("BP", "HP", "LP"), col=popts$colors[c(1, 2, 3)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
+    legend("topright", legend=c("BP", "HP", "LP"), col=popts$colors[c(1, 2, 3)], lty=1, lwd=popts$lwd, cex=popts$cex.legend, bg = "white")
   }
 }

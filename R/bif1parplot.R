@@ -290,7 +290,7 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
             })
           }
         })
-        legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
+        legend("topright", legend=colnames(curvelist[[1]]$points)[2:ncol(curvelist[[1]]$points)], col=popts$colors[1:(ncol(curvelist[[1]]$points)-1)], lty=1, lwd=popts$lwd, cex=popts$cex.legend, bg = "white")
       } else {
         lapply((1:length(curvelist)), function(i) {
           cnames <- colnames(curvelist[[i]]$points)
@@ -394,7 +394,7 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts) {
               }
             }
           })
-          legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$cex.legend)
+          legend("topright", legend=colnames(curvelist[[1]]$points)[c(popts$ycol, popts$y2col)], col=popts$colors[c(1, 2)], lty=1, lwd=popts$lwd, cex=popts$cex.legend, bg = "white")
         }
       }
     }
