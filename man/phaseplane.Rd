@@ -34,12 +34,14 @@ phaseplane(model, state, parms, resume = TRUE, ...)
 \item{resume}{(boolean, optional)
 \preformatted{}
               If TRUE the program will try to load the curves computed during
-              the last session from global variable 'deBifCurves' and try to
-              restore the numerical and plot settings by importing them from
-              the global variable 'deBifSettings'.
+              the last session from the global variable '<model>PhaseCurves' and try
+              to restore the numerical and plot settings by importing them from
+              the global variable '<model>PhaseSettings', where the substring
+              '<model>' is the name of the function describing the dynamics, which
+              is passed as first argument to 'bifurcation()'.
               The program saves the curves computed during a session and the
               numerical and plot settings of this last session in these global
-              variables 'deBifCurves' and 'deBifSettings'.}
+              variables '<model>PhaseCurves' and '<model>PhaseSettings'.}
 
 \item{...}{(optional arguments)
 \preformatted{}

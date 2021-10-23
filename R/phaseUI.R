@@ -28,8 +28,16 @@ phaseUI <- function(state, parms, plotopts, numopts) {
       width = 220,
       tags$style(type='text/css', "#computefwrd1 { font-size: 13px; margin-left: 2px; }"),
       tags$style(type='text/css', "#computebwrd1 { font-size: 13px;}"),
+      tags$head(
+        tags$style(HTML("
+     .selectize-dropdown-content .active {
+       background: #2196f3 !important;
+       color: white !important;
+     }
+  "))
+      ),
       h4("Initial values", align = "center"),
-      selectizeInput('selectpoint1', "", c("User specified" = 0), selected=0),
+      selectInput('selectpoint1', "", c("User specified" = 0), selected=0),
       sidebarMenu(
         id = "varsparscurvesmenu",
         menuItem(

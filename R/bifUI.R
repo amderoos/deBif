@@ -30,11 +30,19 @@ bifUI <- function(state, parms, plotopts, numopts) {
       tags$style(type='text/css', "#computebwrd1 { font-size: 13px;}"),
       tags$style(type='text/css', "#computebwrd2 { font-size: 13px;}"),
       tags$style(type='text/css', "#computebwrd3 { font-size: 13px;}"),
+      tags$head(
+        tags$style(HTML("
+     .selectize-dropdown-content .active {
+       background: #2196f3 !important;
+       color: white !important;
+     }
+  "))
+      ),
       # conditionPanels inside sidebarMenu do not really work well, so the entire sidebarMenu should be wrapped inside a conditionaPanel
       conditionalPanel(
         condition = "input.plottab == 1",
         h4("Initial values", align = "center"),
-        selectizeInput('selectpoint1', "", c("User specified" = 0), selected=0),
+        selectInput('selectpoint1', "", c("User specified" = 0), selected=0),
         sidebarMenu(
           id = "varsparscurvesmenu",
           menuItem(
@@ -136,7 +144,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
         sidebarMenu(
           id = "varsparscurvesmenu",
           h4("Initial values", align = "center"),
-          selectizeInput('selectpoint2', "", c("User specified" = 0), selected=0),
+          selectInput('selectpoint2', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
             lapply(1:length(state),
@@ -183,7 +191,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
         sidebarMenu(
           id = "varsparscurvesmenu",
           h4("Initial values", align = "center"),
-          selectizeInput('selectpoint3', "", c("User specified" = 0), selected=0),
+          selectInput('selectpoint3', "", c("User specified" = 0), selected=0),
           menuItem(
             h4("State variables"),
             lapply(1:length(state),

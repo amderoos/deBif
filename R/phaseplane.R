@@ -33,12 +33,14 @@
 #' @param   resume  (boolean, optional)
 #' \preformatted{}
 #'               If TRUE the program will try to load the curves computed during
-#'               the last session from global variable 'deBifCurves' and try to
-#'               restore the numerical and plot settings by importing them from
-#'               the global variable 'deBifSettings'.
+#'               the last session from the global variable '<model>PhaseCurves' and try
+#'               to restore the numerical and plot settings by importing them from
+#'               the global variable '<model>PhaseSettings', where the substring
+#'               '<model>' is the name of the function describing the dynamics, which
+#'               is passed as first argument to 'bifurcation()'.
 #'               The program saves the curves computed during a session and the
 #'               numerical and plot settings of this last session in these global
-#'               variables 'deBifCurves' and 'deBifSettings'.
+#'               variables '<model>PhaseCurves' and '<model>PhaseSettings'.
 #'
 #' @param   ...  (optional arguments)
 #' \preformatted{}
@@ -92,6 +94,10 @@
 #' @importFrom utils browseURL capture.output unzip
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
+
+  modelname <- as.list(match.call())[[2]]
+  savedSettingsName <- paste0(modelname, "PhaseSettings")
+  savedCurvesName <- paste0(modelname, "PhaseCurves")
   if (interactive()) {
     if (length(unlist(model(0, state, parms))) != length(state))
       stop("The number of derivatives returned by the model function must equal the length of the state vector")
@@ -118,8 +124,8 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
     initpopts[[2]]$ycol <- 2
 
     # Read options from the environment
-    if (resume && exists("dePhaseSettings", envir = .GlobalEnv)) {
-      inlist    <- get("dePhaseSettings", envir = .GlobalEnv)
+    if (resume && exists(savedSettingsName, envir = .GlobalEnv)) {
+      inlist    <- get(savedSettingsName, envir = .GlobalEnv)
       initnopts <- phaseCheckNumSettings(initnopts, inlist)
       initpopts <- phaseCheckPlotSettings(initpopts, inlist, state, parms)
     }
@@ -148,8 +154,8 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
 
     # Read the curves from the environment
     initCurves <- list(Orbits = list(), TotalCurves = 0)
-    if (resume && exists("dePhaseCurves", envir = .GlobalEnv)) {
-      inlist     <- get("dePhaseCurves", envir = .GlobalEnv)
+    if (resume && exists(savedCurvesName, envir = .GlobalEnv)) {
+      inlist     <- get(savedCurvesName, envir = .GlobalEnv)
       initCurves <- phaseCheckInputCurves(NULL, inlist, statenames, parmsnames)
     }
 
@@ -549,20 +555,20 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         isolate({
           cat("Saving curves and programs settings")
           # Save the current curve list
-          if (exists("dePhaseCurves", envir = .GlobalEnv)) {
-            rm("dePhaseCurves", envir = .GlobalEnv)
+          if (exists(savedCurvesName, envir = .GlobalEnv)) {
+            rm(list = savedCurvesName, envir = .GlobalEnv)
           }
 
           # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
-          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("dePhaseCurves",
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(savedCurvesName,
                                                                                list(Orbits = curveList$Orbits, TotalCurves = curveList$TotalCurves), 1L)
           # Save the plot and numerical settings in the global environment
-          if (exists("dePhaseSettings", envir = .GlobalEnv)) {
-            rm("dePhaseSettings", envir = .GlobalEnv)
+          if (exists(savedSettingsName, envir = .GlobalEnv)) {
+            rm(list = savedSettingsName, envir = .GlobalEnv)
           }
 
           # global env set hack (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(myKey, myVal, 1L) `
-          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))("dePhaseSettings",
+          (function(key, val, pos) assign(key,val, envir=as.environment(pos)))(savedSettingsName,
                                                                                list(plotopts = reactiveValuesToList(plotopts), numopts = reactiveValuesToList(numopts)), 1L)
         })
       })
