@@ -123,7 +123,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
                       methods_run = as.character(formals(deSolve::ode)$method),
                       rhstol = 1e-7, dytol = 1e-7, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
                       maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-6, maxstepsize = 0.1,
-                      replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-2
+                      replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-3
     )
 
     # Initialize options for plotting etc.
@@ -354,14 +354,20 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
             names(initparms) <- names(parms)
 
             newlist <- initCurveContinuation(session, model, initstate, initparms, inittanvec, curtabname, clist,
-                                             curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel), as.numeric(curveDirection()))
+                                             curvetype, inittype, popts[[curtabname]], numopts, as.numeric(input$reportlevel),
+                                             as.numeric(curveDirection()))
             if (!is.null(newlist)) {
               lapply((1:length(newlist)), function(i) {curveList[[(curveListNames[[i]])]] <- newlist[[(curveListNames[[i]])]]})
               updatePlot(1)
-              busyComputing(1)
-              updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
-              shinyjs::show("pausebtn")
-              shinyjs::show("stopbtn")
+              if (numopts$maxpoints > 1) {
+                busyComputing(1)
+                updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
+                shinyjs::show("pausebtn")
+                shinyjs::show("stopbtn")
+              } else {
+                changeCurveMenu(1)
+                curveDirection(0)
+              }
             } else {
               curveDirection(0)
             }

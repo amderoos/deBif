@@ -178,6 +178,10 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
 
   if (!is.null(nsol) && (length(nsol) > 0) && !is.null(nsol$points)) {
     if (curvetype == "LC") {
+      if (sign(cData$stepsize * nsol$tanvec[1]) != direction) {
+        session$userData$curveData$stepsize <- -1.0 * as.numeric(cData$stepsize)
+      }
+
       vals <- lapply((1:statedim), function(i) {
         indxrange <- statedim*(1:(nopts$ninterval*nopts$glorder))
         y <- nsol$points[1, freeparsdim+i+indxrange]
@@ -425,8 +429,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               if (testname %in% names(testvals2report)) yy <- c(yy, as.numeric(testvals2report[[testname]]))
             }
           }
-          cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
         }
+        cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
       }
 
       ############## Store the results
@@ -513,7 +517,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         return(NULL)
       }
       if (abs(cData$stepsize) < abs(nopts$minstepsize)) {
-        msg <- "Step size too small\n"
+        msg <- "Unable to find next solution point with smallest step size\n"
         if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
         cData <- NULL
