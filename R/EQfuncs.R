@@ -219,14 +219,24 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
   biftype <- NULL
 
   if (!is.null(lastvals)) {
+    # if (!is.null(lastvals$hpval) && ((lastvals$hpval)*hpval < 0.0)) {
     if (!is.null(lastvals$hpval) && ((lastvals$hpval)*hpval < -(nopts$rhstol*nopts$rhstol))) {
-      biftype = "HP"
+        biftype = "HP"
     }
-    if (!is.null(lastvals$lpval) && ((lastvals$lpval)*lpval < -(nopts$rhstol*nopts$rhstol))) {
-      biftype = "LP"
-    }
-    else if (!is.null(lastvals$bpval) && ((lastvals$bpval)*bpval < -(nopts$rhstol*nopts$rhstol))) {
-      biftype = "BP"
+
+    # Because the test function for a limit point involves the condition that the test function for
+    # a branching point should be non-zero (See below eq. (35)-(37) in the MATCONT manual from 2012
+    # (ManualSep2012.pdf), we first test for a branching point and only after that test for a
+    # limit point
+
+    # if (!is.null(lastvals$bpval) && ((lastvals$bpval)*bpval < 0.0)) {
+    if (!is.null(lastvals$bpval) && ((lastvals$bpval)*bpval < -(nopts$rhstol*nopts$rhstol))) {
+        biftype = "BP"
+    } else {
+      # if (!is.null(lastvals$lpval) && ((lastvals$lpval)*lpval < 0.0)) {
+      if (!is.null(lastvals$lpval) && ((lastvals$lpval)*lpval < -(nopts$rhstol*nopts$rhstol))) {
+          biftype = "LP"
+      }
     }
     if (!is.null(biftype)) {
       cData <- curveData
@@ -302,6 +312,19 @@ analyseEQ <- function(state, parms, curveData, nopts, session) {
 
 EQ_BPtest <- function(state, parms, curveData, nopts, rhsval) {
 
+  # The following defines as test function the determinant of the extended Jacobian of the
+  # system:
+  #           |dF1/dp1 dF1/dx1 ... dF1/dxn|
+  #           |dF2/dp1 dF2/dx1 ... dF2/dxn|
+  #           |   .       .    ...    .   |
+  #      Df = |   .       .    ...    .   |
+  #           |   .       .    ...    .   |
+  #           |dFn/dp1 dFn/dx1 ... dFn/dxn|
+  #           |   NA      NA   ...    NA  |
+  #
+  # with the last row replaced by the tangent vector to the curve. See eq. (35) in the MATCONT
+  # manual from 2012 (ManualSep2012.pdf)
+
   res <- TangentVecEQ(state, parms, curveData, nopts)
   jac <- res$jacobian
   jac[nrow(jac),] <- res$tanvec
@@ -348,6 +371,12 @@ EQ_LPtest <- function(state, parms, curveData, nopts, rhsval) {
 
   res <- TangentVecEQ(state, parms, curveData, nopts)
 
+  # The following defines as test function the parameter component of the tangent vector to the
+  # solution curve. See the remark below eq. (10.39) in Kuznetsov (1998) and eq. (37) in the MATCONT
+  # manual from 2012 (ManualSep2012.pdf)
   return(c(unlist(rhsval), res$tanvec[1]))
+
+  # The following defines as test function the determinant of the restricted Jacobian f_x(x, p) which
+  # equals the produce of the eigenvalues of this Jacobian. See eq. (10.39) in Kuznetsov (1998)
   # return(c(unlist(rhsval), det(res$jac[(1:curveData$statedim),((curveData$freeparsdim+1):curveData$pointdim)])))
 }

@@ -405,7 +405,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                                        function(i){c(paste0("min.", cData$varnames[i+1]),
                                                      paste0("max.", cData$varnames[i+1]))})),
                          names(y[cData$pointdim]))
-            cat("\n\n", paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
+            cat("\n\nPoint: ", paste(unlist(lapply(namesyy, function(x) {sprintf("%12s", x)})), collapse = " "), "\n")
           }
         } else {
           specvar <- c("bpval", "hpval", "lpval", "btval", "cpval")
@@ -421,7 +421,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                 if (specvar[ii] %in% names(testvals2report)) msg <- paste(msg, sprintf("%7s test", speclbl[ii]))
               }
             }
-            cat("\n\n", msg, "\n")
+            cat("\n\nPoint  ", msg, "\n")
           }
           yy <- c(as.numeric(y[1:cData$pointdim]), eigval)
           if (cData$reportlevel == 2) {
@@ -430,7 +430,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
             }
           }
         }
-        cat(paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
+        cat(sprintf("%5d: ", pntnr), paste(unlist(lapply(yy, function(x) {rcprintf("%12.5E", x)})), collapse = " "), "\n")
       }
 
       ############## Store the results
@@ -516,7 +516,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         else cat(msg)
         return(NULL)
       }
-      if (abs(cData$stepsize) < abs(nopts$minstepsize)) {
+      if (corrections > as.numeric(nopts$maxiter)) {
+      # if (abs(cData$stepsize) < abs(nopts$minstepsize)) {
         msg <- "Unable to find next solution point with smallest step size\n"
         if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)
@@ -525,7 +526,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
       corrections <- corrections + 1
       cData$stepsize <- cData$stepsize * 0.5
-      cData$guess <- cData$yold + cData$stepsize * cData$tanvec
+      dyfailed <- cData$guess - cData$yold
+      cData$guess <- cData$yold + dyfailed * 0.5
     }
   }
   if (is.null(cData)) {

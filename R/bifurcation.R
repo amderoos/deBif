@@ -121,8 +121,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     initnopts <- list(odemethod = "lsoda", tmax = 1000, tstep = 0.1,
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
-                      rhstol = 1e-7, dytol = 1e-7, neartol = 0.1, jacdif = 1.0E-4, maxiter = 20,
-                      maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-6, maxstepsize = 0.1,
+                      rhstol = 1e-7, dytol = 1e-7, neartol = 0.05, jacdif = 1.0E-4, maxiter = 20,
+                      maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-5, maxstepsize = 0.05,
                       replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-3
     )
 
