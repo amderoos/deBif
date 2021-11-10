@@ -18,16 +18,7 @@ The package **deBif** is primarily intended to be used in education. It is in no
 
 You can install this package by issuing the following command from the R command line:
 ```
-install.packages("devtools")
-devtools::install_git("https://bitbucket.org/amderoos/debif")
+devtools::install_github("amderoos/deBif")
 ```
-
-----
-
-## Acknowledgments
-
-![ERC logo](https://staff.fnwi.uva.nl/a.m.deroos/PSPManalysis/files/logo-erc-2.png)
-
-The development of this software has been made possible by financial support from the European Research Council under the European Union's Seventh Framework Programme (FP/2007-2013) / ERC Grant Agreement No. 322814
 
 *****
