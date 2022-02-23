@@ -116,6 +116,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   cData$testvals <- NULL
   cData$pntnr <- 1
   cData$stepsize <- as.numeric(direction)*abs(nopts$maxstepsize) / 10.0
+  cData$direction <- as.numeric(direction)
 
   cData$tabname <- curtabname
   cData$model <- model
@@ -156,7 +157,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
 
   if (is.null(tanvec) || (length(tanvec) != length(y)))
     tanvec <- c(1.0, rep(0, (length(y)-1)))
-  else if (abs(tanvec[1]) > nopts$iszero) tanvec <- sign(tanvec[1])*tanvec
+  else if (abs(tanvec[1]) > as.numeric(nopts$iszero)) tanvec <- sign(tanvec[1])*tanvec
 
   cData$guess <- y
   cData$yold <- y
@@ -258,7 +259,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                        })
     newsolution <- TRUE
     if ((cData$pntnr > 1) && (curvetype != "LC")) {
-      nonzeroyold <- (abs(cData$yold) > nopts$iszero)
+      nonzeroyold <- (abs(cData$yold) > as.numeric(nopts$iszero))
       if (length(nonzeroyold) > cData$pointdim) nonzeroyold[((cData$pointdim+1):length(nonzeroyold))] <- FALSE
       newsolution <- (max((cData$yold[nonzeroyold] - result$y[nonzeroyold])^2/cData$yold[nonzeroyold]^2) < nopts$neartol)
     }
