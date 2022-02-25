@@ -156,7 +156,7 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
   }
 
   if (is.null(tanvec) || (length(tanvec) != length(y)))
-    tanvec <- c(1.0, rep(0, (length(y)-1)))
+    tanvec <- c(rep(1.0, length(freepars)), rep(0, (length(y) - length(freepars))))
   else if (abs(tanvec[1]) > as.numeric(nopts$iszero)) tanvec <- sign(tanvec[1])*tanvec
 
   cData$guess <- y
