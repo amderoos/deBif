@@ -257,11 +257,15 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                          else cat(msg)
                          return(NULL)
                        })
-    newsolution <- TRUE
-    if ((cData$pntnr > 1) && (curvetype != "LC")) {
-      nonzeroyold <- (abs(cData$yold) > as.numeric(nopts$iszero))
-      if (length(nonzeroyold) > cData$pointdim) nonzeroyold[((cData$pointdim+1):length(nonzeroyold))] <- FALSE
-      newsolution <- (max((cData$yold[nonzeroyold] - result$y[nonzeroyold])^2/cData$yold[nonzeroyold]^2) < nopts$neartol)
+    if (is.null(result)) {
+      newsolution <- FALSE
+    } else {
+      newsolution <- TRUE
+      if ((cData$pntnr > 1) && (curvetype != "LC")) {
+        nonzeroyold <- (abs(cData$yold) > as.numeric(nopts$iszero))
+        if (length(nonzeroyold) > cData$pointdim) nonzeroyold[((cData$pointdim+1):length(nonzeroyold))] <- FALSE
+        newsolution <- (max((cData$yold[nonzeroyold] - result$y[nonzeroyold])^2/cData$yold[nonzeroyold]^2) < nopts$neartol)
+      }
     }
     if (!is.null(result) && newsolution) {
       y <- result$y
