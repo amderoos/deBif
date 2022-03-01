@@ -65,37 +65,28 @@ setStepSize <- function(y, cData, minstep, iszero) {
   minstepsize <- as.numeric(minstep)
 
   ############## Determine the default step along the curve
-  dy <- as.numeric(cData$stepsize) * cData$tanvec
+  dydef <- as.numeric(cData$stepsize) * cData$tanvec
 
   # Determine the relative change in the components and the index of the largest change
   yabs <- abs(y)
   indx0s <- (yabs < as.numeric(iszero))                     # Indices of zero elements of y. Ignore their relative change
   yabs[indx0s] <- 1.0
-  dyrel <- abs(dy)/yabs
+  dyrel <- abs(dydef) / yabs
   dyrel[indx0s] <- 0
   if (length(dyrel) > cData$pointdim) dyrel[((cData$pointdim+1):length(dyrel))] <- 0
   dyind <- which.max(dyrel)                                 # Index with maximum relative change
 
-  # Compute the target step size as a percentage change equal to as.numeric(cData$stepsize) in the fastest changing y component
-  dyfinal <- max(abs(as.numeric(cData$stepsize)*y[dyind]), minstepsize) * (dy / abs(dy[dyind]))
+  # Scale the step in such a way that the change in the fastest changing component equals 1
+  dy <- dydef / abs(dydef[dyind])
 
-  # If the target step along the branch is smaller than as.numeric(cData$stepsize) * tangent, take the geometric mean of the two
-  # if (abs(dyfinal[dyind]) < abs(as.numeric(cData$stepsize)*cData$tanvec[dyind])) {
-  #   dyfinal <- sqrt(abs((as.numeric(cData$stepsize)*cData$tanvec[dyind]) * dyfinal[dyind]))  * (dyfinal / abs(dyfinal[dyind]))
-  # }
+  # Compute the target step size as a relative change equal to as.numeric(cData$stepsize) in the fastest changing y component
+  dyfinal <- max(abs(as.numeric(cData$stepsize) * y[dyind]), minstepsize) * dy
 
-  if (any(is.infinite(dyfinal)) || any(is.na(dyfinal))) dyfinal <- dy
+  # If there are invalid entries, fall back to the default step along the curve
+  if (any(is.infinite(dyfinal)) || any(is.na(dyfinal))) dyfinal <- dydef
 
-  # If the change in the first component (a bifurcation parameter) is non-zero enforce a minimum step size equal
-  # to minstepsize in that direction
-  if ((abs(dy[1]) > as.numeric(iszero)) && (abs(dyfinal[1]) < minstepsize)) {
-    dyfinal <- minstepsize * (dy / abs(dy[1]))
-  }
-
-  if (any(is.infinite(dyfinal)) || any(is.na(dyfinal))) dyfinal <- dy
-
-  # The absolute minimum step size times the tangent is the minimum step along the branch
-  if (all(abs(dyfinal) < abs(minstepsize*cData$tanvec))) {
+  # If all components change less than the absolute minimum step size times the tangent fall back to that absolute minimum step
+  if (all(abs(dyfinal) < abs(minstepsize * cData$tanvec))) {
     dyfinal <- as.numeric(cData$direction) * minstepsize * cData$tanvec
   }
 
