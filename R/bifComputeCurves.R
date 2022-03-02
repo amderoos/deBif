@@ -523,7 +523,6 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
         return(NULL)
       }
       if (corrections > as.numeric(nopts$maxiter)) {
-      # if (abs(cData$stepsize) < abs(nopts$minstepsize)) {
         msg <- "Unable to find next solution point with smallest step size\n"
         if (!is.null(session)) updateConsoleLog(session, msg)
         else cat(msg)

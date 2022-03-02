@@ -122,7 +122,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
                       rhstol = 1e-7, dytol = 1e-7, neartol = 0.05, jacdif = 1.0E-4, maxiter = 20,
-                      maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-3, maxstepsize = 0.1,
+                      maxpoints = 1000, iszero = 1.0E-5, minstepsize = 1.0E-3, maxstepsize = 0.05,
                       replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-3
     )
 
