@@ -25,7 +25,7 @@
     You should have received a copy of the GNU General Public License
     along with deBif. If not, see <http://www.gnu.org/licenses/>.
 
-    Last modification: AMdR - Mar 08, 2021
+    Last modification: AMdR - Mar 02, 2022
 */
 
 #include "globals.h"
@@ -680,7 +680,7 @@ SEXP deBif(SEXP curveType, SEXP userFunc, SEXP initVals, SEXP fixedParVals, SEXP
   double                          RhsTol, VarTol;
   double                          *dBaseMem, *point, *tanvec, *JacExport, *dblPnt;
   SEXP                            outputList = R_NilValue, nms, outputListEl[4], R_VarNames;
-  SEXP                            R_VarNamesLC, R_cDataNames;
+  SEXP                            R_VarNamesLC, R_cDataNames = R_NilValue;
 
   N_Protected = 0L;
   glorder = ninterval = CDfinemeshdim = 0;
