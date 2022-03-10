@@ -28,6 +28,9 @@ competition <- function(t, state, parms) {
     dN1 <- r1*N1*(1 - (N1 + beta12*N2)/K1)
     dN2 <- r2*N2*(1 - (N2 + beta21*N1)/K2)
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state`
     return(list(c(dN1, dN2)))
   })
 }

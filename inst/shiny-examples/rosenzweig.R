@@ -28,6 +28,9 @@ rosenzweig <- function(t, state, parms) {
     dR = r*R*(1 - R/K) - a*R*C/(1 + a*h*R)
     dC = eps*a*R*C/(1 + a*h*R) - mu*C
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state`
     return(list(c(dR, dC)))
   })
 }

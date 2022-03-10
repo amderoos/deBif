@@ -33,6 +33,9 @@ adaptx <- function(t, state, parms) {
     dy = z
     dz = -alpha*z - beta*y - x + x^2
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state` 
     return(list(c(dx, dy, dz)))
   })
 }

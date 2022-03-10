@@ -28,6 +28,9 @@ cannibalism <- function(t, state, parms) {
     dJ = alpha*A - delta*J - beta*J*A
     dA = delta*J - mu*A/(rho + beta*J)
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state`
     return(list(c(dJ, dA)))
   })
 }

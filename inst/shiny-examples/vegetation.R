@@ -30,6 +30,9 @@ vegetation <- function(t, state, parms) {
     dW  = Win - cmax*gW*P - rw*W
     dP  = gmax*gW*P - d*P -b*P
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state`
     return(list(c(dW, dP)))
   })
 }

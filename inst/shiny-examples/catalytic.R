@@ -38,6 +38,9 @@ catalytic <- function(t, state, parms) {
     dy <- q2*z - q6*y - q3*x*y
     ds <- q4*z - k*q4*s
 
+    # The order of the derivatives in the returned list has to be
+    # identical to the order of the state variables contained in 
+    # the argument `state`
     return(list(c(dx, dy, ds)))
   })
 }
