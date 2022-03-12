@@ -1,4 +1,8 @@
 bifOrbitplot <- function(session = NULL, curvelist = NULL, popts) {
+  # Save plot options to restore on exit
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
   # Plot the computed time series
   if (popts$plot3d == 1) {
     if (popts$theta < 0) par(oma=c(0,0,0,0), cex = popts$cex, mar = c(2.5,5,1,2))

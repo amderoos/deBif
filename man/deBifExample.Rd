@@ -12,6 +12,9 @@ deBifExample(example)
               Name of the example. If not provided a list of examples
               is returned}
 }
+\value{
+None.
+}
 \description{
 \code{deBifExample}
 }

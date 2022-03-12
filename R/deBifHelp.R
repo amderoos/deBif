@@ -5,7 +5,7 @@
 #' @return None.
 #'
 #' @examples
-#' \dontrun{
+#' if(interactive()){
 #' deBifHelp()
 #' }
 #'
@@ -15,6 +15,7 @@
 deBifHelp <- function ()
 {
   oldwd <- getwd()
+  on.exit(setwd(oldwd))
   tempDir <- tempdir()
   unlink(paste0(tempDir, "/manual"), recursive = TRUE)
   dir.create(paste0(tempDir, "/manual"))

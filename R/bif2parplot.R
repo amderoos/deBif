@@ -1,4 +1,8 @@
 bif2parplot <- function(session = NULL, curvelist = NULL, popts) {
+  # Save plot options to restore on exit
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
   # Plot the bifurcation curves
 
   par(cex = popts$cex, mar = as.numeric(c(1.6*(popts$cex.lab+popts$cex.axis), 1.6*(popts$cex.lab+popts$cex.axis), 2, 2)))

@@ -13,6 +13,8 @@
 #'               Name of the example. If not provided a list of examples
 #'               is returned
 #'
+#' @return None.
+#'
 #' @export
 deBifExample <- function(example) {
   # locate all the shiny app examples that exist

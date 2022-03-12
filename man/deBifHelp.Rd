@@ -13,7 +13,7 @@ None.
 \code{deBifHelp} opens the manual of the the deBif package in html format.
 }
 \examples{
-\dontrun{
+if(interactive()){
 deBifHelp()
 }
 

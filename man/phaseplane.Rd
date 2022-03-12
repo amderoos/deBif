@@ -69,7 +69,7 @@ None.
 phaseplane(model, state, parms, resume = TRUE, ...)
 }
 \examples{
-\dontrun{
+if(interactive()){
 # The initial state of the system has to be specified as a named vector of state values.
 state <- c(R=1, N=0.01)
 
@@ -84,6 +84,9 @@ model <- function(t, state, parms) {
     dR <- r*R*(1 - R/K) - a*R*N
     dN <- c*a*R*N - delta*N
 
+   # The order of the derivatives in the returned list has to be
+   # identical to the order of the state variables contained in
+   # the argument "state"
     return(list(c(dR, dN)))
   })
 }
