@@ -121,7 +121,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
     parmsnames <- names(parms)
 
     # Initialize numerical options
-    initnopts <- list(odemethod = "ode45", tmax = 1000, tstep = 0.1,
+    initnopts <- list(odemethod = "lsoda", tmax = 1000, tstep = 0.1,
                       args_run = unique(names(c(formals(deSolve::ode), formals(deSolve::lsoda)))),
                       methods_run = as.character(formals(deSolve::ode)$method),
                       rhstol = 1e-7, dytol = 1e-7, neartol = 0.05, jacdif = 1.0E-4, maxiter = 20,
