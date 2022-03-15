@@ -97,9 +97,6 @@
 #' @importFrom utils browseURL capture.output unzip
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
-  # Save plot options to restore on exit
-  oldpar <- par(no.readonly = TRUE)
-  on.exit(par(oldpar))
 
   modelname <- as.list(match.call())[[2]]
   savedSettingsName <- paste0(modelname, "PhaseSettings")
@@ -209,6 +206,10 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
           popts <- reactiveValuesToList(plotopts)
           nopts <- reactiveValuesToList(numopts)
           output[[paste0("plot", curtab)]] <- renderPlot({
+            # Save plot options to restore on exit
+            oldpar <- par(no.readonly = TRUE)
+            on.exit(par(oldpar))
+
             if (curtab == 1) bifOrbitplot(session, clist$Orbits, popts$Orbits)
             else {
               if (length(curstate) == 1) {
@@ -317,6 +318,10 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
                 height = 7 * setPlotHeight(session, input) / setPlotWidth(session, input),
                 width = 7)
           }
+          # Save plot options to restore on exit
+          oldpar <- par(no.readonly = TRUE)
+          on.exit(par(oldpar))
+
           if (curtab == 1) bifOrbitplot(session, clist$Orbits, popts$Orbits)
           else {
             if (length(curstate) == 1) {
