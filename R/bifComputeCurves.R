@@ -27,7 +27,22 @@ computeTimeseries <- function(session, model, state, parms, clist, pointid, nopt
 
   times <- seq(0, nopts$tmax, by=abs(nopts$tstep))
   if (nopts$tstep < 0.0) times <- nopts$tmax - times
-  nsol <- as.data.frame(do.call('ode', c(list(times=times, func=model, y=initstate, parms=initparms), method=nopts$odemethod)))
+
+  nsol <- tryCatch(as.data.frame(do.call('ode', c(list(times=times, func=model, y=initstate, parms=initparms),
+                                                  method=nopts$odemethod))),
+                   warning = function(e) {
+                     msg <- gsub(".*:", "Warning in computeTimeseries:", e)
+                     if (!is.null(session)) updateConsoleLog(session, msg)
+                     else cat(msg)
+                     return(NULL)
+                   },
+                   error = function(e) {
+                     msg <- gsub(".*:", "Error in computeTimeseries:", e)
+                     if (!is.null(session)) updateConsoleLog(session, msg)
+                     else cat(msg)
+                     return(NULL)
+                   })
+  if (is.null(nsol)) return(clist)
 
   names(nsol) <- c("Time", names(state))
 
