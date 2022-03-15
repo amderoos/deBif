@@ -97,6 +97,9 @@
 #' @importFrom utils browseURL capture.output unzip
 #' @export
 phaseplane <- function(model, state, parms, resume = TRUE, ...) {
+  # Save plot options to restore on exit
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
 
   modelname <- as.list(match.call())[[2]]
   savedSettingsName <- paste0(modelname, "PhaseSettings")

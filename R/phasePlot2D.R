@@ -1,7 +1,4 @@
 phasePlot2D <- function(curtab, odes, state, parms, plotopts, numopts) {
-  # Save plot options to restore on exit
-  oldpar <- par(no.readonly = TRUE)
-  on.exit(par(oldpar))
 
   xcol <- as.numeric(plotopts$xcol)
   ycol <- as.numeric(plotopts$ycol)
