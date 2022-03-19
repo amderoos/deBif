@@ -192,6 +192,28 @@ initCurveContinuation <- function(session, model, initstate, initparms, tanvec, 
                      return(NULL)
                    })
 
+  # If unsuccessful while computing a two parameter plot, swap the two free
+  # parameters and re-try
+  if (is.null(nsol) && (length(freepars) == 2)) {
+    cData$guess[c(1, 2)]  <- cData$guess[c(2, 1)]
+    cData$tanvec[c(1, 2)] <- cData$tanvec[c(2, 1)]
+    names(cData$guess)    <- names(cData$guess)[c(2, 1, 3:length(cData$guess))]
+
+    nsol <- tryCatch(nextCurvePoints(1, cData, popts, nopts, session = session),
+                     warning = function(e) {
+                       msg <- gsub(".*:", "Warning in nextCurvePoints:", e)
+                       if (!is.null(session)) updateConsoleLog(session, msg)
+                       else cat(msg)
+                       return(NULL)
+                     },
+                     error = function(e) {
+                       msg <- gsub(".*:", "Error in nextCurvePoints:", e)
+                       if (!is.null(session)) updateConsoleLog(session, msg)
+                       else cat(msg)
+                       return(NULL)
+                     })
+  }
+
   if (!is.null(nsol) && (length(nsol) > 0) && !is.null(nsol$points)) {
     if (curvetype == "LC") {
       if (sign(cData$stepsize * nsol$tanvec[1]) != direction) {
@@ -437,7 +459,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               if (abs(Im(eigval[ii])) < nopts$iszero) msg <- paste(msg, sprintf("%12s", cData$eignames[ii]))
               else msg <- paste(msg, sprintf("%25s", cData$eignames[ii]))
             }
-            if (cData$reportlevel == 2) {
+            if ((cData$reportlevel == 2) && exists("testvals2report")) {
               for (ii in (1:length(specvar))) {
                 if (specvar[ii] %in% names(testvals2report)) msg <- paste(msg, sprintf("%7s test", speclbl[ii]))
               }
@@ -445,7 +467,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
             cat("\n\nPoint  ", msg, "\n")
           }
           yy <- c(as.numeric(y[1:cData$pointdim]), eigval)
-          if (cData$reportlevel == 2) {
+          if ((cData$reportlevel == 2) && exists("testvals2report")) {
             for (testname in specvar) {
               if (testname %in% names(testvals2report)) yy <- c(yy, as.numeric(testvals2report[[testname]]))
             }
@@ -465,7 +487,7 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
       }
       corrections <- 1
       if (curvetype == "LC") cData$guess <- y + cData$stepsize * cData$tanvec
-      else cData$guess <- y + setStepSize(y, cData, as.numeric(nopts$minstepsize), as.numeric(nopts$dytol))
+      else cData$guess <- y + setStepSize(y, cData, as.numeric(nopts$minstepsize), as.numeric(nopts$iszero))
       cData$yold <- y
 
       ############## Stop the curve if outside the visible plotting region
@@ -480,8 +502,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
 
       if ((!curvedone ) && (pntnr > 10)) {
         bndtol <- as.numeric(nopts$iszero)
-        if ((!curvedone ) && ((as.numeric(y[1]) < (as.numeric(popts$xmin) - bndtol)) ||
-                              (as.numeric(y[1]) > (as.numeric(popts$xmax) + bndtol)))) {
+        if ((!curvedone ) && ((as.numeric(y[popts$xlab]) < (as.numeric(popts$xmin) - bndtol)) ||
+                              (as.numeric(y[popts$xlab]) > (as.numeric(popts$xmax) + bndtol)))) {
           msg <- "Computation halted:\nMinimum or maximum of x-axis domain reached\n"
           curvedone <- TRUE
         }
@@ -515,8 +537,8 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
               curvedone <- TRUE
             }
           } else if ((!curvedone ) && (curvetype != "LC")) {
-            if ((as.numeric(y[2]) < (as.numeric(popts$ymin) - bndtol)) ||
-                (as.numeric(y[2]) > (as.numeric(popts$ymax) + bndtol))) {
+            if ((as.numeric(y[popts$ylab]) < (as.numeric(popts$ymin) - bndtol)) ||
+                (as.numeric(y[popts$ylab]) > (as.numeric(popts$ymax) + bndtol))) {
               msg <- "Computation halted:\nMinimum or maximum of y-axis domain reached for 1st y-axis variable\n"
               curvedone <- TRUE
             }
