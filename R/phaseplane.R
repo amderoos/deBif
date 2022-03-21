@@ -331,7 +331,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
               phasePlot2D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
             }
             if (curtab >= 3) msg <- allequi(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
-            if (curtab == 3) output[["console"]] <- renderText({msg})
+            if (curtab >= 3) output[["console"]] <- renderText({msg})
             if ((curtab == 5) && (length(clist$Orbits) > 0)) {
               lapply((1:length(clist$Orbits)), function(i) {
                 if ((popts$PhasePlane$xlab %in% statenames) && (popts$PhasePlane$ylab %in% statenames) &&
