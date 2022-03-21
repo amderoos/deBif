@@ -33,16 +33,16 @@ allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
         else neweq <- (!any(sapply(1:eqnr, function(i) {any(c(all(abs(eqlst[i,] - equ) < 1e-4),all(abs(eqlst[i,] - equ) < 0.5e-4*(eqlst[i,] + equ))))})))
         if (neweq)
         {
-          if (curtab == 3) msg <- paste0(msg, paste(unlist(lapply(1:length(equ), function(i) {paste(names(equ[i]), "=", round(equ[i],6), sep=" ")})), collapse=', '), "\n")
+          if (curtab >= 3) msg <- paste0(msg, paste(unlist(lapply(1:length(equ), function(i) {paste(names(equ[i]), "=", round(equ[i],6), sep=" ")})), collapse=', '), "\n")
           jac <- jacobian.full(y=equ,func=odes,parms=parms)
           eig <- eigen(jac)
           dom <- max(sort(Re(eig$values)))
-          if (curtab == 3) {
+          if (curtab >= 3) {
             if (dom < 0) msg <- paste0(msg, "Stable point\n")
             else msg <- paste0(msg, "Unstable point\n")
             msg <- paste0(msg, "Eigenvalues: ", paste(round(eig$values,5), collapse=', '), "\n")
           }
-          if (curtab == 3) msg <- paste0(msg, "\n")
+          if (curtab >= 3) msg <- paste0(msg, "\n")
           if (dom < 0) points(equ[xcol],ifelse((length(state) > 1),equ[ycol],0),pch=19,cex=2)
           else points(equ[xcol],ifelse((length(state) > 1),equ[ycol],0),pch=1,cex=2)
           eqnr <- eqnr + 1
