@@ -56,3 +56,42 @@ allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
   return(msg)
 }
 
+nullclines <- function(odes, state, parms, plotopts, numopts) {
+  xcol <- as.numeric(plotopts$xcol)
+  ycol <- as.numeric(plotopts$ycol)
+  xmin <- as.numeric(plotopts$xmin)
+  xmax <- as.numeric(plotopts$xmax)
+  ymin <- as.numeric(plotopts$ymin)
+  ymax <- as.numeric(plotopts$ymax)
+  logx <- (as.numeric(plotopts$logx) == 1)
+  logy <- (as.numeric(plotopts$logy) == 1)
+  eps  <- numopts$eps
+  npixels <- numopts$npixels
+
+  # Make a phase plane with nullclines and/or phase portrait
+  nvar <- length(state)
+
+  if (logx) {
+    xc <- 10^seq(log10(xmin), log10(xmax), length.out=npixels)
+  } else xc <- seq(xmin+eps, xmax, length.out=npixels)
+  if (logy) {
+    yc <- 10^seq(log10(ymin), log10(ymax), length.out=npixels)
+  } else yc <- seq(ymin+eps, ymax, length.out=npixels)
+
+  vstate <- as.list(state)
+  npixels2 <- npixels^2
+
+  for (j in seq(1, nvar)) if (j!=xcol & j!=ycol) vstate[[j]]<-rep(vstate[[j]],npixels2);
+
+  zlst <- list(xc = xc, yc = yc,
+               dxc = matrix(nrow = length(xc), ncol = length(yc)),
+               dyc = matrix(nrow = length(xc), ncol = length(yc)))
+
+  for (ix in (1:length(xc))) {
+    vstate[[xcol]] <- xc[ix];
+    ztmp <- sapply(yc, function(ycc) {vstate[[ycol]] <- ycc; unlist(odes(0, vstate, parms))})
+    zlst$dxc[ix,] <- ztmp[xcol,]
+    zlst$dyc[ix,] <- ztmp[ycol,]
+  }
+  return(zlst)
+}

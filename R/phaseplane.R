@@ -110,7 +110,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
     parmsnames <- names(parms)
 
     # Initialize numerical options
-    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, pgrid=5, ssgrid=10, npixels=500)
+    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, pgrid=5, ssgrid=10, npixels=200)
 
     # Initialize options for plotting etc.
     initpopts <- vector(mode = "list", 2)
@@ -188,6 +188,9 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       numopts <- reactiveValues()
       lapply((1:length(initnopts)), function(i) {numopts[[(names(initnopts)[[i]])]] <- initnopts[[i]]})
 
+      # Create the variable Derivatives
+      Derivatives <- NULL
+
       # Create the variable consoleLog as a reactive value, such that the console will be updated when text is added to it
       consoleLog <- reactiveVal()
 
@@ -216,7 +219,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
                 phasePlot1D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
               }
               else {
-                phasePlot2D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
+                Derivatives <<- phasePlot2D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts, zlst = Derivatives)
               }
               if (curtab >= 3) {
                 msg <- allequi(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
@@ -328,7 +331,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
               phasePlot1D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
             }
             else {
-              phasePlot2D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
+              Derivatives <<- phasePlot2D(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts, zlst = Derivatives)
             }
             if (curtab >= 3) msg <- allequi(curtab, odes=model, state=curstate, parms=curparms, plotopts=popts$PhasePlane, numopts = nopts)
             if (curtab == 3) output[["console"]] <- renderText({msg})
@@ -404,8 +407,12 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
       observeEvent(input$lapply, {
         isolate({
           curtab <- as.numeric(input$plottab)
+          oldpars <- curparms
           for (i in statenames) curstate[i] <<- input[[paste0(i, "_1")]]
           for (i in parmsnames) curparms[i] <<- input[[paste0(i, "_1")]]
+
+          if ((length(curstate) > 1) && (any(oldpars != curparms))) Derivatives <<- NULL
+
           updatePlot(1)
         })
       })
@@ -430,6 +437,8 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
         plotopts[[curtabname]]$ylab <- ifelse(curtab == 1, (c("State variables", statenames))[plotopts[[curtabname]]$ycol],
                                               statenames[plotopts[[curtabname]]$ycol])
         plotopts[[curtabname]]$y2lab <- (c("None", statenames))[plotopts[[curtabname]]$y2col]
+
+        if ((curtabname == "PhasePlane") && (length(curstate) > 1)) Derivatives <<- NULL
 
         updatePlot(1)
 
