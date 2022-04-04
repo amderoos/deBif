@@ -81,17 +81,14 @@ nullclines <- function(odes, state, parms, plotopts, numopts) {
   vstate <- as.list(state)
   npixels2 <- npixels^2
 
-  for (j in seq(1, nvar)) if (j!=xcol & j!=ycol) vstate[[j]]<-rep(vstate[[j]],npixels2);
+  xyc <- cbind(as.vector(matrix(xc, nrow = npixels, ncol = npixels, byrow = T)),
+               as.vector(matrix(yc, nrow = npixels, ncol = npixels)))
+
+  ztmp <- apply(xyc, 1, function(cst) {vstate[[xcol]] <- cst[1]; vstate[[ycol]] <- cst[2]; unlist(odes(0, vstate, parms))}, simplify = T)
 
   zlst <- list(xc = xc, yc = yc,
-               dxc = matrix(nrow = length(xc), ncol = length(yc)),
-               dyc = matrix(nrow = length(xc), ncol = length(yc)))
+               dxc = matrix(ztmp[1,], npixels, npixels, byrow = T),
+               dyc = matrix(ztmp[2,], npixels, npixels, byrow = T))
 
-  for (ix in (1:length(xc))) {
-    vstate[[xcol]] <- xc[ix];
-    ztmp <- sapply(yc, function(ycc) {vstate[[ycol]] <- ycc; unlist(odes(0, vstate, parms))})
-    zlst$dxc[ix,] <- ztmp[xcol,]
-    zlst$dyc[ix,] <- ztmp[ycol,]
-  }
   return(zlst)
 }
