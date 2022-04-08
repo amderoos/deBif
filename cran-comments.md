@@ -7,13 +7,13 @@
 ## R CMD check results
 
 Package fails checks on Rhub - Debian Linux, R-devel, GCC ASAN/UBSAN with the error message that the compilation of Rcpp fails.
-This leads to further failures, in particular as a result of the Rcpp installation failure the packages 'shiny', 'shinyjs', 
-'shinydashboard' and 'shinydashboardPlus' that are used by the deBif package can not be installed.
+This leads to further failures, in particular as a result of the Rcpp installation failure the packages 'shiny', 'shinyjs',  'shinydashboard' and 'shinydashboardPlus' that are used by the deBif package can not be installed.
 
 
-On all other platforms the package passed checks successfully with only a note that some subdirectories (in particular the
-subdirectory containing the user manual) are 1Mb or more
+On all other platforms the package passed checks successfully with only a note that some subdirectories (in particular the subdirectory containing the user manual) are 1Mb or more
 
 ## Changes since last update
 
-First release
+Minor bugs fixed. Changed the calls to the Lapack routines dgetrf, dgecon and dgesvx to correctly pass string from C to Fortran following ‘Writing R Extensions’ §6.6.1
+
+
