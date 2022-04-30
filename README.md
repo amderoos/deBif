@@ -12,7 +12,7 @@ This directory contains the R package **deBif** which is aimed at bifurcation an
     - Continuation of limit cycles as function of one model parameter
     - Continuation of saddle-node bifurcation points (limit points), transcritical bifurcation points (branching points) and Hopf bifurcation points as function of 2 model parameters
 
-The package **deBif** is primarily intended to be used in education. It is in no way meant to replace the ultimate program to properly analyse the bifurcations in dynamical systems, which is [Matcont](https://sourceforge.net/projects/matcont/). 
+I developed the package **deBif** primarily to use in the modelling courses that I teach. It is in no way meant to replace the ultimate program to properly analyse the bifurcations in dynamical systems, which is [Matcont](https://sourceforge.net/projects/matcont/). If you are interested in a tutorial to learn more about bifurcation theory and for step-by-step exercises to use the **deBif** package, you can check out the [reader that I am using for teaching model analysis](https://staff.fnwi.uva.nl/a.m.deroos/projects/BifurcationTheory/).
 
 ### Installation
 
