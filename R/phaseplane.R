@@ -110,7 +110,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
     parmsnames <- names(parms)
 
     # Initialize numerical options
-    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, pgrid=5, ssgrid=10, npixels=200)
+    initnopts <- list(odemethod = "lsoda", tmax = 100, tstep = 0.1, eps = -.001, pgrid=8, ssgrid=10, npixels=200)
 
     # Initialize options for plotting etc.
     initpopts <- vector(mode = "list", 2)

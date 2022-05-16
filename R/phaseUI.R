@@ -182,7 +182,8 @@ phaseUI <- function(state, parms, plotopts, numopts) {
         id = "controlbartabs",
         controlbarItem(
           NULL,
-          h3("Plot options"),
+          div(style="font-size: 20px; line-height: 22px; margin-top: 0px; margin-bottom: 5px;",
+              ("Plot options")),
           selectInput('xcol', 'Variable(s) on X-axis', c("Time" = 1), selected=plotopts[[1]]$xcol),
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="xmin", label="Minimum", value=plotopts[[1]]$xmin),
@@ -229,7 +230,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
               }
-              label {font-size: 14px;}
+              label {font-size: 13px;}
               #xmin{height: 30px}
               #xmax{height: 30px}
               #ymin{height: 30px}
@@ -241,7 +242,8 @@ phaseUI <- function(state, parms, plotopts, numopts) {
           icon = shiny::icon("chart-line")),
         controlbarItem(
           NULL,
-          h3("Numerical options"),
+          div(style="font-size: 20px; line-height: 22px; margin-top: 0px; margin-bottom: 5px;",
+              ("Numerical options")),
           h4("Time integration"),
           splitLayout(cellWidths = c("50%", "50%"),
                       numericInput(inputId="tmax", label="Maximum time", value=numopts$tmax),
@@ -252,7 +254,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
             sliderInput(inputId="ssgrid", label="Steady state search grid", min = 1, max = 50, step = 1, value=numopts$ssgrid)),
           conditionalPanel(
             condition = "input.plottab == 6",
-            sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 1, max = 10, step = 1, value=numopts$pgrid)),
+            sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 3, max = 20, step = 1, value=numopts$pgrid)),
           div(style="line-height: 12px !important", br()),
           actionButton("numoptsapply", "Apply", icon("sync")
           ),
@@ -268,7 +270,12 @@ phaseUI <- function(state, parms, plotopts, numopts) {
               margin-top: 0 !important;
               margin-bottom: 2px !important;
               }
-              label {font-size: 14px;}
+              .shiny-bound-input {
+              font-size: 12px !important;
+              padding-left: 5px !important;
+              padding-right: 2px !important;
+              }
+              label {font-size: 13px;}
               #tmax{height: 30px}
               #tstep{height: 30px}
               '))),
