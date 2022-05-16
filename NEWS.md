@@ -1,3 +1,11 @@
+# deBif 0.1.6 (5/16/2022)
+
+* Introduced a new numerical option "Initial step size" to control the initial step along a solution curve
+
+* Changed the default grid dimension in the Portrait tab of phaseplane() to 8 and allowed this setting to be varied between 3 and 20
+
+* Reduced the font sizes in the menus of both phaseplane() and bifurcation()
+
 # deBif 0.1.5 (4/8/2022)
 
 * Changed the calls to the Lapack routines dgetrf, dgecon and dgesvx to correctly pass string from C to Fortran following ‘Writing R Extensions’ §6.6.1
