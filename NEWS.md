@@ -1,3 +1,9 @@
+# deBif 0.1.7 (current)
+
+* Corrected a bug in phasePlot2D.R that generated an error when selecting a variable with index > 2 in a model with more than 2 variables
+
+* Added an argument 'verify_fa = FALSE' to various calls to shiny::icon() in phaseUI.R and bifUI.R to prevent error messages from the FontAwesome package
+
 # deBif 0.1.6 (5/16/2022)
 
 * Introduced a new numerical option "Initial step size" to control the initial step along a solution curve

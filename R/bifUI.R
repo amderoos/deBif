@@ -10,7 +10,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
       title = tagList(
         span(class = "logo-lg", "Bifurcation analysis"),
         icon("compass"), tags$style(".fa-compass {color:#E87722}")),
-      leftUi = tagList(span(class = "help-button", icon("question-circle"),
+      leftUi = tagList(span(class = "help-button", icon("question-circle", verify_fa = FALSE),
                             tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
                        tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
                                tags$style(".show-odes {font-size: 13px;
@@ -19,7 +19,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
                                       text-indent: -8px;
                                       left: 270px; top: 11px; position: fixed;}"))),
       titleWidth = 220,
-      controlbarIcon = shiny::icon("cogs")
+      controlbarIcon = shiny::icon("cogs", verify_fa = FALSE)
     ),
     ########## Left side-bar
     sidebar = shinydashboardPlus::dashboardSidebar(
@@ -239,7 +239,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
         div(style="line-height: 18px !important", br()),
         conditionalPanel(
           condition = "input.plottab == 2 | input.plottab == 3",
-          shinyjs::hidden(actionButton("pausebtn", "Pause", icon("pause-circle"), style = "color: white;
+          shinyjs::hidden(actionButton("pausebtn", "Pause", icon("pause-circle", verify_fa = FALSE), style = "color: white;
                        background-color: green;
                        font-size: 16px;
                        position: relative;
@@ -251,7 +251,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
                        border-radius: 6px;
                        border-width: 2px")),
           div(style="line-height: 8px !important", br()),
-          shinyjs::hidden(actionButton("stopbtn", "Stop", icon("stop-circle"), style = "color: white;
+          shinyjs::hidden(actionButton("stopbtn", "Stop", icon("stop-circle", verify_fa = FALSE), style = "color: white;
                        background-color: red;
                        font-size: 16px;
                        position: relative;
@@ -358,7 +358,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
             )
           ),
           div(style="line-height: 12px !important", br()),
-          actionButton("plotoptsapply", "Apply", icon("sync")),
+          actionButton("plotoptsapply", "Apply", icon("sync", verify_fa = FALSE)),
           tags$head(
             tags$style(
               HTML(
@@ -421,7 +421,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
             textInput(inputId="lcampl", label="Initial amplitude", value=sprintf("%.1E", numopts$lcampl))
           ),
           div(style="line-height: 12px !important", br()),
-          actionButton("numoptsapply", "Apply", icon("sync")),
+          actionButton("numoptsapply", "Apply", icon("sync", verify_fa = FALSE)),
           tags$head(
             tags$style(
               HTML(
@@ -458,7 +458,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
               #lcampl{height: 30px}
               '))),
           value = "control-sidebar-numopttab-tab",
-          icon = shiny::icon("tachometer-alt")),
+          icon = shiny::icon("tachometer-alt", verify_fa = FALSE)),
         selected = "control-sidebar-plotopttab-tab"),
       id = "controlbar",
       skin = "dark"),

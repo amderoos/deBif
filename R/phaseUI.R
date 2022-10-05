@@ -12,7 +12,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
       title = tagList(
         span(class = "logo-lg", "Phaseplane analysis"),
         icon("compass"), tags$style(".fa-compass {color:#E87722}")),
-      leftUi = tagList(span(class = "help-button", icon("question-circle"),
+      leftUi = tagList(span(class = "help-button", icon("question-circle", verify_fa = FALSE),
                             tags$style(".fa-question-circle {font-size: 24px; color:#66CC66; left: 235px; top: 13px; position: fixed;}")),
                        tags$li(class = "dropdown", actionButton("showODEs", "Show ODEs", class = "show-odes"),
                                tags$style(".show-odes {font-size: 13px;
@@ -21,7 +21,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
                                       text-indent: -8px;
                                       left: 270px; top: 11px; position: fixed;}"))),
       titleWidth = 220,
-      controlbarIcon = shiny::icon("cogs")
+      controlbarIcon = shiny::icon("cogs", verify_fa = FALSE)
     ),
     ########## Left side-bar
     sidebar = shinydashboardPlus::dashboardSidebar(
@@ -109,7 +109,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
           tabName = "pars1tab"
         ),
         br(),
-        actionButton("lapply", "Apply", icon("sync")),
+        actionButton("lapply", "Apply", icon("sync", verify_fa = FALSE)),
         br(),
         conditionalPanel(condition = "input.plottab == 1 || input.plottab == 5",
                          splitLayout(cellWidths = c("52%", "48%"),
@@ -217,7 +217,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
                                            ticks = FALSE, round=TRUE))
             )),
           div(style="line-height: 12px !important", br()),
-          actionButton("plotoptsapply", "Apply", icon("sync")),
+          actionButton("plotoptsapply", "Apply", icon("sync", verify_fa = FALSE)),
           tags$head(
             tags$style(
               HTML(
@@ -256,7 +256,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
             condition = "input.plottab == 6",
             sliderInput(inputId="pgrid", label="Portrait starting point grid", min = 3, max = 20, step = 1, value=numopts$pgrid)),
           div(style="line-height: 12px !important", br()),
-          actionButton("numoptsapply", "Apply", icon("sync")
+          actionButton("numoptsapply", "Apply", icon("sync", verify_fa = FALSE)
           ),
           tags$head(
             tags$style(
@@ -280,7 +280,7 @@ phaseUI <- function(state, parms, plotopts, numopts) {
               #tstep{height: 30px}
               '))),
           value = "control-sidebar-numopttab-tab",
-          icon = shiny::icon("tachometer-alt")),
+          icon = shiny::icon("tachometer-alt", verify_fa = FALSE)),
         selected = "control-sidebar-plotopttab-tab"),
       id = "controlbar",
       skin = "dark"),
