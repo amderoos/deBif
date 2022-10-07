@@ -124,7 +124,7 @@ phaseplane <- function(model, state, parms, resume = TRUE, ...) {
                                         "aquamarine","deeppink","gray",seq(2,991)),
                              saveplotas = "png")
     }
-    initpopts[[2]]$ycol <- 2
+    if (length(state) > 1) initpopts[[2]]$ycol <- 2
 
     # Read options from the environment
     if (resume && exists(savedSettingsName, envir = .GlobalEnv)) {
