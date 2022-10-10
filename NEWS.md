@@ -1,5 +1,7 @@
 # deBif 0.1.7 (current)
 
+* Corrected a bug (superfluous checking of the value of 'ycol') in phaseServerFuncs.R that prevented the preventing of all steady states
+
 * Corrected a missing value TRUE/FALSE error that occurred when phaseplane() was started for a 1-dimensional model for the very first time 
 
 * Corrected a bug in phasePlot2D.R that generated an error when selecting a variable with index > 2 in a model with more than 2 variables

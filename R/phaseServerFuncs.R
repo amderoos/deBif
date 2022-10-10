@@ -27,8 +27,7 @@ allequi <- function(curtab, odes, state, parms, plotopts, numopts) {
       }
       q <- tryCatch(steady(y=state, func=odes, parms=parms))
       if (attr(q,"steady") && (!any(is.nan(q$y))) &&
-          (q$y[xcol] >= xmin - 1e-8) && (q$y[xcol] <= xmax + 1e-8) &&
-          (q$y[ycol] >= ymin - 1e-8) && (q$y[ycol] <= ymax + 1e-8)) {
+          (q$y[xcol] >= xmin - 1e-8) && (q$y[xcol] <= xmax + 1e-8)) {
         equ <- q$y
         equ <- ifelse(abs(equ) < 1e-8, 0, equ)
         if (eqnr < 1) neweq <- TRUE
