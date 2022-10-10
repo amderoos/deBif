@@ -365,7 +365,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
               updatePlot(1)
               if (numopts$maxpoints > 1) {
                 busyComputing(1)
-                updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
+                updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle", verify_fa = FALSE))
                 shinyjs::show("pausebtn")
                 shinyjs::show("stopbtn")
               } else {
@@ -448,7 +448,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
           updatePlot(1)
         }
         else {
-          updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
+          updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle", verify_fa = FALSE))
           busyComputing(1)
         }
       })
@@ -504,7 +504,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         updatePlot(1)
         curveDirection(0)
         busyComputing(0)
-        updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle"))
+        updateActionButton(session, "pausebtn", label = "Pause", icon = icon("pause-circle", verify_fa = FALSE))
         shinyjs::hide("pausebtn")
         shinyjs::hide("stopbtn")
 
