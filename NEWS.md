@@ -1,6 +1,6 @@
 # deBif 0.1.7 (current)
 
-* Corrected a bug (superfluous checking of the value of 'ycol') in phaseServerFuncs.R that prevented the preventing of all steady states
+* Corrected a bug (superfluous checking of the value of 'ycol' in case length(state) == 1) in phaseServerFuncs.R that prevented the preventing of all steady states
 
 * Corrected a missing value TRUE/FALSE error that occurred when phaseplane() was started for a 1-dimensional model for the very first time 
 

@@ -442,7 +442,7 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
         busycomp <- as.numeric(isolate(busyComputing()))
         if (busycomp == 0) return(NULL)
         else if (busycomp == 1) {
-          updateActionButton(session, "pausebtn", label = "Continue", icon = icon("forward"))
+          updateActionButton(session, "pausebtn", label = "Continue", icon = icon("forward", verify_fa = FALSE))
           busyComputing(-1)
           changeCurveMenu(1)
           updatePlot(1)
