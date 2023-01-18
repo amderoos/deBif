@@ -1,4 +1,6 @@
-# deBif 0.1.7 (current)
+# deBif 0.1.7 (current, 1/18/2023)
+
+* Changed the use of the function sprintf() to snprintf() in the underlying C code as sprintf() has been deprecated in macOS 13
 
 * Corrected a bug (superfluous checking of the value of 'ycol' in case length(state) == 1) in phaseServerFuncs.R that prevented the preventing of all steady states
 
