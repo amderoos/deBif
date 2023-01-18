@@ -10,6 +10,8 @@ On all platforms the package passed checks successfully
 
 ## Changes since last update
 
-Minor bugs fixed. Changed all calls to sprintf() in the C code to snprintf(), as sprintf() is deprecated
+Minor bugs fixed.
+Changed all calls to sprintf() in the C code to snprintf(), as sprintf() is deprecated
+Corrected a function declaration without a prototype which is deprecated in all versions of C
 
 
