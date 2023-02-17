@@ -97,7 +97,7 @@
 #' bifurcation(model, state, parms)
 #' }
 #' @useDynLib deBif
-#' @import deSolve rootSolve shiny
+#' @import deSolve rootSolve shiny Matrix geigen
 #' @importFrom shinydashboard dashboardBody box menuItem sidebarMenu
 #' @importFrom shinydashboardPlus dashboardPage dashboardHeader dashboardSidebar dashboardControlbar controlbarItem controlbarMenu
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments
@@ -126,8 +126,8 @@ bifurcation <- function(model, state, parms, resume = TRUE, ...) {
                       methods_run = as.character(formals(deSolve::ode)$method),
                       rhstol = 1e-7, dytol = 1e-7, neartol = 0.05, jacdif = 1.0E-4, maxiter = 20,
                       maxpoints = 1000, iszero = 1.0E-5,
-                      initstepsize = 5.0E-3, minstepsize = 1.0E-3, maxstepsize = 5.0E-2,
-                      replotfreq = 10, ninterval = 10, glorder = 4, lcampl = 1.0E-3
+                      initstepsize = 5.0E-3, minstepsize = 1.0E-3, maxstepsize = 5.0E-1,
+                      replotfreq = 10, ninterval = 20, glorder = 4, lcampl = 1.0E-3
     )
 
     # Initialize options for plotting etc.

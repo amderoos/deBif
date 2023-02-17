@@ -303,3 +303,43 @@ updateRefSol <- function(t, state, parms, curveData, nopts = NULL) {
   return(rhsval)
 }
 
+multipliers <- function(jac, cData, nopts) {
+  # Ignore the first and last column (parameter and period) and the last 2 rows (boundary and integral condition)
+  J <- jac[(1:(cData$statedim*cData$finemeshdim)), cData$freeparsdim + (1:(cData$statedim*cData$finemeshdim))]
+  p <- Diagonal(nrow(J))
+
+  blockrow <- cData$statedim * nopts$glorder
+  blockcol <- cData$statedim * (nopts$glorder + 1)
+  rowrange <- (1:blockrow)
+  colrange <- (1:blockcol)
+
+  rws <- rowrange
+  for (i in (1:nopts$ninterval)) {
+    # requires library(Matrix)
+    sJ <- J[rws, cData$statedim + rws]
+    lumat <- lu(sJ)
+    sl <- expand(lumat)$P %*% expand(lumat)$L
+    p[rws, rws] <- solve(sl)
+    rws <- rws + blockrow
+  }
+
+  rws <- (0:(nopts$ninterval * cData$statedim - 1))
+  multi_r1 <- floor(rws / cData$statedim + 1) * blockrow - cData$statedim + rws %% cData$statedim + 1
+  rws <- (0:((nopts$ninterval + 1) * cData$statedim - 1))
+  multi_r2 <- floor(rws / cData$statedim ) * blockrow + rws %% cData$statedim + 1
+
+  S <- p[multi_r1, ] %*% J[, multi_r2]
+
+  for (ii  in (1:(nopts$ninterval-1)) * cData$statedim) {
+    rws <- ii + (1:cData$statedim)
+    for (jj in rws) {
+      f <- matrix(S[rws, jj] / S[jj - cData$statedim, jj], ncol = 1)
+      S[rws, ] <- S[rws, ] - f %*% S[jj-cData$statedim, ]
+    }
+  }
+
+  r1 <- (nopts$ninterval - 1) * cData$statedim + (1:cData$statedim)
+  A0 <- S[r1, (1:cData$statedim)]
+  A1 <- S[r1, r1 + cData$statedim]
+  d  <- geigen(as.matrix(-A0), as.matrix(A1))
+}
