@@ -97,7 +97,7 @@
 #' bifurcation(model, state, parms)
 #' }
 #' @useDynLib deBif
-#' @import deSolve rootSolve shiny Matrix geigen
+#' @import deSolve rootSolve shiny
 #' @importFrom shinydashboard dashboardBody box menuItem sidebarMenu
 #' @importFrom shinydashboardPlus dashboardPage dashboardHeader dashboardSidebar dashboardControlbar controlbarItem controlbarMenu
 #' @importFrom graphics contour legend lines par plot points text title axis mtext persp axTicks segments

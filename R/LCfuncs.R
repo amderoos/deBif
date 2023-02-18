@@ -306,7 +306,9 @@ updateRefSol <- function(t, state, parms, curveData, nopts = NULL) {
 multipliers <- function(jac, cData, nopts) {
   # Ignore the first and last column (parameter and period) and the last 2 rows (boundary and integral condition)
   J <- jac[(1:(cData$statedim*cData$finemeshdim)), cData$freeparsdim + (1:(cData$statedim*cData$finemeshdim))]
-  p <- Diagonal(nrow(J))
+  # If library(Matrix) is used a diagonal identity matrix is created using:
+  # p <- Diagonal(nrow(J))
+  p <- diag(nrow(J))
 
   blockrow <- cData$statedim * nopts$glorder
   blockcol <- cData$statedim * (nopts$glorder + 1)
@@ -315,11 +317,13 @@ multipliers <- function(jac, cData, nopts) {
 
   rws <- rowrange
   for (i in (1:nopts$ninterval)) {
-    # requires library(Matrix)
     sJ <- J[rws, cData$statedim + rws]
-    lumat <- lu(sJ)
-    sl <- expand(lumat)$P %*% expand(lumat)$L
-    p[rws, rws] <- solve(sl)
+    # MATCONT uses here the inv() function, which requires that the matrix is first LU decomposed
+    # Using this approach requires library(Matrix) and the following statements:
+    # lumat <- lu(sJ)
+    # sl <- expand(lumat)$P %*% expand(lumat)$L
+    # The routine solve() can do this in one step
+    p[rws, rws] <- solve(sJ)
     rws <- rws + blockrow
   }
 
@@ -341,5 +345,9 @@ multipliers <- function(jac, cData, nopts) {
   r1 <- (nopts$ninterval - 1) * cData$statedim + (1:cData$statedim)
   A0 <- S[r1, (1:cData$statedim)]
   A1 <- S[r1, r1 + cData$statedim]
-  d  <- geigen(as.matrix(-A0), as.matrix(A1))
+  # Here we have to solve for the generalized eigenvalues, which can be done using library(geigen)
+  # and the call:
+  # d  <- geigen(as.matrix(-A0), as.matrix(A1), symmetric = FALSE, only.values=TRUE)
+  # However, the following statement is equivalent and does not require geigen()
+  d <- eigen(solve(A1, -A0), only.values = TRUE)
 }
