@@ -794,9 +794,9 @@ int SolveLinearSystem(const int N, double *A, double *B)
     {
       int             ii, jj;
 
-      snprintf(errstr, MAX_STR_LEN, "(Nearly) Singular %dx%d matrix in SolveLinearSystem(), (zero component U(%d, %d) in A*x = B) \n", N, N, info, info);
+      snprintf(errstr, MAX_STR_LEN, "\n(Nearly) Singular %dx%d matrix in SolveLinearSystem(), (zero component U(%d, %d) in A*x = B) \n", N, N, info, info);
 
-      ErrorMsg(errstr);
+      REprintf("\n");
       for (ii = 0; ii < N; ii++)
         {
           if ((2*ii == (N - 1)) || (2*ii == N))
@@ -812,6 +812,7 @@ int SolveLinearSystem(const int N, double *A, double *B)
     R_FlushConsole();
     R_ProcessEvents();
 
+    ErrorMsg(errstr);
     retval = SINGULARITY;
     }
   else
