@@ -174,9 +174,13 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts, iszero = 1.0E-3
           return(NA)
         }
         if (curvelist[[i]]$type == "LC") {
-          # Multipliers are sorted on decreasing modulus
-          evmax <- Mod(curvelist[[i]]$eigvals)
-          unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+          if ("eigvals" %in% names(curvelist[[i]])) {
+            # Multipliers are sorted on decreasing modulus
+            evmax <- Mod(curvelist[[i]]$eigvals)
+            unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+          } else {
+            unstable <- rep(FALSE, nrow(curvelist[[i]]$points))
+          }
           sdim <- length(curvelist[[i]]$initstate)
           mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
           mrange <- sdim*(0:(mdim-1))
@@ -259,9 +263,13 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts, iszero = 1.0E-3
             return(NA)
           }
           if (curvelist[[i]]$type == "LC") {
-            # Multipliers are sorted on decreasing modulus
-            evmax <- Mod(curvelist[[i]]$eigvals)
-            unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+            if ("eigvals" %in% names(curvelist[[i]])) {
+              # Multipliers are sorted on decreasing modulus
+              evmax <- Mod(curvelist[[i]]$eigvals)
+              unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+            } else {
+              unstable <- rep(FALSE, nrow(curvelist[[i]]$points))
+            }
             sdim <- length(curvelist[[i]]$initstate)
             mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
             mrange <- sdim*(0:(mdim-1))
@@ -338,9 +346,13 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts, iszero = 1.0E-3
             return(NA)
           }
           if (curvelist[[i]]$type == "LC") {
-            # Multipliers are sorted on decreasing modulus
-            evmax <- Mod(curvelist[[i]]$eigvals)
-            unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+            if ("eigvals" %in% names(curvelist[[i]])) {
+              # Multipliers are sorted on decreasing modulus
+              evmax <- Mod(curvelist[[i]]$eigvals)
+              unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+            } else {
+              unstable <- rep(FALSE, nrow(curvelist[[i]]$points))
+            }
             sdim <- length(curvelist[[i]]$initstate)
             mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
             mrange <- sdim*(0:(mdim-1))
@@ -407,9 +419,13 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts, iszero = 1.0E-3
               return(NA)
             }
             if (curvelist[[i]]$type == "LC") {
-              # Multipliers are sorted on decreasing modulus
-              evmax <- Mod(curvelist[[i]]$eigvals)
-              unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+              if ("eigvals" %in% names(curvelist[[i]])) {
+                # Multipliers are sorted on decreasing modulus
+                evmax <- Mod(curvelist[[i]]$eigvals)
+                unstable <- rowSums((evmax > (1.0 - as.numeric(iszero)))) > 1
+              } else {
+                unstable <- rep(FALSE, nrow(curvelist[[i]]$points))
+              }
               sdim <- length(curvelist[[i]]$initstate)
               mdim <- (length(curvelist[[i]]$points[1,]) - 2)/sdim
               mrange <- sdim*(0:(mdim-1))
