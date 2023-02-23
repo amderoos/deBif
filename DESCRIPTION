@@ -19,10 +19,10 @@ Imports: graphics,
          rootSolve (>= 1.8),
          rstudioapi (>= 0.13),
          shiny (>= 1.7), 
-         shinyjs (>= 2.0), 
+         shinyjs (>= 2.1), 
          shinydashboard (>= 0.7), 
          shinydashboardPlus  (>= 2.0)
 Suggests: knitr, R.rsp, rmarkdown
 RoxygenNote: 7.2.3
 VignetteBuilder: R.rsp
-Depends: R (>= 4.0)
+Depends: R (>= 4.2)
