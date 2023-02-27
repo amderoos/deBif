@@ -559,13 +559,24 @@ nextCurvePoints <- function(maxpoints, curveData, popts, nopts, session = NULL) 
                                           function(i) {min(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))])}))
             maxstatevals <- unlist(lapply((1:cData$statedim),
                                           function(i) {max(y[cData$freeparsdim+i+cData$statedim*(1:(nopts$ninterval*nopts$glorder))])}))
-            if (any(as.numeric(minstatevals) < (as.numeric(popts$ymin) - bndtol))) {
-              msg <- "Computation halted:\nMinimum of y-axis domain reached for one of the y-axis variables\n"
-              curvedone <- TRUE
-            }
-            if (any(as.numeric(maxstatevals) > (as.numeric(popts$ymax) + bndtol))) {
-              msg <- "Computation halted:\nMaximum of y-axis domain reached for one of the y-axis variables\n"
-              curvedone <- TRUE
+            if (popts$ycol == 1) {
+              if (any(as.numeric(minstatevals) < (as.numeric(popts$ymin) - bndtol))) {
+                msg <- "Computation halted:\nMinimum of y-axis domain reached for one of the y-axis variables\n"
+                curvedone <- TRUE
+              }
+              if (any(as.numeric(maxstatevals) > (as.numeric(popts$ymax) + bndtol))) {
+                msg <- "Computation halted:\nMaximum of y-axis domain reached for one of the y-axis variables\n"
+                curvedone <- TRUE
+              }
+            } else {
+              if (as.numeric(minstatevals[popts$ycol - 1]) < (as.numeric(popts$ymin) - bndtol)) {
+                msg <- "Computation halted:\nMinimum of y-axis domain reached for 1st y-axis variable\n"
+                curvedone <- TRUE
+              }
+              if (as.numeric(maxstatevals[popts$ycol - 1]) > (as.numeric(popts$ymax) + bndtol)) {
+                msg <- "Computation halted:\nMaximum of y-axis domain reached for 1st y-axis variable\n"
+                curvedone <- TRUE
+              }
             }
             if (all((as.numeric(maxstatevals) - as.numeric(minstatevals)) < bndtol)) {
               msg <- paste("Computation halted:\nCycle amplitude smaller than", bndtol, "\n")
