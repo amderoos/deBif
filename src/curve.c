@@ -24,7 +24,7 @@
     You should have received a copy of the GNU General Public License
     along with deBif. If not, see <http://www.gnu.org/licenses/>.
 
-    Last modification: AMdR - Feb 16, 2023
+    Last modification: AMdR - Dec 1, 2023
 ***/
 #ifndef CURVE
 #define CURVE
@@ -104,7 +104,7 @@ int ErrorMsg(const char *msg)
 #else
 
   REprintf("%s\n", msg);
-  warning(msg);
+  warning("%s", msg);
   R_FlushConsole();
   R_ProcessEvents();
 
