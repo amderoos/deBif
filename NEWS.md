@@ -1,4 +1,6 @@
-# deBif 0.1.9 (current, 27/2/2024)
+# deBif 0.1.9 (current, 14/2/2025)
+
+* Corrected a bug in bifpar1plot.R resulting in dashed lines being used to draw curves of stable equilibria
 
 * Corrected a bug in bifpar1plot.R that labelled bifurcation points wrongly in 3D plots if some bifurcation points were off-scale
 

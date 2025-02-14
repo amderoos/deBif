@@ -11,6 +11,4 @@ On all platforms the package passed checks successfully
 ## Changes since last update
 
 Minor bugs fixed
-Changed call to warning() to make the format string is a string literal
-Implemented some more functionality
 

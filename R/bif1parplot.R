@@ -467,7 +467,7 @@ bif1parplot <- function(session = NULL, curvelist = NULL, popts, iszero = 1.0E-3
               y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
               x[!sp] <- NA
               y[!sp] <- NA
-              lines(x, y, lty=popts$unstablelty, col=popts$colors[2], lwd=popts$lwd)
+              lines(x, y, col=popts$colors[2], lwd=popts$lwd)
               x <- curvelist[[i]]$points[,1]
               y <- converty2y(curvelist[[i]]$points[,popts$y2col], popts$ymin, popts$ymax, popts$logy, popts$y2min, popts$y2max, popts$logy2)
               x[sp] <- NA
