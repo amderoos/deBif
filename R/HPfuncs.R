@@ -72,7 +72,11 @@ analyseHP <- function(state, parms, curveData, nopts, session) {
         names(y) <- names(state)
 
         # Compute the Jacobian w.r.t. to the free parameter and the state variables
-        jac <- jacobian.full(y=y, func=curveData$model, parms=parms, pert = nopts$jacdif)
+        ###### 20250217: The following seems like a bug as it returns a matrix with lots of NA values.
+        ######           The Jacobian of the extended system function should be computed instead of the
+        ######           Jacobian of the model function
+        ###### jac <- jacobian.full(y=y, func=curveData$model, parms=parms, pert = nopts$jacdif)
+        jac <- jacobian.full(y=y, func=ExtSystemEQ, parms=parms, pert = nopts$jacdif, curveData = cData, nopts = nopts)
 
         # Discard all th rows and columns that pertain to additional variables
         jac <- jac[(1:curveData$pointdim), (1:curveData$pointdim)]
@@ -93,7 +97,7 @@ analyseHP <- function(state, parms, curveData, nopts, session) {
           tvnew <- solve(jac, c(rep(0, (curveData$pointdim-1)), 1))
           tvnorm <- sqrt(sum(tvnew^2))
           tvnew <- tvnew/tvnorm
-          names(tvnew) <- unlist(lapply((1:length(state)), function(i){paste0("d", names(state)[i])}))
+          names(tvnew) <- unlist(lapply((1:length(tvnew)), function(i){paste0("d", names(state)[i])}))
         } else {
           tvnew <- curveData$tanvec[(1:curveData$pointdim)]
         }

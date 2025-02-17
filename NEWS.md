@@ -1,4 +1,10 @@
-# deBif 0.1.9 (current, 14/2/2025)
+# deBif 0.1.10 (current, 17/2/2025)
+
+* Corrected bugs in analyseLP() (in LPfuncs.R) and analyseHP() (in HPfuncs.R) that caused crashes when testing for CP or BT points. Erroneously, the Jacobian matrix of the model function was computed, while it should have been the Jacobian of the extended system
+
+* Corrected bugs in assigning names to the elements of the tangent vector in analyseLP() (in LPfuncs.R) and analyseHP() (in HPfuncs.R)
+
+# deBif 0.1.9 (14/2/2025)
 
 * Corrected a bug in bifpar1plot.R resulting in dashed lines being used to draw curves of stable equilibria
 
