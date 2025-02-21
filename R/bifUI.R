@@ -301,7 +301,7 @@ bifUI <- function(state, parms, plotopts, numopts) {
       # ),
       do.call(tabsetPanel, c(myTabs, id = "plottab")),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
-        "#saveplot { width: 105px; left: calc(100% - 125px); top: 107px; position: absolute;}"
+        "#saveplot { width: 105px; left: calc(100% - 125px); top: 70px; position: absolute;}"
       ))),
       downloadButton("saveplot", label = paste0("Save ", plotopts[[1]]$saveplotas)),
       shiny::tags$head(shiny::tags$style(shiny::HTML(
